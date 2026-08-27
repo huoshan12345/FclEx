@@ -1,15 +1,18 @@
 namespace FclEx.Dapper.SqlAdapters;
 
 /// <summary>
-/// Adapter for Microsoft.Data.SqlClient
+/// Provides SQL Server quoting, parameter construction, batch limits, generated-key retrieval, and identity-insert handling for Microsoft.Data.SqlClient.
 /// </summary>
 public class SqlServerAdapter : SqlAdapterBase
 {
     private const int MaxParametersPerCommand = 2100;
     private const int MaxRowsPerValuesClause = 1000;
 
+    /// <inheritdoc />
     protected override QuotationMarks QuotationMarks { get; } = new('[', ']');
 
+    /// <inheritdoc />
+    /// <remarks>Applies SQL Server's 2,100-parameter command limit and 1,000-row VALUES limit.</remarks>
     public override int GetMaxInsertBatchSize(int parameterCountPerRow)
     {
         return Math.Min(
@@ -17,6 +20,8 @@ public class SqlServerAdapter : SqlAdapterBase
             CalculateMaxInsertBatchSize(parameterCountPerRow, MaxParametersPerCommand));
     }
 
+    /// <inheritdoc />
+    /// <remarks>Uses <c>OUTPUT INSERTED</c> when a generated-key column is requested.</remarks>
     public override string BuildInsertCommandText(
         string quotedTableName,
         string? columnListSql,
@@ -35,6 +40,7 @@ public class SqlServerAdapter : SqlAdapterBase
             : $"INSERT INTO {quotedTableName} ({columnListSql}){outputClause}{Environment.NewLine}VALUES{Environment.NewLine}{valueRowsSql}";
     }
 
+    /// <inheritdoc />
     protected override DbParameterCreator BuildParameterCreator()
     {
         return BuildParameterCreator("Microsoft.Data.SqlClient.SqlParameter, Microsoft.Data.SqlClient", "SqlDbType");

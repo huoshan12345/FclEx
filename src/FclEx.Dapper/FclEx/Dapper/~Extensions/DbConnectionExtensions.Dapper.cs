@@ -11,6 +11,8 @@ partial class DbConnectionExtensions
     /// <param name="level">The transaction isolation level. The default is <see cref="IsolationLevel.ReadCommitted"/>.</param>
     /// <param name="cancellationToken">The token used to cancel opening, transaction creation, and commit.</param>
     /// <returns>The callback result.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is cancelled before the transaction commits.</exception>
     /// <exception cref="AggregateException">The operation or commit failed and rollback also failed. Both exceptions are available in <see cref="AggregateException.InnerExceptions"/>.</exception>
     public static Task<T> ExecuteInTransactionAsync<T>(
         this DbConnection connection,
@@ -33,6 +35,8 @@ partial class DbConnectionExtensions
     /// <param name="level">The transaction isolation level. The default is <see cref="IsolationLevel.ReadCommitted"/>.</param>
     /// <param name="cancellationToken">The token used for the complete transaction operation.</param>
     /// <returns>The callback result.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is cancelled before the transaction commits.</exception>
     /// <exception cref="AggregateException">The operation or commit failed and rollback also failed. Both exceptions are available in <see cref="AggregateException.InnerExceptions"/>.</exception>
     public static async Task<T> ExecuteInTransactionAsync<T>(
         this DbConnection connection,
@@ -93,6 +97,8 @@ partial class DbConnectionExtensions
     /// <param name="level">The transaction isolation level. The default is <see cref="IsolationLevel.ReadCommitted"/>.</param>
     /// <param name="cancellationToken">The token used to cancel opening, transaction creation, and commit.</param>
     /// <returns>A task representing the transaction operation.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is cancelled before the transaction commits.</exception>
     /// <exception cref="AggregateException">The operation or commit failed and rollback also failed. Both exceptions are available in <see cref="AggregateException.InnerExceptions"/>.</exception>
     public static Task ExecuteInTransactionAsync(
         this DbConnection connection,
@@ -114,6 +120,8 @@ partial class DbConnectionExtensions
     /// <param name="level">The transaction isolation level. The default is <see cref="IsolationLevel.ReadCommitted"/>.</param>
     /// <param name="cancellationToken">The token used for the complete transaction operation.</param>
     /// <returns>A task representing the transaction operation.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is cancelled before the transaction commits.</exception>
     /// <exception cref="AggregateException">The operation or commit failed and rollback also failed. Both exceptions are available in <see cref="AggregateException.InnerExceptions"/>.</exception>
     public static async Task ExecuteInTransactionAsync(
         this DbConnection connection,
@@ -137,6 +145,7 @@ partial class DbConnectionExtensions
     /// <param name="connection">The connection to open.</param>
     /// <param name="cancellationToken">The token used to cancel connection opening.</param>
     /// <returns>A task representing the open operation.</returns>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is cancelled before the connection opens.</exception>
     public static Task TryOpenAsync(this DbConnection connection, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();

@@ -1,5 +1,8 @@
 namespace FclEx.Dapper;
 
+/// <summary>
+/// Resolves entity mappings and SQL adapters and exposes shared helper operations used by FclEx.Dapper.
+/// </summary>
 public static class DapperHelper
 {
     private static readonly ConcurrentDictionary<Type, ISqlAdapter> RegisteredAdapters = new();
@@ -113,6 +116,17 @@ public static class DapperHelper
         return TryRegisterSqlAdapter(typeof(TConnection), adapter);
     }
 
+    /// <summary>
+    /// Resolves the SQL adapter for a connection's runtime type.
+    /// </summary>
+    /// <param name="connection">The connection whose runtime type identifies the provider.</param>
+    /// <returns>
+    /// The exact or most-specific assignable registered adapter, or a built-in adapter recognized from the
+    /// connection type or one of its base types.
+    /// </returns>
+    /// <exception cref="ArgumentNullException"><paramref name="connection"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">Multiple incomparable registrations match the connection type.</exception>
+    /// <exception cref="NotSupportedException">No registered or built-in adapter matches the connection type.</exception>
     public static ISqlAdapter GetSqlAdapter(IDbConnection connection)
     {
         if (connection is null)
@@ -300,6 +314,19 @@ public static class DapperHelper
         return GetQuotedColumnName(GetSqlAdapter(connection), typeof(T), member.Name, mappingSource);
     }
 
+    /// <summary>
+    /// Creates a required ambient transaction scope with asynchronous-flow propagation enabled.
+    /// </summary>
+    /// <param name="timeout">The non-null transaction timeout.</param>
+    /// <param name="isolationLevel">The ambient transaction isolation level.</param>
+    /// <returns>
+    /// A required scope that joins an existing ambient transaction or creates one. The caller must call
+    /// <see cref="TransactionScope.Complete"/> before disposal to commit its participation.
+    /// </returns>
+    /// <remarks>
+    /// Disposing the scope without calling <see cref="TransactionScope.Complete"/> causes the ambient transaction
+    /// to roll back. The scope uses <see cref="TransactionScopeAsyncFlowOption.Enabled"/>.
+    /// </remarks>
     public static TransactionScope CreateTransactionScope(
         TimeSpan timeout,
         System.Transactions.IsolationLevel isolationLevel = System.Transactions.IsolationLevel.ReadCommitted)

@@ -15,6 +15,9 @@ internal readonly record struct InsertSqlKey(
     bool ReturnGeneratedKey,
     int RowCount);
 
+/// <summary>
+/// Provides cached CRUD command generation and execution helpers for <see cref="DbConnection"/>.
+/// </summary>
 public static partial class DbConnectionExtensions
 {
     // This limit bounds both command size and the row-number dimension of the process-wide INSERT SQL cache.
@@ -587,6 +590,15 @@ public static partial class DbConnectionExtensions
             connection.Close();
     }
 
+    /// <summary>
+    /// Creates and configures a provider command without executing it.
+    /// </summary>
+    /// <param name="connection">The connection that creates and owns the command.</param>
+    /// <param name="sql">The command text to assign.</param>
+    /// <param name="parameters">Optional provider parameters to append to the command in enumeration order.</param>
+    /// <param name="timeoutSeconds">An optional command timeout in seconds; when omitted, the provider default is retained.</param>
+    /// <param name="transaction">An optional local transaction to assign to the command.</param>
+    /// <returns>The configured command. The caller owns and must dispose it.</returns>
     public static DbCommand CreateCommand(this DbConnection connection, string sql, IEnumerable<DbParameter>? parameters = null, int? timeoutSeconds = null, DbTransaction? transaction = null)
     {
         var command = connection.CreateCommand();

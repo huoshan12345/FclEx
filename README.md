@@ -44,7 +44,7 @@ This repository is a multi-package library collection. Each package is intention
 |[FclEx.Caching](src/FclEx.Caching)|Cache abstractions and EasyCaching-based implementations for FclEx, including typed cache managers, configuration helpers, and System.Text.Json serialization patches.|
 |[FclEx.Caching.Redis](src/FclEx.Caching.Redis)|Redis-backed caching extensions for FclEx, including EasyCaching Redis integration, typed Redis collection wrappers, and collection configuration helpers.|
 |[FclEx.Core](src/FclEx.Core)|Foundational extensions, operation results, action pipelines, domain entity contracts, collection helpers, JSON/XML helpers, and general utilities.|
-|[FclEx.Dapper](src/FclEx.Dapper)|Dapper and ADO.NET helpers for CRUD operations, local transactions, dynamic parameters, SQL adapters, type handlers, and explicit entity mapping sources.|
+|[FclEx.Dapper](src/FclEx.Dapper)|Focused Dapper extensions for cached CRUD SQL, bounded multi-row inserts, local transactions, explicit entity mappings, and provider-specific SQL adapters.|
 |[FclEx.DependencyInjection](src/FclEx.DependencyInjection)|Convenience extensions for service registration, replacement, removal, decoration, scopes, and provider lookup.|
 |[FclEx.EfCore](src/FclEx.EfCore)|Entity Framework Core query, update, soft-delete, schema, SSH tunnel, and test-model helpers.|
 |[FclEx.Http](src/FclEx.Http)|HTTP service helpers, request actions, response parsing, downloads/uploads, cookies, authentication, AngleSharp HTML helpers, and user-client abstractions.|

@@ -1,24 +1,56 @@
 namespace FclEx.Dapper.SqlAdapters;
 
+/// <summary>
+/// Describes the opening and terminating delimiters used to quote identifiers in a SQL dialect.
+/// </summary>
+/// <param name="Prefix">The opening delimiter.</param>
+/// <param name="Suffix">The terminating delimiter, which is doubled when it appears inside an identifier.</param>
 public readonly record struct QuotationMarks(char Prefix, char Suffix)
 {
+    /// <summary>
+    /// Creates a delimiter pair that uses the same character to open and terminate an identifier.
+    /// </summary>
+    /// <param name="mark">The shared opening and terminating delimiter.</param>
     public QuotationMarks(char mark) : this(mark, mark) { }
 }
 
+/// <summary>
+/// Provides common identifier quoting, INSERT construction, parameter creation, and batch-limit behavior for SQL adapters.
+/// </summary>
+/// <remarks>
+/// Derived adapters supply provider delimiters, parameter construction, and provider-specific limits or generated-key
+/// SQL. An adapter's SQL-affecting behavior must remain stable while its instance is registered because command text
+/// is cached by adapter identity.
+/// </remarks>
 public abstract class SqlAdapterBase : ISqlAdapter
 {
+    /// <summary>
+    /// Lazily creates and caches the compiled provider parameter factory for this adapter instance.
+    /// </summary>
     protected readonly Lazy<DbParameterCreator> _creator;
 
+    /// <summary>
+    /// Initializes an adapter with a thread-safe lazy parameter factory.
+    /// </summary>
     protected SqlAdapterBase()
     {
         _creator = new(BuildParameterCreator, true);
     }
 
+    /// <inheritdoc />
     public virtual bool SupportsSchemas { get; } = true;
 
+    /// <summary>
+    /// Gets the provider delimiters used for table, schema, and column identifiers.
+    /// </summary>
     protected abstract QuotationMarks QuotationMarks { get; }
 
     // ReSharper disable once VirtualMemberNeverOverridden.Global
+    /// <summary>
+    /// Quotes one unqualified identifier component and escapes embedded terminating delimiters.
+    /// </summary>
+    /// <param name="name">The unquoted identifier from trusted application configuration.</param>
+    /// <returns>The delimited and escaped identifier.</returns>
     protected virtual string GetQuotedName(string name)
     {
         var (prefix, suffix) = QuotationMarks;
@@ -30,18 +62,26 @@ public abstract class SqlAdapterBase : ISqlAdapter
         return StringBuilder.Build(m => m.Append(prefix).Append(escapedName).Append(suffix));
     }
 
+    /// <inheritdoc />
     public virtual string GetQuotedTableName(string name)
     {
         return GetQuotedName(name);
     }
 
+    /// <inheritdoc />
     public virtual string GetQuotedColumnName(string name)
     {
         return GetQuotedName(name);
     }
 
+    /// <inheritdoc />
     public abstract int GetMaxInsertBatchSize(int parameterCountPerRow);
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// The base implementation emits <c>DEFAULT VALUES</c> for a default-only row and does not support returning a
+    /// generated key. Derived adapters override this method when their default-row or key-returning syntax differs.
+    /// </remarks>
     public virtual string BuildInsertCommandText(
         string quotedTableName,
         string? columnListSql,
@@ -58,8 +98,20 @@ public abstract class SqlAdapterBase : ISqlAdapter
             : $"INSERT INTO {quotedTableName} ({columnListSql}){Environment.NewLine}VALUES{Environment.NewLine}{valueRowsSql}";
     }
 
+    /// <summary>
+    /// Builds the provider-specific delegate used to create command parameters.
+    /// </summary>
+    /// <returns>A reusable parameter factory.</returns>
     protected abstract DbParameterCreator BuildParameterCreator();
 
+    /// <summary>
+    /// Calculates a provider batch limit from its maximum command parameter count.
+    /// </summary>
+    /// <param name="parameterCountPerRow">The positive parameter count required for one row.</param>
+    /// <param name="maxParameterCount">The positive maximum number of parameters accepted by one command.</param>
+    /// <returns>The maximum complete rows that fit in one command.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="parameterCountPerRow"/> is not positive.</exception>
+    /// <exception cref="NotSupportedException">One row exceeds <paramref name="maxParameterCount"/>.</exception>
     protected static int CalculateMaxInsertBatchSize(int parameterCountPerRow, int maxParameterCount)
     {
         if (parameterCountPerRow <= 0)
@@ -75,6 +127,7 @@ public abstract class SqlAdapterBase : ISqlAdapter
         return rowCount;
     }
 
+    /// <inheritdoc />
     public virtual DbParameter CreateParameter(string name, object? value, string? storeTypeName = null)
     {
         value ??= DBNull.Value;
@@ -91,6 +144,16 @@ public abstract class SqlAdapterBase : ISqlAdapter
         return AsyncDisposable.EmptyValueTask;
     }
 
+    /// <summary>
+    /// Builds a compiled parameter factory for a provider parameter type discovered at runtime.
+    /// </summary>
+    /// <param name="typeName">The assembly-qualified provider parameter type name.</param>
+    /// <param name="dbTypePropName">The provider enum property used for recognized store type names.</param>
+    /// <returns>
+    /// A factory that invokes the provider parameter's <c>(string, object)</c> constructor and, when recognized,
+    /// assigns the requested provider type enum.
+    /// </returns>
+    /// <remarks>The corresponding provider assembly must be available when the returned factory is first built.</remarks>
     protected static DbParameterCreator BuildParameterCreator(string typeName, string dbTypePropName)
     {
         var type = Type.GetType(typeName, true)!;

@@ -139,10 +139,11 @@
     - 建议：完整命名所有公开参数；内部局部变量可另行决定是否精简。
     - 处理：保留内部局部变量命名不变；所有公开 extension 参数中的 `con`、`paras` 和 `tran` 分别改为 `connection`、`parameters` 和 `transaction`。
 
-23. **[P3] 大部分公共 API 没有消费者可用的 XML 文档。**
+23. **[P3][已修复 2026-08-27] 大部分公共 API 没有消费者可用的 XML 文档。**
     - 位置：`src/FclEx.Dapper` 全部公共类型；现有 CRUD 文档的 `<param>`/`<returns>` 基本为空。
     - 说明：生成键类型、连接状态、schema 解释、映射属性、异常、批量限制、全局注册副作用均未说明；当前 0 warning 只是项目没有把缺失文档当作错误。
     - 建议：先确定公共面，再为保留 API 补齐行为、参数、返回、连接所有权、失败模式和 provider 差异；实现细节类型应改为 internal 而不是补表面文档。
+    - 处理：为保留的公共 API 补齐类型和成员文档，明确连接状态、事务绑定、取消与失败条件、映射和全局注册契约、批量限制以及各 provider 的 SQL 差异；并以 `CS1591` 作为错误严格构建全部目标框架，确认无遗漏。
 
 24. **[P2][已修复 2026-08-27] `SqlConnectionHelper.ParseEndpoint` 名称和解析能力均不足以表达 SQL Server data source。**
     - 位置：`SqlConnectionHelper.cs:3-11`。

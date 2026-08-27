@@ -1,5 +1,8 @@
 namespace FclEx.Dapper;
 
+/// <summary>
+/// Provides transaction-bound CRUD operations and compatibility helpers for <see cref="DbTransaction"/>.
+/// </summary>
 public static class DbTransactionExtensions
 {
 #if !NET5_0_OR_GREATER
@@ -9,6 +12,7 @@ public static class DbTransactionExtensions
     /// <param name="transaction">The transaction to commit.</param>
     /// <param name="cancellationToken">The token checked before the synchronous commit begins.</param>
     /// <returns>A completed task after the commit finishes.</returns>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is cancelled before the commit begins.</exception>
     public static Task CommitAsync(this DbTransaction transaction, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -22,6 +26,7 @@ public static class DbTransactionExtensions
     /// <param name="transaction">The transaction to roll back.</param>
     /// <param name="cancellationToken">The token checked before the synchronous rollback begins.</param>
     /// <returns>A completed task after the rollback finishes.</returns>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is cancelled before rollback begins.</exception>
     public static Task RollbackAsync(this DbTransaction transaction, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -36,6 +41,7 @@ public static class DbTransactionExtensions
     /// <param name="level">The transaction isolation level.</param>
     /// <param name="cancellationToken">The token checked before transaction creation begins.</param>
     /// <returns>The created transaction.</returns>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is cancelled before transaction creation begins.</exception>
     public static Task<DbTransaction> BeginTransactionAsync(
         this DbConnection connection,
         IsolationLevel level = IsolationLevel.ReadUncommitted,
@@ -63,6 +69,7 @@ public static class DbTransactionExtensions
     /// <param name="transaction">The transaction to roll back.</param>
     /// <param name="cancellationToken">The token used to cancel rollback.</param>
     /// <returns>A task representing rollback, or a completed task when rollback is no longer possible.</returns>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is cancelled before rollback completes.</exception>
     public static async Task TryRollbackAsync(this DbTransaction transaction, CancellationToken cancellationToken = default)
     {
         if (transaction.Connection is not { State: ConnectionState.Open })
@@ -82,6 +89,10 @@ public static class DbTransactionExtensions
     /// <param name="returnGeneratedKey">Whether to return the single generated key when one is mapped.</param>
     /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
     /// <returns>The generated key converted to <typeparamref name="TKey"/> when requested and supported; otherwise the default value.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><see cref="CommandOptions.TimeoutSeconds"/> is negative.</exception>
+    /// <exception cref="InvalidOperationException"><paramref name="transaction"/> is no longer associated with a connection.</exception>
+    /// <exception cref="ArgumentException"><paramref name="commandOptions"/> is already bound to another transaction.</exception>
+    /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
     public static Task<TKey?> InsertAsync<TEntity, TKey>(
         this DbTransaction transaction,
         TEntity entity,
@@ -108,6 +119,10 @@ public static class DbTransactionExtensions
     /// <param name="returnGeneratedKey">Whether to return the single generated key when one is mapped.</param>
     /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
     /// <returns>The generated key converted to <see langword="long"/> when requested and supported; otherwise the default value.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><see cref="CommandOptions.TimeoutSeconds"/> is negative.</exception>
+    /// <exception cref="InvalidOperationException"><paramref name="transaction"/> is no longer associated with a connection.</exception>
+    /// <exception cref="ArgumentException"><paramref name="commandOptions"/> is already bound to another transaction.</exception>
+    /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
     public static Task<long> InsertAsync<TEntity>(
         this DbTransaction transaction,
         TEntity entity,
@@ -133,6 +148,9 @@ public static class DbTransactionExtensions
     /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
     /// <returns>A task representing the insert operation.</returns>
     /// <exception cref="DataException">The entity mapping does not contain a database-generated key.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><see cref="CommandOptions.TimeoutSeconds"/> is negative.</exception>
+    /// <exception cref="InvalidOperationException"><paramref name="transaction"/> is no longer associated with a connection.</exception>
+    /// <exception cref="ArgumentException"><paramref name="commandOptions"/> is already bound to another transaction.</exception>
     /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
     /// <remarks>
     /// This operation does not advance or reset a provider identity, sequence, or auto-increment counter.
@@ -162,6 +180,11 @@ public static class DbTransactionExtensions
     /// <param name="includeAutoKey">Whether to insert mapped generated keys explicitly.</param>
     /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
     /// <returns>The total affected rows reported by all batches, or zero for an empty collection.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><see cref="CommandOptions.TimeoutSeconds"/> is negative.</exception>
+    /// <exception cref="InvalidOperationException"><paramref name="transaction"/> is no longer associated with a connection.</exception>
+    /// <exception cref="ArgumentException"><paramref name="commandOptions"/> is already bound to another transaction.</exception>
+    /// <exception cref="NotSupportedException">The mapped row shape cannot be represented by the selected adapter.</exception>
+    /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
     /// <remarks>
     /// When <paramref name="includeAutoKey"/> is <see langword="true"/>, this operation does not advance or reset a
     /// provider identity, sequence, or auto-increment counter. The caller must keep that state consistent so later
@@ -192,6 +215,11 @@ public static class DbTransactionExtensions
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
     /// <returns>The matching entity, or <see langword="null"/> when no row matches.</returns>
+    /// <exception cref="DataException">The mapping does not define exactly one key.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><see cref="CommandOptions.TimeoutSeconds"/> is negative.</exception>
+    /// <exception cref="InvalidOperationException"><paramref name="transaction"/> is no longer associated with a connection.</exception>
+    /// <exception cref="ArgumentException"><paramref name="commandOptions"/> is already bound to another transaction.</exception>
+    /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
     public static Task<T?> GetAsync<T>(
         this DbTransaction transaction,
         object id,
@@ -214,6 +242,11 @@ public static class DbTransactionExtensions
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
     /// <returns>The affected row count.</returns>
+    /// <exception cref="DataException">The mapping does not define exactly one key.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><see cref="CommandOptions.TimeoutSeconds"/> is negative.</exception>
+    /// <exception cref="InvalidOperationException"><paramref name="transaction"/> is no longer associated with a connection.</exception>
+    /// <exception cref="ArgumentException"><paramref name="commandOptions"/> is already bound to another transaction.</exception>
+    /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
     public static Task<int> DeleteAsync<T>(
         this DbTransaction transaction,
         object id,
