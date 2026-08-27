@@ -61,10 +61,11 @@ partial class DbConnectionExtensionsTests
         Assert.Equal(payload.Value, actualPayload.Value);
     }
 
-    [LocalOnlyFact]
+    [Fact]
     public async Task InsertAsync_EntityWithSqliteBlob_Test()
     {
-        using var con = Fixture.CreateDbConnection(DbDriver.Sqlite, null);
+        using var database = await SqliteMigrationTestDatabase.CreateAsync();
+        using var con = database.CreateConnection();
 
         var payload = new EntityWithGuidKey
         {
@@ -87,7 +88,7 @@ partial class DbConnectionExtensionsTests
         Assert.Equal(payload.Value, actualPayload.Value);
     }
 
-    [LocalOnlyTheory]
+    [Theory]
     [MemberData(nameof(MySqlSchemaCases))]
     public async Task InsertAsync_EntityWithMySqlBlob_Test(DbDriver dbDriver, string? schema)
     {

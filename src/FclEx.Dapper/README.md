@@ -1,58 +1,134 @@
 # FclEx.Dapper
 
-Dapper and ADO.NET helpers for FclEx.
+FclEx.Dapper adds focused, cache-aware CRUD and transaction helpers to Dapper while keeping connections, transactions, SQL providers, and execution boundaries visible to the caller. It is not an ORM: it does not provide change tracking, relationship management, LINQ translation, schema migrations, repositories, or a unit of work.
 
-## What Is Included
+## Installation
 
-- CRUD-oriented `IDbConnection` extensions.
-- Local transaction helpers and operation wrappers.
-- Dynamic-parameter utilities.
-- SQL adapter abstractions for provider-specific SQL fragments.
-- Type-handler helpers for custom Dapper mappings.
-- An explicit `IEntityMappingSource` contract for CRUD SQL generation and caching.
+Install FclEx.Dapper and the ADO.NET provider used by the application:
 
-## Usage Notes
-
-- This package depends on Dapper and `FclEx.Core`.
-- The APIs stay close to ADO.NET and Dapper concepts rather than introducing a full repository framework.
-- Future changes follow the package's [design principles](DESIGN.md).
-- CRUD operations do not scan assemblies or modify Dapper's process-wide type maps and type handlers.
-- Registered SQL adapters must keep their SQL-generation behavior stable while registered because generated SQL is cached by adapter instance.
-- Pass execution, adapter, mapping, and cancellation settings through `CommandOptions` for both connection and transaction CRUD. Transaction callbacks can receive the same cancellation token directly.
-- CRUD and transaction helpers restore a connection that they opened from `Closed`; a connection supplied already open remains open for its caller.
-- Some tests expect local database services to be available.
-
-## Entity Mapping
-
-CRUD operations use `DataAnnotationsEntityMappingSource` by default. It supports `[Table]` including `Schema`, `[Column]`, `[Key]`, `[NotMapped]`, and all `[DatabaseGenerated]` values. Unannotated properties must be readable and writable scalar instance properties; navigation, static, indexer, read-only, and explicitly unmapped properties are excluded.
-
-Implement `IEntityMappingSource` when the application should own its mapping independently of DataAnnotations. The source returns stable immutable `EntityMapping` instances composed from `PropertyMapping` values:
-
-```csharp
-var orderMapping = new EntityMapping(
-    typeof(Order),
-    tableName: "orders",
-    properties:
-    [
-        new(typeof(Order).GetProperty(nameof(Order.Id))!, "order_id", isKey: true,
-            valueGeneration: DatabaseValueGeneration.OnInsert),
-        new(typeof(Order).GetProperty(nameof(Order.Total))!, "total_amount"),
-    ],
-    schema: "sales");
-
-IEntityMappingSource mappings = new ApplicationEntityMappingSource(orderMapping);
-var commandOptions = new CommandOptions { EntityMappingSource = mappings };
-var orderId = await connection.InsertAsync(order, commandOptions: commandOptions);
+```shell
+dotnet add package FclEx.Dapper
+dotnet add package Microsoft.Data.Sqlite
 ```
 
-Here `ApplicationEntityMappingSource` is an application-owned implementation that returns `orderMapping` for `Order` and throws for unknown entity types.
+The package targets `net472`, `netstandard2.0`, `net8.0`, `net9.0`, and `net10.0`. It references Dapper and FclEx.Core, but it does not add a database provider dependency.
 
-`InsertAsync<TEntity>` returns a generated key as `long` for the common identity-key case. Use `InsertAsync<TEntity, TKey>` for another key type, or `InsertWithExplicitGeneratedKeysAsync` when importing an entity whose database-generated key value must be inserted explicitly.
+## Quick Start
 
-`InsertWithExplicitGeneratedKeysAsync` and `BulkInsertAsync(..., includeAutoKey: true)` do not advance or reset provider identity, sequence, or auto-increment state. The caller must maintain that state so later database-generated keys do not conflict with the explicitly inserted values.
+Map an entity with DataAnnotations:
 
-An `IEntityMappingSource` must return the same `EntityMapping` instance whenever the same entity type is requested. SQL caches use mapping identity so multiple mapping sources can safely map one CLR type differently.
+```csharp
+[Table("widgets")]
+public sealed class Widget
+{
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public long Id { get; set; }
 
-FclEx-generated queries alias database columns back to CLR property names, so CRUD operations do not require a global Dapper type map. Applications that configure raw Dapper queries or type handlers own those process-wide settings.
+    public string Name { get; set; } = "";
+}
+```
 
-`GuidTypeHandler` and `AssumeUtcDateTimeTypeHandler` remain available for explicit registration through Dapper.
+Use a normal provider connection. The schema must already exist; the `CREATE TABLE` below is included only to make the example runnable:
+
+```csharp
+using var connection = new SqliteConnection("Data Source=:memory:");
+await connection.OpenAsync();
+await connection.ExecuteAsync(
+    "CREATE TABLE widgets (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT NOT NULL)");
+
+var id = await connection.InsertAsync(new Widget { Name = "first" });
+var widget = await connection.GetAsync<Widget>(id);
+
+await connection.BulkInsertAsync(
+[
+    new Widget { Name = "second" },
+    new Widget { Name = "third" },
+]);
+
+await connection.DeleteAsync<Widget>(id);
+```
+
+`InsertAsync<TEntity>` returns the generated key as `long`. Use `InsertAsync<TEntity, TKey>` when the generated key has another type.
+
+## Providers and SQL Adapters
+
+FclEx.Dapper recognizes these provider connection types when the corresponding provider package is installed:
+
+| Database | Provider package | Built-in adapter | Generated-key SQL |
+| --- | --- | --- | --- |
+| SQL Server | `Microsoft.Data.SqlClient` | `SqlServerAdapter` | `OUTPUT INSERTED` |
+| PostgreSQL | `Npgsql` | `NpgsqlAdapter` | `RETURNING` |
+| SQLite | `Microsoft.Data.Sqlite` | `SqliteAdapter` | `last_insert_rowid()` |
+| MySQL | `MySql.Data` | `MySqlAdapter` | `LAST_INSERT_ID()` |
+| MySQL/MariaDB | `MySqlConnector` | `MySqlConnectorAdapter` | `LAST_INSERT_ID()` |
+
+Adapter resolution examines the runtime connection type and its base types. Register an adapter for a custom or wrapped connection type when it cannot be recognized automatically:
+
+```csharp
+DapperHelper.RegisterSqlAdapter<CustomConnection>(new CustomSqlAdapter()); // add or replace
+
+var added = DapperHelper.TryRegisterSqlAdapter<CustomConnection>(new CustomSqlAdapter());
+```
+
+`TryRegisterSqlAdapter` returns `false` when the exact connection type is already registered. A registered adapter must keep its SQL-affecting behavior stable because generated SQL is cached by adapter instance. Schema support follows `ISqlAdapter.SupportsSchemas`; unsupported adapters ignore mapped and per-call schemas.
+
+## Entity Mapping and Key Limits
+
+`DataAnnotationsEntityMappingSource` is used by default. It supports:
+
+- `[Table]`, including `Schema`
+- `[Column]`, including column aliases and provider store type names
+- `[Key]`
+- `[NotMapped]`
+- `[DatabaseGenerated]` with `None`, `Identity`, or `Computed`
+
+By convention, public readable and writable scalar instance properties are persistent. Static properties, indexers, read-only properties, navigation properties, and explicitly unmapped properties are excluded. A non-scalar property must declare an explicit mapping attribute to be included.
+
+`GetAsync<T>` and `DeleteAsync<T>` require exactly one mapped key. Generated-key return from `InsertAsync` requires exactly one generated key. Composite-key lookup and deletion are not supported.
+
+Implement `IEntityMappingSource` when mappings should be independent of DataAnnotations. A source must return the same immutable `EntityMapping` instance whenever the same entity type is requested because mapping identity participates in SQL cache keys:
+
+```csharp
+var mapping = new EntityMapping(
+    typeof(Widget),
+    "widgets",
+    [
+        new(typeof(Widget).GetProperty(nameof(Widget.Id))!, "Id", true,
+            DatabaseValueGeneration.OnInsert),
+        new(typeof(Widget).GetProperty(nameof(Widget.Name))!, "Name"),
+    ]);
+
+var options = new CommandOptions { EntityMappingSource = new ApplicationMappingSource(mapping) };
+var id = await connection.InsertAsync(new Widget { Name = "mapped" }, commandOptions: options);
+```
+
+`ApplicationMappingSource` in this example is an application-owned `IEntityMappingSource` implementation.
+
+## Commands, Connections, and Transactions
+
+`CommandOptions` carries the command timeout, local transaction, adapter override, mapping source, and cancellation token. The same options shape is accepted by connection and transaction CRUD methods.
+
+CRUD helpers record the connection's initial state. A connection opened by the helper is closed before the operation returns; a connection supplied already open remains open. Transaction extension methods bind the receiver transaction to the generated command.
+
+`ExecuteInTransactionAsync` starts a local transaction with `ReadCommitted` by default, commits after a successful callback, and attempts rollback after callback or commit failure. If both the operation and rollback fail, an `AggregateException` contains both exceptions.
+
+## Bulk Inserts and SQL Caching
+
+`BulkInsertAsync` emits bounded multi-row INSERT commands; it does not silently execute one command per entity. A batch contains at most 500 rows and may be smaller because of provider row or parameter limits. Multiple rows with no insertable properties are rejected when the adapter cannot express an efficient bulk form.
+
+Canonical CRUD command text is cached by adapter instance, immutable mapping identity, operation shape, and batch row count. Per-call schema and adapter overrides do not enter the process-wide cache. This avoids repeated SQL string construction without permanently retaining open-ended override values.
+
+## Explicit Generated Keys
+
+Use `InsertWithExplicitGeneratedKeysAsync` or `BulkInsertAsync(..., includeAutoKey: true)` only when importing values for keys normally generated by the database.
+
+These operations do not advance or reset provider identity, sequence, or auto-increment state. The caller must maintain that state so later database-generated keys do not conflict with explicitly inserted values.
+
+## Dapper Global State and Type Handlers
+
+Core CRUD operations do not scan assemblies or modify Dapper's process-wide type maps, type handlers, or settings. Generated queries alias database columns back to CLR property names, so they do not require a global Dapper type map.
+
+`Dapper.GuidTypeHandler` and `Dapper.AssumeUtcDateTimeTypeHandler` are optional helpers. Registering either through `SqlMapper.AddTypeHandler` changes Dapper process-wide state and remains the application's responsibility.
+
+See [DESIGN.md](DESIGN.md) for the principles governing future changes.

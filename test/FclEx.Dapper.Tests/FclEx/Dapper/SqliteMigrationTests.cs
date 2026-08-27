@@ -119,6 +119,24 @@ public sealed class CreateSqliteMigrationTestEntities : Migration
     }
 }
 
+[Migration(2026082701)]
+public sealed class CreateEntityWithSqliteBlobTable : Migration
+{
+    public const string TableName = nameof(EntityWithSqliteBlob);
+
+    public override void Up()
+    {
+        Create.Table(TableName)
+            .WithColumn(nameof(EntityWithSqliteBlob.Id)).AsInt32().PrimaryKey().Identity()
+            .WithColumn("blob_bytes").AsBinary().Nullable();
+    }
+
+    public override void Down()
+    {
+        Delete.Table(TableName);
+    }
+}
+
 public sealed class SqliteMigrationTestEntity
 {
     [Key]

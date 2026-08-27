@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Description>Dapper and ADO.NET helpers for CRUD operations, local transactions, dynamic parameters, SQL adapters, type handlers, and explicit entity mapping sources.</Description>
+    <Description>Focused Dapper extensions for cached CRUD SQL, bounded multi-row inserts, local transactions, explicit entity mappings, and provider-specific SQL adapters.</Description>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Dapper" />

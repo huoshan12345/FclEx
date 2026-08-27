@@ -253,11 +253,11 @@
     - 建议：若确需该策略，重命名为 `AssumeUtcDateTimeTypeHandler` 并严格限定输入 Kind；否则删除。README 应明确默认是否注册以及时间语义。
     - 处理：类型移至 `Dapper` namespace 并重命名为 opt-in 的 `AssumeUtcDateTimeTypeHandler`；Local 值通过 `ToUniversalTime` 保持 instant，Unspecified 值才保留 ticks 并标记为 UTC，README 不再引用旧名称。测试覆盖 Local 转换语义。
 
-42. **[P2] `GuidTypeHandler` 把 `null` 映射为 `Guid.Empty`，会混淆缺失值与真实空 GUID。**
+42. **[P2][已修复 2026-08-27] `GuidTypeHandler` 把 `null` 映射为 `Guid.Empty`，会混淆缺失值与真实空 GUID。**
     - 位置：`GuidTypeHandler.cs:5-19`。
     - 说明：非 nullable Guid 的数据库 NULL 应是映射错误，而不是合法的全零 GUID；同时 ADO.NET 常用 `DBNull.Value` 表示数据库 NULL，该分支又不会覆盖它，行为不一致。
     - 建议：让 null/`DBNull` 明确失败；nullable Guid 交给 nullable 映射处理。若保留宽松转换，应使用显式命名和 opt-in 注册。
-    - 复查（2026-08-27）：`GuidTypeHandler` 已对 null/`DBNull` 明确抛出 `InvalidCastException`，原问题已修正；但新增的 `NullableGuidTypeHandler` 不应保留。Dapper 注册 value-type handler 时会把同一实例同时写入 `Guid` 与 `Guid?`，所以两种 handler 不是独立配置，后注册者会覆盖两者；此外 nullable handler 的 `SetValue(null)` 当前写入 CLR null 而不是 `DBNull.Value`。在移除该冗余类型前暂不关闭本 issue。
+    - 处理：`GuidTypeHandler` 对 null/`DBNull` 明确抛出 `InvalidCastException`；删除冗余的 `NullableGuidTypeHandler`，nullable Guid 继续使用 Dapper 自身的 nullable 映射。Dapper 会把 value-type handler 同时注册给该类型及其 nullable counterpart，因此不提供两套相互覆盖的 handler。
 
 43. **[P2][已修复 2026-08-27] `RegisterSqlAdapter` 实际是无条件全局替换，却没有明确的冲突契约。**
     - 位置：`DapperHelper.cs:104-111`。
@@ -267,15 +267,17 @@
 
 ## 问题清单：测试与消费者文档
 
-44. **[P2] provider 测试通过 early return 伪装成成功，SQLite 主路径基本未执行。**
+44. **[P2][已修复 2026-08-27] provider 测试通过 early return 伪装成成功，SQLite 主路径基本未执行。**
     - 位置：`DapperTestsFixture.cs:40-57`、`DbConnectionExtensionsTests.CustomDbType.cs:8-13,39-44,69-74,100-105`。
     - 说明：`DbDrivers` 默认不含 SQLite；custom-type 测试在 provider 不可用时直接 `return`，测试报告仍显示 passed。MySQL 测试还只检查 `DbDriver.MySql`，即使 case 是 MySqlConnector 也可能整体退出。
     - 建议：在 MemberData 构造阶段只生成可用 provider case，或使用 xUnit 明确 Skip；利用已加入的 FluentMigrator + SQLite memory fixture 覆盖可移植 CRUD 边界，让“passed”确实表示执行过断言。
+    - 处理：不可用的外部 provider case 改为 xUnit 显式 Skip；SQLite BLOB 测试改用 FluentMigrator 在独立的 shared-memory SQLite 数据库中按需建表，并改为普通 `Fact`，不再依赖本地预建数据库。
 
-45. **[P3] README 没有说明包最重要的运行时契约和限制。**
+45. **[P3][已修复 2026-08-27] README 没有说明包最重要的运行时契约和限制。**
     - 位置：`src/FclEx.Dapper/README.md`。
     - 说明：文档只列能力名称，没有 provider 支持/安装方式、adapter 注册、DataAnnotations 子集、单键限制、全局 Dapper mutation、连接所有权、批量上限或 identity 行为；Description 还宣传 type handlers，却未说明 `DateTimeHandler` 并未注册。
     - 建议：整体设计收敛后补一套最小可运行示例和兼容性表，并明确副作用、限制及 provider-specific 行为；根 README、包 README 和项目 Description 同步更新。
+    - 处理：包 README 增加安装和最小示例、内置 provider/adapter 表、映射与单键限制、连接及事务所有权、批量与 SQL cache、显式生成键、全局 Dapper 状态和自定义 adapter 契约；项目 Description 同步收敛到 cached CRUD、bounded multi-row insert、local transaction、mapping 与 adapter。按本次明确范围未修改根 README。
 
 ## 建议的处理顺序
 
