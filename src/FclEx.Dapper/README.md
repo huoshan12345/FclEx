@@ -18,7 +18,7 @@ Dapper and ADO.NET helpers for FclEx.
 - Future changes follow the package's [design principles](DESIGN.md).
 - CRUD operations do not scan assemblies or modify Dapper's process-wide type maps and type handlers.
 - Registered SQL adapters must keep their SQL-generation behavior stable while registered because generated SQL is cached by adapter instance.
-- Pass a `CancellationToken` through `CommandOptions` for connection CRUD, or through the final parameter of transaction CRUD. Transaction callbacks can receive the same token directly.
+- Pass execution, adapter, mapping, and cancellation settings through `CommandOptions` for both connection and transaction CRUD. Transaction callbacks can receive the same cancellation token directly.
 - CRUD and transaction helpers restore a connection that they opened from `Closed`; a connection supplied already open remains open for its caller.
 - Some tests expect local database services to be available.
 

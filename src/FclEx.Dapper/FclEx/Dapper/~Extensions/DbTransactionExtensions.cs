@@ -80,32 +80,22 @@ public static class DbTransactionExtensions
     /// <param name="entity">The entity whose mapped values are inserted.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="returnGeneratedKey">Whether to return the single generated key when one is mapped.</param>
-    /// <param name="timeoutSeconds">The optional command timeout in seconds.</param>
-    /// <param name="sqlAdapter">An optional SQL adapter overriding connection-type resolution.</param>
-    /// <param name="cancellationToken">The token used to cancel command execution.</param>
+    /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
     /// <returns>The generated key converted to <typeparamref name="TKey"/> when requested and supported; otherwise the default value.</returns>
     public static Task<TKey?> InsertAsync<TEntity, TKey>(
         this DbTransaction tran,
         TEntity entity,
         string? schema = null,
         bool returnGeneratedKey = true,
-        int? timeoutSeconds = null,
-        ISqlAdapter? sqlAdapter = null,
-        CancellationToken cancellationToken = default)
+        CommandOptions commandOptions = default)
         where TEntity : class
     {
-        var con = Check.NotNull(tran.Connection, nameof(tran.Connection));
-        return con.InsertAsync<TEntity, TKey>(
+        var boundOptions = commandOptions.BindTransaction(tran);
+        return tran.Connection!.InsertAsync<TEntity, TKey>(
             entity,
             schema,
             returnGeneratedKey,
-            new CommandOptions
-            {
-                TimeoutSeconds = timeoutSeconds,
-                Transaction = tran,
-                SqlAdapter = sqlAdapter,
-                CancellationToken = cancellationToken,
-            });
+            boundOptions);
     }
 
     /// <summary>
@@ -116,27 +106,21 @@ public static class DbTransactionExtensions
     /// <param name="entity">The entity whose mapped values are inserted.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="returnGeneratedKey">Whether to return the single generated key when one is mapped.</param>
-    /// <param name="timeoutSeconds">The optional command timeout in seconds.</param>
-    /// <param name="sqlAdapter">An optional SQL adapter overriding connection-type resolution.</param>
-    /// <param name="cancellationToken">The token used to cancel command execution.</param>
+    /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
     /// <returns>The generated key converted to <see langword="long"/> when requested and supported; otherwise the default value.</returns>
     public static Task<long> InsertAsync<TEntity>(
         this DbTransaction tran,
         TEntity entity,
         string? schema = null,
         bool returnGeneratedKey = true,
-        int? timeoutSeconds = null,
-        ISqlAdapter? sqlAdapter = null,
-        CancellationToken cancellationToken = default)
+        CommandOptions commandOptions = default)
         where TEntity : class
     {
         return tran.InsertAsync<TEntity, long>(
             entity,
             schema,
             returnGeneratedKey,
-            timeoutSeconds,
-            sqlAdapter,
-            cancellationToken);
+            commandOptions);
     }
 
     /// <summary>
@@ -146,32 +130,22 @@ public static class DbTransactionExtensions
     /// <param name="tran">The transaction assigned to the insert command.</param>
     /// <param name="entity">The entity containing the generated key values to insert.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
-    /// <param name="timeoutSeconds">The optional command timeout in seconds.</param>
-    /// <param name="sqlAdapter">An optional SQL adapter overriding connection-type resolution.</param>
-    /// <param name="cancellationToken">The token used to cancel command execution.</param>
+    /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
     /// <returns>A task representing the insert operation.</returns>
     /// <exception cref="DataException">The entity mapping does not contain a database-generated key.</exception>
-    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is cancelled.</exception>
+    /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
     public static Task InsertWithExplicitKeysAsync<TEntity>(
         this DbTransaction tran,
         TEntity entity,
         string? schema = null,
-        int? timeoutSeconds = null,
-        ISqlAdapter? sqlAdapter = null,
-        CancellationToken cancellationToken = default)
+        CommandOptions commandOptions = default)
         where TEntity : class
     {
-        var con = Check.NotNull(tran.Connection, nameof(tran.Connection));
-        return con.InsertWithExplicitKeysAsync(
+        var boundOptions = commandOptions.BindTransaction(tran);
+        return tran.Connection!.InsertWithExplicitKeysAsync(
             entity,
             schema,
-            new CommandOptions
-            {
-                TimeoutSeconds = timeoutSeconds,
-                Transaction = tran,
-                SqlAdapter = sqlAdapter,
-                CancellationToken = cancellationToken,
-            });
+            boundOptions);
     }
 
     /// <summary>
@@ -182,32 +156,22 @@ public static class DbTransactionExtensions
     /// <param name="entities">The entities to insert.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="includeAutoKey">Whether to insert mapped generated keys explicitly.</param>
-    /// <param name="timeoutSeconds">The optional command timeout in seconds.</param>
-    /// <param name="sqlAdapter">An optional SQL adapter overriding connection-type resolution.</param>
-    /// <param name="cancellationToken">The token used to cancel command execution.</param>
+    /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
     /// <returns>The total affected rows reported by all batches, or zero for an empty collection.</returns>
     public static Task<int> BulkInsertAsync<T>(
         this DbTransaction tran,
         IReadOnlyCollection<T> entities,
         string? schema = null,
         bool includeAutoKey = false,
-        int? timeoutSeconds = null,
-        ISqlAdapter? sqlAdapter = null,
-        CancellationToken cancellationToken = default)
+        CommandOptions commandOptions = default)
         where T : class
     {
-        var con = Check.NotNull(tran.Connection, nameof(tran.Connection));
-        return con.BulkInsertAsync(
+        var boundOptions = commandOptions.BindTransaction(tran);
+        return tran.Connection!.BulkInsertAsync(
             entities,
             schema,
             includeAutoKey,
-            new CommandOptions
-            {
-                TimeoutSeconds = timeoutSeconds,
-                Transaction = tran,
-                SqlAdapter = sqlAdapter,
-                CancellationToken = cancellationToken,
-            });
+            boundOptions);
     }
 
     /// <summary>
@@ -217,29 +181,19 @@ public static class DbTransactionExtensions
     /// <param name="tran">The transaction assigned to the query.</param>
     /// <param name="id">The key value to find.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
-    /// <param name="timeoutSeconds">The optional command timeout in seconds.</param>
-    /// <param name="sqlAdapter">An optional SQL adapter overriding connection-type resolution.</param>
-    /// <param name="cancellationToken">The token used to cancel command execution.</param>
+    /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
     /// <returns>The matching entity, or <see langword="null"/> when no row matches.</returns>
     public static Task<T?> GetAsync<T>(
         this DbTransaction tran,
         object id,
         string? schema = null,
-        int? timeoutSeconds = null,
-        ISqlAdapter? sqlAdapter = null,
-        CancellationToken cancellationToken = default)
+        CommandOptions commandOptions = default)
     {
-        var con = Check.NotNull(tran.Connection, nameof(tran.Connection));
-        return con.GetAsync<T>(
+        var boundOptions = commandOptions.BindTransaction(tran);
+        return tran.Connection!.GetAsync<T>(
             id,
             schema,
-            new CommandOptions
-            {
-                TimeoutSeconds = timeoutSeconds,
-                Transaction = tran,
-                SqlAdapter = sqlAdapter,
-                CancellationToken = cancellationToken,
-            });
+            boundOptions);
     }
 
     /// <summary>
@@ -249,28 +203,18 @@ public static class DbTransactionExtensions
     /// <param name="tran">The transaction assigned to the delete command.</param>
     /// <param name="id">The key value to delete.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
-    /// <param name="timeoutSeconds">The optional command timeout in seconds.</param>
-    /// <param name="sqlAdapter">An optional SQL adapter overriding connection-type resolution.</param>
-    /// <param name="cancellationToken">The token used to cancel command execution.</param>
+    /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
     /// <returns>The affected row count.</returns>
     public static Task<int> DeleteAsync<T>(
         this DbTransaction tran,
         object id,
         string? schema = null,
-        int? timeoutSeconds = null,
-        ISqlAdapter? sqlAdapter = null,
-        CancellationToken cancellationToken = default)
+        CommandOptions commandOptions = default)
     {
-        var con = Check.NotNull(tran.Connection, nameof(tran.Connection));
-        return con.DeleteAsync<T>(
+        var boundOptions = commandOptions.BindTransaction(tran);
+        return tran.Connection!.DeleteAsync<T>(
             id,
             schema,
-            new CommandOptions
-            {
-                TimeoutSeconds = timeoutSeconds,
-                Transaction = tran,
-                SqlAdapter = sqlAdapter,
-                CancellationToken = cancellationToken,
-            });
+            boundOptions);
     }
 }

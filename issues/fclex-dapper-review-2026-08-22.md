@@ -64,7 +64,7 @@
    - 位置：`DbConnectionExtensions.cs:37-84,211-245,268-295`、`DbConnectionExtensions.Dapper.cs:5-60`、`DbTransactionExtensions.cs:63-113`。
    - 说明：插入、批量插入、查询、删除、事务回调和 commit/rollback 均不接收 `CancellationToken`；只有底层 `TryOpenAsync` 和 `IDbCommand` 扩展孤立地支持 token，调用者无法取消真实工作。
    - 建议：把 token 放入每个异步公共签名或明确的 command options，并传到 open、execute、commit、rollback 和用户回调；不要只取消连接打开。
-   - 处理：`CommandOptions.CancellationToken` 现在统一控制 connection CRUD 的 open 和 command execution，transaction CRUD 在末尾接收 token 并转发到同一 options。事务 helper 新增接收 `(DbTransaction, CancellationToken)` 的回调 overload，并将 token 传到 open、begin、callback 和 commit；回调完成后再次检查取消以避免在已取消时提交。rollback 在 token 尚可用时接收该 token，取消已经发生时则作为不可取消的 cleanup 执行，防止跳过回滚。explicit identity setup 同样接收 token，而 cleanup 始终执行。
+   - 处理：`CommandOptions.CancellationToken` 现在统一控制 connection 和 transaction CRUD 的 open 与 command execution。事务 helper 新增接收 `(DbTransaction, CancellationToken)` 的回调 overload，并将 token 传到 open、begin、callback 和 commit；回调完成后再次检查取消以避免在已取消时提交。rollback 在 token 尚可用时接收该 token，取消已经发生时则作为不可取消的 cleanup 执行，防止跳过回滚。explicit identity setup 同样接收 token，而 cleanup 始终执行。
 
 9. **[P1][已修复 2026-08-26] `BulkInsertAsync` 生成一个无限增长的多值 INSERT，没有 provider 批次策略。**
    - 位置：`DbConnectionExtensions.cs:67-117,142-173`。
@@ -109,15 +109,11 @@
     - 建议：使用 `ExecuteInTransactionAsync`，默认采用 provider/ADO.NET 默认隔离级别或 `ReadCommitted`；非默认隔离必须由调用方显式选择。
     - 处理：四个单连接重载统一重命名为 `ExecuteInTransactionAsync`，默认隔离级别改为 `ReadCommitted`；调用方仍可通过 `level` 显式选择其他隔离级别。
 
-17. **[P2] `TryOpenAsync`、`TryRollbackAsync` 不符合 .NET Try 模式。**
-    - 位置：`DbConnectionExtensions.Dapper.cs:64-69`、`DbTransactionExtensions.cs:30-48`。
-    - 说明：两者都可能抛异常且不返回成功布尔值；集合版 `TryRollbackAsync` 更是有意重新抛出原异常或 aggregate。名称会误导调用方以为失败被吸收。
-    - 建议：分别改为 `OpenIfClosedAsync`、`RollbackIfActiveAsync`；负责保留并重新抛出异常的集合逻辑应使用 `RollbackAllAndRethrowAsync` 等明确名称。
-
-18. **[P2] connection 与 transaction CRUD 重载形状重复且已经发生能力漂移。**
+18. **[P2][已修复 2026-08-27] connection 与 transaction CRUD 重载形状重复且已经发生能力漂移。**
     - 位置：`DbConnectionExtensions.cs:37-245`、`DbTransactionExtensions.cs:50-114`。
     - 说明：transaction 重载把 `CommandOptions` 拆成 timeout/adapter 参数；后续增加 cancellation 或其他选项必须维护两套签名，调用体验也不一致。
     - 建议：让 transaction 重载接收同一 options 类型并仅注入 transaction，或抽象一个内部 command context 后由薄重载转发。
+    - 处理：全部 transaction CRUD 重载改为接收与 connection CRUD 相同的 `CommandOptions`，不再拆分 timeout、adapter 和 cancellation 参数，并补齐 `EntityMappingSource` 等能力。`CommandOptions.BindTransaction(DbTransaction)` 公开提供经过校验的绑定操作：拒绝 null、已脱离 connection 的 transaction，以及把已绑定 options 改绑到其他 transaction；transaction 重载通过该方法注入 receiver transaction 后转发到 connection 实现。
 
 19. **[P2][已修复 2026-08-24] `ISqlAdapter.EnableIdentityInsertAsync<T>` 把泛型实体、命令和 scope 生命周期混在方言接口中。**
     - 位置：`ISqlAdapter.cs:10`、`SqlAdapterBase.cs:49-51`、`SqlServerAdapter.cs:17-22`。

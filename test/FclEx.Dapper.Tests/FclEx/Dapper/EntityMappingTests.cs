@@ -100,6 +100,35 @@ public class EntityMappingTests
     }
 
     [Fact]
+    public async Task TransactionCrud_AcceptsEntityMappingSourceThroughCommandOptions()
+    {
+        var commandOptions = new CommandOptions
+        {
+            EntityMappingSource = new SingleEntityMappingSource(CreateCustomMapping()),
+        };
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await connection.ExecuteAsync(
+            """
+            CREATE TABLE custom_rows
+            (
+                row_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                stored_name TEXT NOT NULL,
+                generated_value INTEGER NOT NULL DEFAULT 7
+            );
+            """);
+        using var transaction = connection.BeginTransaction();
+
+        var id = await transaction.InsertAsync<CustomMappedEntity, long>(
+            new CustomMappedEntity { Name = "transaction mapping" },
+            commandOptions: commandOptions);
+        var persisted = await transaction.GetAsync<CustomMappedEntity>(id, commandOptions: commandOptions);
+
+        Assert.Equal("transaction mapping", persisted?.Name);
+        Assert.Equal(1, await transaction.DeleteAsync<CustomMappedEntity>(id, commandOptions: commandOptions));
+    }
+
+    [Fact]
     public async Task DifferentMappingSources_ForSameEntityType_KeepSqlCachesIsolated()
     {
         var firstMapping = CreateCustomMapping("first_rows", "first_id", "first_name");

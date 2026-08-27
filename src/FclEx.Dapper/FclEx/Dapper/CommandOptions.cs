@@ -31,6 +31,34 @@ public readonly record struct CommandOptions
     public CancellationToken CancellationToken { get; init; }
 
     /// <summary>
+    /// Returns a copy of these options bound to a local transaction.
+    /// </summary>
+    /// <param name="transaction">The transaction to assign to the returned options.</param>
+    /// <returns>A copy of these options whose <see cref="Transaction"/> is <paramref name="transaction"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="transaction"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><see cref="TimeoutSeconds"/> is negative.</exception>
+    /// <exception cref="InvalidOperationException"><paramref name="transaction"/> is no longer associated with a connection.</exception>
+    /// <exception cref="ArgumentException">These options are already bound to another transaction.</exception>
+    public CommandOptions BindTransaction(DbTransaction transaction)
+    {
+        if (transaction is null)
+            throw new ArgumentNullException(nameof(transaction));
+        var connection = transaction.Connection
+                         ?? throw new InvalidOperationException(
+                             "The transaction is no longer associated with a connection.");
+        if (Transaction is not null && !ReferenceEquals(Transaction, transaction))
+        {
+            throw new ArgumentException(
+                "The command options are already bound to another transaction.",
+                nameof(transaction));
+        }
+
+        var boundOptions = this with { Transaction = transaction };
+        boundOptions.ValidateFor(connection);
+        return boundOptions;
+    }
+
+    /// <summary>
     /// Validates these options for execution against a specific connection.
     /// </summary>
     /// <param name="connection">The connection that will execute the command.</param>

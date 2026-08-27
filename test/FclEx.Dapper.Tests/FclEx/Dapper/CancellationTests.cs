@@ -40,9 +40,10 @@ public class CancellationTests
             "INSERT INTO cancellable_rows (id, name) VALUES (1, 'one');");
         using var transaction = connection.BeginTransaction();
         var cancellationToken = new CancellationToken(true);
+        var commandOptions = new CommandOptions { CancellationToken = cancellationToken };
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            transaction.GetAsync<CancellableRow>(1, cancellationToken: cancellationToken));
+            transaction.GetAsync<CancellableRow>(1, commandOptions: commandOptions));
     }
 
     [Fact]
