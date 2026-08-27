@@ -3,6 +3,17 @@ namespace FclEx.Dapper;
 public class SqlAdapterTests
 {
     [Theory]
+    [MemberData(nameof(QuotedIdentifierCases))]
+    public void GetQuotedNames_EscapesOnlyTerminatingDelimiter(
+        ISqlAdapter adapter,
+        string name,
+        string expected)
+    {
+        Assert.Equal(expected, adapter.GetQuotedTableName(name));
+        Assert.Equal(expected, adapter.GetQuotedColumnName(name));
+    }
+
+    [Theory]
     [InlineData(1, 1000)]
     [InlineData(2, 1000)]
     [InlineData(3, 700)]
@@ -81,5 +92,15 @@ public class SqlAdapterTests
     {
         new MySqlAdapter(),
         new MySqlConnectorAdapter(),
+    };
+
+    public static TheoryData<ISqlAdapter, string, string> QuotedIdentifierCases => new()
+    {
+        { new SqlServerAdapter(), "name[part", "[name[part]" },
+        { new SqlServerAdapter(), "name]part", "[name]]part]" },
+        { new NpgsqlAdapter(), "name\"part", "\"name\"\"part\"" },
+        { new SqliteAdapter(), "name\"part", "\"name\"\"part\"" },
+        { new MySqlAdapter(), "name`part", "`name``part`" },
+        { new MySqlConnectorAdapter(), "name`part", "`name``part`" },
     };
 }

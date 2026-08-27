@@ -212,10 +212,11 @@
     - 建议：无返回值路径使用 `ExecuteNonQueryAsync`；单行插入无需公开通常恒为 1 且可能受 provider 配置影响的 affected rows，数据库失败直接抛出异常。
     - 处理：只有实际请求且映射恰好包含一个 generated key 时使用 `ExecuteScalarAsync`；其余单行插入和 `InsertWithExplicitGeneratedKeysAsync` 均使用 `ExecuteNonQueryAsync`，并不公开 affected rows。
 
-35. **[P2] identifier quoting 只包围名称，不转义结束符。**
+35. **[P2][已修复 2026-08-27] identifier quoting 只包围名称，不转义结束符。**
     - 位置：`SqlAdapterBase.cs:22-38`、`DapperHelper.cs:114-121`。
     - 说明：表/列/schema 中若含 `]`、`"` 或反引号，会生成非法 SQL；schema 又是每次公共调用传入的字符串，若来自外部输入还可能扩大为 SQL 注入边界。
     - 建议：每个 adapter 正确 escape identifier 结束符，并明确 schema/table name 只能来自可信配置；不要把任意用户输入当 identifier。
+    - 处理：`SqlAdapterBase` 将名称中的结束 delimiter 加倍后再包围；identifier delimiter 不嵌套，因此不同的开始符在名称内部只是普通内容，而开始符与结束符相同时，加倍结束符也自然覆盖该字符。测试覆盖 SQL Server 方括号、PostgreSQL/SQLite 双引号和两种 MySQL 反引号 adapter；README 明确 identifier 必须来自可信应用配置。
 
 36. **[P2][已修复 2026-08-26] 表名缓存只按 adapter 类型区分，却在 factory 中捕获具体 adapter 实例。**
     - 位置：`DapperHelper.cs:23,114-122`。

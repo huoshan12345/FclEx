@@ -73,6 +73,8 @@ var added = DapperHelper.TryRegisterSqlAdapter<CustomConnection>(new CustomSqlAd
 
 `TryRegisterSqlAdapter` returns `false` when the exact connection type is already registered. A registered adapter must keep its SQL-affecting behavior stable because generated SQL is cached by adapter instance. Schema support follows `ISqlAdapter.SupportsSchemas`; unsupported adapters ignore mapped and per-call schemas.
 
+Table, schema, and column names supplied through mappings or method arguments must come from trusted application configuration, not end-user input. Adapters quote and escape identifiers, but identifier names cannot be parameterized like data values.
+
 ## Entity Mapping and Key Limits
 
 `DataAnnotationsEntityMappingSource` is used by default. It supports:

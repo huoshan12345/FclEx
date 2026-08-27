@@ -22,7 +22,12 @@ public abstract class SqlAdapterBase : ISqlAdapter
     protected virtual string GetQuotedName(string name)
     {
         var (prefix, suffix) = QuotationMarks;
-        return StringBuilder.Build(m => m.Append(prefix).Append(name).Append(suffix));
+
+        // Delimited identifiers do not nest, so a prefix inside the name is ordinary content; only the suffix can
+        // terminate the identifier and must be doubled. When prefix and suffix are the same character, doubling the
+        // suffix naturally handles every occurrence of that shared delimiter.
+        var escapedName = name.Replace(suffix.ToString(), new string(suffix, 2));
+        return StringBuilder.Build(m => m.Append(prefix).Append(escapedName).Append(suffix));
     }
 
     public virtual string GetQuotedTableName(string name)
