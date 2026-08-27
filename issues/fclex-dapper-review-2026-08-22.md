@@ -103,10 +103,11 @@
     - 建议：采用准确的 options 命名、具名 init properties 和集中验证，避免每个 CRUD 方法重复实现相同约束。
     - 处理：类型重命名为 `CommandOptions`，改为带 init properties 的 `readonly record struct`，并公开 `ValidateFor(DbConnection)`。验证统一拒绝负 timeout、已脱离 connection 的 transaction，以及属于其他 connection 的 transaction；connection CRUD 的共享执行入口和独立 Get/Delete/Bulk 路径调用该方法，transaction 重载只负责构造 options 并转发。
 
-16. **[P2] `DoTransactionAsync` 名称不自然，默认 `ReadUncommitted` 又偏离常见安全默认值。**
+16. **[P2][已修复 2026-08-27] `DoTransactionAsync` 名称不自然，默认 `ReadUncommitted` 又偏离常见安全默认值。**
     - 位置：`DbConnectionExtensions.Dapper.cs:5,25`。
     - 说明：`DoTransactionAsync` 没表达“在事务中执行回调”；保留的两个单连接重载默认 dirty-read 隔离级别，而 `CreateAsyncTransactionScope` 默认 `ReadCommitted`，同一包内部也不一致。
     - 建议：使用 `ExecuteInTransactionAsync`，默认采用 provider/ADO.NET 默认隔离级别或 `ReadCommitted`；非默认隔离必须由调用方显式选择。
+    - 处理：四个单连接重载统一重命名为 `ExecuteInTransactionAsync`，默认隔离级别改为 `ReadCommitted`；调用方仍可通过 `level` 显式选择其他隔离级别。
 
 17. **[P2] `TryOpenAsync`、`TryRollbackAsync` 不符合 .NET Try 模式。**
     - 位置：`DbConnectionExtensions.Dapper.cs:64-69`、`DbTransactionExtensions.cs:30-48`。

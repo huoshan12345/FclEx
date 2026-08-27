@@ -8,19 +8,19 @@ partial class DbConnectionExtensions
     /// <typeparam name="T">The callback result type.</typeparam>
     /// <param name="con">The connection on which the transaction is created. A connection opened here is closed before return.</param>
     /// <param name="action">The work executed inside the transaction.</param>
-    /// <param name="level">The transaction isolation level.</param>
+    /// <param name="level">The transaction isolation level. The default is <see cref="IsolationLevel.ReadCommitted"/>.</param>
     /// <param name="cancellationToken">The token used to cancel opening, transaction creation, and commit.</param>
     /// <returns>The callback result.</returns>
-    public static Task<T> DoTransactionAsync<T>(
+    public static Task<T> ExecuteInTransactionAsync<T>(
         this DbConnection con,
         Func<DbTransaction, Task<T>> action,
-        IsolationLevel level = IsolationLevel.ReadUncommitted,
+        IsolationLevel level = IsolationLevel.ReadCommitted,
         CancellationToken cancellationToken = default)
     {
         if (action is null)
             throw new ArgumentNullException(nameof(action));
 
-        return con.DoTransactionAsync((transaction, _) => action(transaction), level, cancellationToken);
+        return con.ExecuteInTransactionAsync((transaction, _) => action(transaction), level, cancellationToken);
     }
 
     /// <summary>
@@ -29,13 +29,13 @@ partial class DbConnectionExtensions
     /// <typeparam name="T">The callback result type.</typeparam>
     /// <param name="con">The connection on which the transaction is created. A connection opened here is closed before return.</param>
     /// <param name="action">The work executed inside the transaction. It receives the operation cancellation token.</param>
-    /// <param name="level">The transaction isolation level.</param>
+    /// <param name="level">The transaction isolation level. The default is <see cref="IsolationLevel.ReadCommitted"/>.</param>
     /// <param name="cancellationToken">The token used for the complete transaction operation.</param>
     /// <returns>The callback result.</returns>
-    public static async Task<T> DoTransactionAsync<T>(
+    public static async Task<T> ExecuteInTransactionAsync<T>(
         this DbConnection con,
         Func<DbTransaction, CancellationToken, Task<T>> action,
-        IsolationLevel level = IsolationLevel.ReadUncommitted,
+        IsolationLevel level = IsolationLevel.ReadCommitted,
         CancellationToken cancellationToken = default)
     {
         if (action is null)
@@ -77,19 +77,19 @@ partial class DbConnectionExtensions
     /// </summary>
     /// <param name="con">The connection on which the transaction is created. A connection opened here is closed before return.</param>
     /// <param name="action">The work executed inside the transaction.</param>
-    /// <param name="level">The transaction isolation level.</param>
+    /// <param name="level">The transaction isolation level. The default is <see cref="IsolationLevel.ReadCommitted"/>.</param>
     /// <param name="cancellationToken">The token used to cancel opening, transaction creation, and commit.</param>
     /// <returns>A task representing the transaction operation.</returns>
-    public static Task DoTransactionAsync(
+    public static Task ExecuteInTransactionAsync(
         this DbConnection con,
         Func<DbTransaction, Task> action,
-        IsolationLevel level = IsolationLevel.ReadUncommitted,
+        IsolationLevel level = IsolationLevel.ReadCommitted,
         CancellationToken cancellationToken = default)
     {
         if (action is null)
             throw new ArgumentNullException(nameof(action));
 
-        return con.DoTransactionAsync((transaction, _) => action(transaction), level, cancellationToken);
+        return con.ExecuteInTransactionAsync((transaction, _) => action(transaction), level, cancellationToken);
     }
 
     /// <summary>
@@ -97,19 +97,19 @@ partial class DbConnectionExtensions
     /// </summary>
     /// <param name="con">The connection on which the transaction is created. A connection opened here is closed before return.</param>
     /// <param name="action">The work executed inside the transaction. It receives the operation cancellation token.</param>
-    /// <param name="level">The transaction isolation level.</param>
+    /// <param name="level">The transaction isolation level. The default is <see cref="IsolationLevel.ReadCommitted"/>.</param>
     /// <param name="cancellationToken">The token used for the complete transaction operation.</param>
     /// <returns>A task representing the transaction operation.</returns>
-    public static async Task DoTransactionAsync(
+    public static async Task ExecuteInTransactionAsync(
         this DbConnection con,
         Func<DbTransaction, CancellationToken, Task> action,
-        IsolationLevel level = IsolationLevel.ReadUncommitted,
+        IsolationLevel level = IsolationLevel.ReadCommitted,
         CancellationToken cancellationToken = default)
     {
         if (action is null)
             throw new ArgumentNullException(nameof(action));
 
-        await con.DoTransactionAsync<int>(async (transaction, token) =>
+        await con.ExecuteInTransactionAsync<int>(async (transaction, token) =>
         {
             await action(transaction, token);
             return 0;

@@ -46,7 +46,7 @@ public class CancellationTests
     }
 
     [Fact]
-    public async Task DoTransactionAsync_CancelledInCallback_RollsBackInsteadOfCommitting()
+    public async Task ExecuteInTransactionAsync_CancelledInCallback_RollsBackInsteadOfCommitting()
     {
         using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
@@ -55,7 +55,7 @@ public class CancellationTests
         using var cancellationSource = new CancellationTokenSource();
         var receivedToken = default(CancellationToken);
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.DoTransactionAsync(
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.ExecuteInTransactionAsync(
             async (transaction, cancellationToken) =>
             {
                 receivedToken = cancellationToken;

@@ -5,6 +5,23 @@ namespace FclEx.Dapper;
 public class ConnectionOwnershipTests
 {
     [Fact]
+    public void ExecuteInTransactionAsync_DefaultIsolationLevel_IsReadCommitted()
+    {
+        var methods = typeof(DbConnectionExtensions)
+            .GetMethods()
+            .Where(method => method.Name == nameof(DbConnectionExtensions.ExecuteInTransactionAsync))
+            .ToArray();
+
+        Assert.Equal(4, methods.Length);
+        Assert.All(methods, method =>
+        {
+            var parameter = Assert.Single(method.GetParameters(), parameter => parameter.Name == "level");
+            Assert.True(parameter.HasDefaultValue);
+            Assert.Equal(IsolationLevel.ReadCommitted, parameter.DefaultValue);
+        });
+    }
+
+    [Fact]
     public async Task CrudAsync_RestoresInitialConnectionState()
     {
         using var database = await SqliteMigrationTestDatabase.CreateAsync();
@@ -54,20 +71,20 @@ public class ConnectionOwnershipTests
     }
 
     [Fact]
-    public async Task DoTransactionAsync_RestoresInitialConnectionStateOnEveryExitPath()
+    public async Task ExecuteInTransactionAsync_RestoresInitialConnectionStateOnEveryExitPath()
     {
         using var database = await SqliteMigrationTestDatabase.CreateAsync();
         using var connection = database.CreateConnection();
 
-        await connection.DoTransactionAsync(_ => Task.CompletedTask);
+        await connection.ExecuteInTransactionAsync(_ => Task.CompletedTask);
         Assert.Equal(ConnectionState.Closed, connection.State);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => connection.DoTransactionAsync(_ =>
+        await Assert.ThrowsAsync<InvalidOperationException>(() => connection.ExecuteInTransactionAsync(_ =>
             Task.FromException(new InvalidOperationException("expected"))));
         Assert.Equal(ConnectionState.Closed, connection.State);
 
         using var cancellationSource = new CancellationTokenSource();
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.DoTransactionAsync(
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.ExecuteInTransactionAsync(
             (_, _) =>
             {
                 cancellationSource.Cancel();
@@ -77,7 +94,7 @@ public class ConnectionOwnershipTests
         Assert.Equal(ConnectionState.Closed, connection.State);
 
         await connection.OpenAsync();
-        await connection.DoTransactionAsync(_ => Task.CompletedTask);
+        await connection.ExecuteInTransactionAsync(_ => Task.CompletedTask);
         Assert.Equal(ConnectionState.Open, connection.State);
     }
 

@@ -223,7 +223,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task DoTransactionAsync_Test(DbDriver dbDriver, string? schema)
+    public async Task ExecuteInTransactionAsync_Test(DbDriver dbDriver, string? schema)
     {
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
 
@@ -238,7 +238,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
             Name = Guid.NewGuid().ToString(),
         };
 
-        var (id, id2) = await con.DoTransactionAsync(async tran =>
+        var (id, id2) = await con.ExecuteInTransactionAsync(async tran =>
         {
             var id = await tran.InsertAsync<EntityWithAutoKey, int>(entity, schema);
             var id2 = await tran.InsertAsync<EntityWithAutoKey, int>(entity2, schema);
@@ -256,14 +256,14 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task DoTransactionAsync_Rollback_Test(DbDriver dbDriver, string? schema)
+    public async Task ExecuteInTransactionAsync_Rollback_Test(DbDriver dbDriver, string? schema)
     {
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
 
         var count = await GetCount<EntityWithGuidKey>(con, schema);
 
         var id = Guid.NewGuid();
-        await Assert.ThrowsAsync<InvalidOperationException>(() => con.DoTransactionAsync(async tran =>
+        await Assert.ThrowsAsync<InvalidOperationException>(() => con.ExecuteInTransactionAsync(async tran =>
         {
             await tran.InsertAsync<EntityWithGuidKey, object>(new EntityWithGuidKey
             {
