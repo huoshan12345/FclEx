@@ -1,5 +1,3 @@
-using Microsoft.Data.Sqlite;
-
 namespace FclEx.Dapper;
 
 public class CancellationTests

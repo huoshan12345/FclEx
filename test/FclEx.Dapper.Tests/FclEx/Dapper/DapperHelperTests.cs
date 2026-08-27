@@ -1,5 +1,3 @@
-using FclEx.Dapper.SqlAdapters;
-using Microsoft.Data.Sqlite;
 using System.Diagnostics.CodeAnalysis;
 
 namespace FclEx.Dapper;

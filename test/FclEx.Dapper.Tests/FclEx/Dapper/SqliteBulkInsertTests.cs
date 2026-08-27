@@ -1,6 +1,4 @@
-using FclEx.Dapper.SqlAdapters;
-using Microsoft.Data.Sqlite;
-
+// ReSharper disable UseAwaitUsing
 namespace FclEx.Dapper;
 
 public class SqliteBulkInsertTests

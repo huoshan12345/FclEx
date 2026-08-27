@@ -64,8 +64,6 @@ partial class DbConnectionExtensionsTests
     [LocalOnlyFact]
     public async Task InsertAsync_EntityWithSqliteBlob_Test()
     {
-        Assert.SkipUnlessIncluded(DbDriver.Sqlite);
-
         using var con = Fixture.CreateDbConnection(DbDriver.Sqlite, null);
 
         var payload = new EntityWithGuidKey
@@ -93,7 +91,7 @@ partial class DbConnectionExtensionsTests
     [MemberData(nameof(MySqlSchemaCases))]
     public async Task InsertAsync_EntityWithMySqlBlob_Test(DbDriver dbDriver, string? schema)
     {
-        Assert.SkipUnlessIncluded(DbDriver.MySql);
+        Assert.SkipUnlessIncluded(dbDriver, [DbDriver.MySql, DbDriver.MySqlConnector]);
 
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
 

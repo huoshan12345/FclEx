@@ -1,8 +1,4 @@
-using FluentMigrator;
-using FluentMigrator.Runner;
-using Microsoft.Data.Sqlite;
-using Microsoft.Extensions.DependencyInjection;
-
+// ReSharper disable UseAwaitUsing
 namespace FclEx.Dapper;
 
 public class SqliteMigrationTests

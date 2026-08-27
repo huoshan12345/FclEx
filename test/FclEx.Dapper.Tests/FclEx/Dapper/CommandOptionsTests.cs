@@ -1,5 +1,4 @@
 using System.Data.Common;
-using Microsoft.Data.Sqlite;
 
 namespace FclEx.Dapper;
 

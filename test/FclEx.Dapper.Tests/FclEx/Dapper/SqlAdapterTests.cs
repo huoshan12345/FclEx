@@ -1,5 +1,3 @@
-using FclEx.Dapper.SqlAdapters;
-
 namespace FclEx.Dapper;
 
 public class SqlAdapterTests

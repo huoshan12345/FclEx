@@ -4,11 +4,16 @@ public static class Extensions
 {
     extension(Assert)
     {
-        public static void SkipUnlessIncluded(DbDriver driver)
+        public static void SkipUnlessIncluded(DbDriver driver, DbDriver[] dbDrivers)
         {
             Assert.SkipUnless(
-                DbDrivers.Contains(driver),
-                $"Skipped because driver '{driver}' is not included in this test run (enabled drivers: {string.Join(", ", DbDrivers)}).");
+                dbDrivers.Contains(driver),
+                $"Skipped because driver '{driver}' is not included in this test run (enabled drivers: {string.Join(", ", dbDrivers)}).");
+        }
+
+        public static void SkipUnlessIncluded(DbDriver driver)
+        {
+            Assert.SkipUnlessIncluded(driver, DbDrivers);
         }
     }
 }
