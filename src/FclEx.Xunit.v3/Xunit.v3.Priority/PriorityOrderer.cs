@@ -7,7 +7,6 @@ public class PriorityOrderer : ITestCaseOrderer
     public IReadOnlyCollection<TTestCase> OrderTestCases<TTestCase>(IReadOnlyCollection<TTestCase> testCases) where TTestCase : ITestCase
     {
         var groupedTestCases = new Dictionary<int, List<ITestCase>>();
-        var defaultPriorities = new Dictionary<Type, int>();
 
         foreach (IXunitTestCase testCase in testCases)
         {
