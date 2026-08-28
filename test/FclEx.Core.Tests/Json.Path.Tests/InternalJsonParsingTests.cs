@@ -1,0 +1,32 @@
+namespace Json.Path.Tests;
+
+public class InternalJsonParsingTests
+{
+    [Theory]
+    [MemberData(nameof(GetJson))]
+    public static void Parse(string json)
+    {
+        int i = 0;
+        if (!json.AsSpan().TryParseJson(ref i, out var node))
+            Assert.Fail();
+
+        Console.WriteLine(node);
+    }
+
+    public static IEnumerable<object[]> GetJson()
+    {
+        return
+        [
+            ["-42"],
+            ["1+5"],
+            ["true"],
+            ["false"],
+            ["true and some more"],
+            ["false this is different"],
+            ["5.6/7"],
+            ["\"a string\"; then this"],
+            ["[null, true]; and some more"],
+            ["{\"key\": \"value\"}, then the end"]
+        ];
+    }
+}

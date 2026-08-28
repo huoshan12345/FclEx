@@ -3,6 +3,16 @@
 partial class EnumerableExtensions
 {
     /// <summary>
+    /// Sorts the elements of a sequence in ascending or descending order according to a key.
+    /// </summary>
+    public static IOrderedEnumerable<T> OrderBy<T, TKey>(this IEnumerable<T> enumerable, Func<T, TKey> keySelector, bool desc)
+    {
+        return desc
+            ? enumerable.OrderByDescending(keySelector)
+            : enumerable.OrderBy(keySelector);
+    }
+
+    /// <summary>
     /// Sorts the elements of a string sequence in ascending order using
     /// ordinal (byte-value) comparison, avoiding culture-sensitive sorting.
     /// </summary>

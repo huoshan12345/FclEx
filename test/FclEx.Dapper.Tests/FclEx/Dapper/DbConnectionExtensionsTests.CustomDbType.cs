@@ -7,8 +7,7 @@ partial class DbConnectionExtensionsTests
     [MemberData(nameof(SchemaCases))]
     public async Task InsertAsync_EntityWithPostgresqlJsonb_Test(string? schema)
     {
-        if (DbDrivers.Contains(DbDriver.Npgsql) == false)
-            return;
+        Assert.SkipUnlessIncluded(DbDriver.Npgsql);
 
         using var con = Fixture.CreateDbConnection(DbDriver.Npgsql, schema);
 
@@ -22,8 +21,7 @@ partial class DbConnectionExtensionsTests
             Json = payload.ToJson(),
         };
 
-        var id = (long?)await con.InsertAsync(entity, schema);
-        Assert.NotNull(id);
+        var id = await con.InsertAsync<EntityWithPostgresqlJsonb, int>(entity, schema);
 
         var e = await con.GetAsync<EntityWithPostgresqlJsonb>(id, schema);
         Assert.NotNull(e);
@@ -38,8 +36,7 @@ partial class DbConnectionExtensionsTests
     [MemberData(nameof(SchemaCases))]
     public async Task InsertAsync_EntityWithSqlServerXml_Test(string? schema)
     {
-        if (DbDrivers.Contains(DbDriver.SqlServer) == false)
-            return;
+        Assert.SkipUnlessIncluded(DbDriver.SqlServer);
 
         using var con = Fixture.CreateDbConnection(DbDriver.SqlServer, schema);
 
@@ -53,8 +50,7 @@ partial class DbConnectionExtensionsTests
             Xml = XmlHelper.Serialize(payload),
         };
 
-        var id = (long?)await con.InsertAsync(entity, schema);
-        Assert.NotNull(id);
+        var id = await con.InsertAsync<EntityWithSqlServerXml, int>(entity, schema);
 
         var e = await con.GetAsync<EntityWithSqlServerXml>(id, schema);
         Assert.NotNull(e);
@@ -65,13 +61,11 @@ partial class DbConnectionExtensionsTests
         Assert.Equal(payload.Value, actualPayload.Value);
     }
 
-    [LocalOnlyFact]
+    [Fact]
     public async Task InsertAsync_EntityWithSqliteBlob_Test()
     {
-        if (DbDrivers.Contains(DbDriver.Sqlite) == false)
-            return;
-        
-        using var con = Fixture.CreateDbConnection(DbDriver.Sqlite, null);
+        using var database = await SqliteMigrationTestDatabase.CreateAsync();
+        using var con = database.CreateConnection();
 
         var payload = new EntityWithGuidKey
         {
@@ -83,8 +77,7 @@ partial class DbConnectionExtensionsTests
             Blob = payload.ToJson().ToBytes(),
         };
 
-        var id = (long?)await con.InsertAsync(entity);
-        Assert.NotNull(id);
+        var id = await con.InsertAsync<EntityWithSqliteBlob, int>(entity);
 
         var e = await con.GetAsync<EntityWithSqliteBlob>(id);
         Assert.NotNull(e);
@@ -95,12 +88,11 @@ partial class DbConnectionExtensionsTests
         Assert.Equal(payload.Value, actualPayload.Value);
     }
 
-    [LocalOnlyTheory]
+    [Theory]
     [MemberData(nameof(MySqlSchemaCases))]
     public async Task InsertAsync_EntityWithMySqlBlob_Test(DbDriver dbDriver, string? schema)
     {
-        if (DbDrivers.Contains(DbDriver.MySql) == false)
-            return;
+        Assert.SkipUnlessIncluded(dbDriver, [DbDriver.MySql, DbDriver.MySqlConnector]);
 
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
 
@@ -114,8 +106,7 @@ partial class DbConnectionExtensionsTests
             Blob = payload.ToJson().ToBytes(),
         };
 
-        var id = (long?)await con.InsertAsync(entity, schema);
-        Assert.NotNull(id);
+        var id = await con.InsertAsync<EntityWithMySqlBlob, int>(entity, schema);
 
         var e = await con.GetAsync<EntityWithMySqlBlob>(id, schema);
         Assert.NotNull(e);

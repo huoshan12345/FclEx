@@ -38,11 +38,12 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
     /// Reads previously saved cookies for an account.
     /// </summary>
     /// <param name="account">The account whose cookie file should be read.</param>
+    /// <param name="useLock">Whether to acquire a lock for the account while reading cookies.</param>
     /// <returns>The saved cookies, or an empty list when the cookie file does not exist.</returns>
     /// <remarks>The file content is expected to be JSON previously written by <see cref="SaveCookies"/>.</remarks>
-    public virtual async Task<IList<SimpleCookie>> ReadCookies(IUserAccount account)
+    public virtual async Task<IList<SimpleCookie>> ReadCookies(IUserAccount account, bool useLock = true)
     {
-        using var _ = await GetLock(account).AcquireAsync();
+        using var _ = useLock ? await GetLock(account).AcquireAsync() : null;
 
         var path = GetCookiesFilePath(account);
         if (File.Exists(path))
@@ -67,10 +68,11 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
     /// Saves all cookies currently held by the client's HTTP service.
     /// </summary>
     /// <param name="client">The client whose service cookies should be persisted.</param>
+    /// <param name="useLock">Whether to acquire a lock for the client's account while saving cookies.</param>
     /// <remarks>Cookies are written as indented JSON to the path returned by <see cref="GetCookiesFilePath"/>.</remarks>
-    public virtual async Task SaveCookies(TClient client)
+    public virtual async Task SaveCookies(TClient client, bool useLock = true)
     {
-        using var _ = await GetLock(client.Account).AcquireAsync();
+        using var _ = useLock ? await GetLock(client.Account).AcquireAsync() : null;
 
         var cookies = client.HttpService.GetAllSimpleCookies();
         var str = cookies.ToJson(new JsonOptions(true));
@@ -87,9 +89,19 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
     /// <param name="useCache">Whether an existing cached client for the account can be reused.</param>
     /// <param name="readCookie">Whether saved cookies should be loaded into a newly created client.</param>
     /// <param name="proxy">An optional proxy address string for the client's HTTP service.</param>
+    /// <param name="cancellation">The cancellation token to cancel the client creation operation.</param>
     /// <returns>The created or cached client.</returns>
-    public virtual Task<TClient> CreateClient(TAccount account, bool login, bool fakeLogin = true, bool useCache = false, bool readCookie = true, string? proxy = null)
-        => CreateClient(account, new LoginOptions(login, fakeLogin, useCache, readCookie, WebProxy.Create(proxy)));
+    public virtual Task<TClient> CreateClient(
+        TAccount account,
+        bool login,
+        bool? fakeLogin = null,
+        bool useCache = false,
+        bool readCookie = true,
+        string? proxy = null,
+        CancellationToken cancellation = default)
+    {
+        return CreateClient(account, new LoginOptions(login, fakeLogin, useCache, readCookie, WebProxy.Create(proxy), cancellation));
+    }
 
     /// <summary>
     /// Creates or reuses a client using the supplied login options.
@@ -110,15 +122,19 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
             if (options.UseCache) _dic[account] = client;
         }
 
-        if (!client.IsOnline && options.FakeLogin)
+        var fakeLogin = options.FakeLogin ?? options.Login;
+
+        if (!client.IsOnline && fakeLogin)
         {
+            using var _ = await GetLock(account).AcquireAsync();
             await client.FakeLoginAsync(false);
         }
 
         if (!client.IsOnline && options.Login)
         {
+            using var _ = await GetLock(account).AcquireAsync();
             await client.LoginAsync()
-                .OnSucceeded(_ => SaveCookies(client));
+                .OnSucceeded(_ => SaveCookies(client, false));
         }
 
         return client;

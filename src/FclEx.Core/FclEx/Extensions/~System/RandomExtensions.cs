@@ -135,6 +135,7 @@ public static class RandomExtensions
         Check.NotNull(random);
         CheckRange(min, max);
 
+        // ReSharper disable once CompareOfFloatsByEqualityOperator
         if (min == max)
             return min;
 

@@ -32,20 +32,13 @@ public static class JsonValidator
             case '{': return ParseObject(s, ref i, depth + 1);
             case '[': return ParseArray(s, ref i, depth + 1);
             case '"': return ParseString(s, ref i);
+            case 't': return Match(s, ref i, "true");
+            case 'f': return Match(s, ref i, "false");
+            case 'n': return Match(s, ref i, "null");
         }
 
         if (c == '-' || c.IsAsciiDigit())
             return ParseNumber(s, ref i);
-
-        if (Match(s, ref i, "true"))
-            return true;
-
-        if (Match(s, ref i, "false"))
-            return true;
-
-        // ReSharper disable once ConvertIfStatementToReturnStatement
-        if (Match(s, ref i, "null"))
-            return true;
 
         return false;
     }

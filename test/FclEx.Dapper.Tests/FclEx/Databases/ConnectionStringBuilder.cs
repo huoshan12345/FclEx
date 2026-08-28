@@ -1,6 +1,5 @@
 using System.Data.Common;
 using Microsoft.Data.SqlClient;
-using Microsoft.Data.Sqlite;
 using MySql.Data.MySqlClient;
 using Npgsql;
 using SQLitePCL;

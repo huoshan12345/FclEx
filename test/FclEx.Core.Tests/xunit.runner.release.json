@@ -5,5 +5,5 @@
   "parallelizeTestCollections": true,
   "maxParallelThreads": "2x",
   "preEnumerateTheories": false,
-  "diagnosticMessages": false
+  "diagnosticMessages": true
 }

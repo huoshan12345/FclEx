@@ -1,7 +1,5 @@
-// ReSharper disable UseAwaitUsing
 using System.Data.Common;
 using Microsoft.Data.SqlClient;
-using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using Npgsql;
@@ -42,11 +40,8 @@ public class DapperTestsFixture : CoreTestsFixture
     {
         return TestHelper.IsGithubAction
             ? TestHelper.IsWindows
-                ? [DbDriver.Npgsql]
-                : [
-                    DbDriver.MySqlConnector,
-                    DbDriver.Npgsql,
-                ]
+                ? [DbDriver.MySqlConnector,]
+                : [DbDriver.Npgsql,]
             : [
                 DbDriver.MySql,
                 DbDriver.MySqlConnector,

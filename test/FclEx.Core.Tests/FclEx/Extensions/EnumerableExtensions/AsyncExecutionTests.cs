@@ -10,7 +10,7 @@ public class AsyncExecutionTests
         await Enumerable.Range(0, 5).ForEachSequentiallyAsync((item, _) =>
         {
             actual.Add(item);
-            return default;
+            return Task.CompletedTask;
         });
 
         Assert.Equal(Enumerable.Range(0, 5), actual);
@@ -20,7 +20,7 @@ public class AsyncExecutionTests
     public async Task SelectSequentiallyAsync_Returns_Results_In_Source_Order()
     {
         var results = await Enumerable.Range(0, 5)
-            .SelectSequentiallyAsync((item, _) => new ValueTask<int>(item * 2));
+            .SelectSequentiallyAsync((item, _) => Task.FromResult(item * 2));
 
         Assert.Equal([0, 2, 4, 6, 8], results);
     }
@@ -65,7 +65,7 @@ public class AsyncExecutionTests
     public async Task Cancellation_Does_Not_Return_Successful_Partial_Results()
     {
         using var cancellation = new CancellationTokenSource();
-        cancellation.Cancel();
+        await cancellation.CancelAsync();
         var operationCount = 0;
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => Enumerable.Range(0, 5)
@@ -73,7 +73,7 @@ public class AsyncExecutionTests
                 (item, token) =>
                 {
                     operationCount++;
-                    return new ValueTask<int>(item);
+                    return Task.FromResult(item);
                 },
                 maxDegreeOfParallelism: 2,
                 cancellationToken: cancellation.Token));
@@ -85,14 +85,14 @@ public class AsyncExecutionTests
     public async Task Sequential_Cancellation_Does_Not_Return_Success()
     {
         using var cancellation = new CancellationTokenSource();
-        cancellation.Cancel();
+        await cancellation.CancelAsync();
         var operationCount = 0;
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => Array.Empty<int>().ForEachSequentiallyAsync(
             (item, token) =>
             {
                 operationCount++;
-                return default;
+                return Task.CompletedTask;
             },
             cancellationToken: cancellation.Token));
 
@@ -109,7 +109,7 @@ public class AsyncExecutionTests
             (_, token) =>
             {
                 observedToken = token;
-                return default;
+                return Task.CompletedTask;
             },
             maxDegreeOfParallelism: 1,
             cancellationToken: cancellation.Token);
@@ -120,10 +120,10 @@ public class AsyncExecutionTests
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
-    public async Task Concurrent_APIs_Reject_NonPositive_Parallelism(int maxDegreeOfParallelism)
+    public async Task Concurrent_Apis_Reject_NonPositive_Parallelism(int maxDegreeOfParallelism)
     {
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => Array.Empty<int>().ForEachConcurrentlyAsync(
-            (_, _) => default,
+            (_, _) => Task.CompletedTask,
             maxDegreeOfParallelism));
     }
 }

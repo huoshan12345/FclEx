@@ -64,8 +64,8 @@ public static class DefaultJsonAction
     /// <returns>The deserialized result, or an error if no token was selected.</returns>
     public static OperationResult<T> GetResult<T>(IJsonAction<T> action, JsonActionContext context)
     {
-        return context.TryGetResultToken(out var token)
+        return context.ResultToken is { } token
             ? token.ToObject<T>()!
-            : nameof(context.ResultToken) + " is null";
+            : $"{nameof(context.ResultToken)} is null";
     }
 }

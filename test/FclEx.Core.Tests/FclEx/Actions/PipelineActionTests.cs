@@ -65,7 +65,6 @@ public class PipelineActionTests
     public async Task ExecuteAsync_WhenExecuteActionThrowsCancellation_CallsHandleCancellation()
     {
         var action = new TestPipelineAction(_ => throw new OperationCanceledException("cancel"));
-
         var (success, _, ex, _) = await action.ExecuteAsync();
 
         Assert.False(success);
@@ -76,11 +75,11 @@ public class PipelineActionTests
     }
 
     [Fact]
-    public void GetName_DefaultsToTypeShortName()
+    public void GetName_DefaultsToTypeLongName()
     {
         var action = new TestPipelineAction(_ => Operation.Success(1));
-
-        Assert.Equal(nameof(TestPipelineAction), action.GetName());
+        var type = typeof(TestPipelineAction);
+        Assert.Equal(type.DeclaringType?.FullName + "." + type.Name, action.GetName());
     }
 
     private sealed class TestPipelineAction(

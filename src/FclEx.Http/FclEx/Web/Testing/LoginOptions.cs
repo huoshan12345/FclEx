@@ -8,9 +8,11 @@ namespace FclEx.Web.Testing;
 /// <param name="UseCache">Whether clients should be reused for equal account values.</param>
 /// <param name="ReadCookie">Whether saved cookies should be loaded into newly created clients.</param>
 /// <param name="Proxy">The proxy assigned to the client's HTTP service.</param>
+/// <param name="CancellationToken">The cancellation token to cancel the login operation.</param>
 public readonly record struct LoginOptions(
-    bool Login, 
-    bool FakeLogin,
-    bool UseCache, 
-    bool ReadCookie, 
-    IWebProxy? Proxy);
+    bool Login,
+    bool? FakeLogin,
+    bool UseCache,
+    bool ReadCookie,
+    IWebProxy? Proxy = null,
+    CancellationToken CancellationToken = default);

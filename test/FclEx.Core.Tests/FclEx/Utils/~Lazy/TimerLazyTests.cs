@@ -1,5 +1,6 @@
 namespace FclEx.Utils;
 
+[TestClass(DisableParallelization = true)]
 public class TimerLazyTests
 {
     [Fact]
@@ -22,7 +23,7 @@ public class TimerLazyTests
         Assert.Equal("period", exception.ParamName);
     }
 
-    [RetryFact(3, 100)]
+    [RetryFact]
     public async Task PeriodConstructor_DoesNotResetBeforeFirstPeriod()
     {
         var period = TimeSpan.FromMilliseconds(300);
@@ -49,7 +50,7 @@ public class TimerLazyTests
         Assert.Equal(0, invocationCount);
     }
 
-    [RetryFact(3, 100)]
+    [RetryFact]
     public async Task ExplicitDueTime_ResetsCreatedValue()
     {
         var first = new TrackedDisposable();
@@ -66,7 +67,7 @@ public class TimerLazyTests
         Assert.Null(lazy.LastResetException);
     }
 
-    [RetryFact(3, 100)]
+    [RetryFact]
     public async Task FaultedGeneration_IsResetByTimerAndCanRetry()
     {
         var invocationCount = 0;
@@ -83,7 +84,7 @@ public class TimerLazyTests
         Assert.Equal(2, invocationCount);
     }
 
-    [RetryFact(3, 100)]
+    [RetryFact]
     public async Task ReleaseFailure_IsCapturedWithoutStoppingFutureResets()
     {
         var releaseCount = 0;
@@ -106,7 +107,8 @@ public class TimerLazyTests
             TimeSpan.FromSeconds(3));
     }
 
-    [RetryFact(3, 100)]
+    [RetryFact]
+    [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
     public async Task DifferentInstances_DoNotShareTimerCallbackLock()
     {
         using var firstReleaseStarted = new ManualResetEventSlim();

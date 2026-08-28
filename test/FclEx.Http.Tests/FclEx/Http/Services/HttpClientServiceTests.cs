@@ -199,7 +199,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
         Assert.NotEqual(fac1, fac2, ReferenceEqualityComparer.Instance);
     }
 
-    [RetryTheory(5)]
+    [RetryTheory(DisableParallelization = true)]
     [InlineData(1, 0.1)]
     [InlineData(2, 0.1)]
     [InlineData(2, 0.2)]

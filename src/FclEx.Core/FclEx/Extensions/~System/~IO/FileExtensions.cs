@@ -101,8 +101,8 @@ public static class FileExtensions
             using var stream2 = File.OpenRead(f2.FullName);
 
 #if NET5_0_OR_GREATER
-        Span<byte> buf1 = stackalloc byte[4096];
-        Span<byte> buf2 = stackalloc byte[4096];
+            Span<byte> buf1 = stackalloc byte[4096];
+            Span<byte> buf2 = stackalloc byte[4096];
 #else
             var buf1 = new byte[4096];
             var buf2 = new byte[4096];
@@ -112,10 +112,10 @@ public static class FileExtensions
             {
                 var toRead = (int)Math.Min(buf1.Length, length);
 #if NET5_0_OR_GREATER
-            var chunk1 = buf1[..toRead];
-            var chunk2 = buf2[..toRead];
-            var read1 = ReadChunk(stream1, chunk1);
-            var read2 = ReadChunk(stream2, chunk2);
+                var chunk1 = buf1[..toRead];
+                var chunk2 = buf2[..toRead];
+                var read1 = ReadChunk(stream1, chunk1);
+                var read2 = ReadChunk(stream2, chunk2);
 #else
                 var read1 = ReadChunk(stream1, buf1, toRead);
                 var read2 = ReadChunk(stream2, buf2, toRead);
@@ -125,8 +125,8 @@ public static class FileExtensions
                     return false;
 
 #if NET5_0_OR_GREATER
-            if (!chunk1.SequenceEqual(chunk2))
-                return false;
+                if (!chunk1.SequenceEqual(chunk2))
+                    return false;
 #else
                 for (var i = 0; i < toRead; i++)
                 {

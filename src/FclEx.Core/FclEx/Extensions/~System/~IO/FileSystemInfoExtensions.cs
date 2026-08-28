@@ -129,4 +129,26 @@ public static class FileSystemInfoExtensions
             ? root[..1]
             : "";
     }
+
+    /// <summary>
+    /// Combines the current <see cref="FileSystemInfo"/> path with additional path segments and returns a <see cref="FileInfo"/> object. <br/>
+    /// </summary>
+    /// <param name="info">The current <see cref="FileSystemInfo"/>.</param>
+    /// <param name="paths">Additional path segments to combine.</param>
+    /// <returns>A <see cref="FileInfo"/> representing the combined path.</returns>
+    public static FileInfo CombineFile(this FileSystemInfo info, params IEnumerable<string> paths)
+    {
+        return Path.ToFileInfo([info.FullName, .. paths]);
+    }
+
+    /// <summary>
+    /// Combines the current <see cref="FileSystemInfo"/> path with additional path segments and returns a <see cref="DirectoryInfo"/> object. <br/>
+    /// </summary>
+    /// <param name="info">The current <see cref="FileSystemInfo"/>.</param>
+    /// <param name="paths">Additional path segments to combine.</param>
+    /// <returns>A <see cref="DirectoryInfo"/> representing the combined path.</returns>
+    public static DirectoryInfo CombineDirectory(this FileSystemInfo info, params IEnumerable<string> paths)
+    {
+        return Path.ToDirectoryInfo([info.FullName, .. paths]);
+    }
 }

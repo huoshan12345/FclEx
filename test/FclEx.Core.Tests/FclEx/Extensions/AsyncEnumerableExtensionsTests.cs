@@ -6,10 +6,10 @@ public class AsyncEnumerableExtensionsTests
     public async Task ToListAsync_CanceledToken_ShouldCancelEnumeration()
     {
         using var cancellationTokenSource = new CancellationTokenSource();
-        cancellationTokenSource.Cancel();
+        await cancellationTokenSource.CancelAsync();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
-            () => GetValues().ToListAsync(cancellationTokenSource.Token));
+            async () => await GetValues(CancellationToken.None).ToListAsync(cancellationTokenSource.Token));
     }
 
     [Fact]
