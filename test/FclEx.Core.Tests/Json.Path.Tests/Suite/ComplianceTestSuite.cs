@@ -4,5 +4,5 @@ namespace Json.Path.Tests.Suite;
 
 public class ComplianceTestSuite
 {
-	public List<ComplianceTestCase> Tests { get; set; }
+    public List<ComplianceTestCase> Tests { get; set; }
 }

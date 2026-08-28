@@ -10,10 +10,10 @@ namespace Json.Path.Tests.Suite;
 public class CburgmerFeatureValidationTests
 {
     private static readonly string _regressionResultsFile = Directories.TestData.CombineFile("json-path-comparison", "regression_suite.yaml").FullName;
-    private static readonly Regex _idPattern = new(@"  - id: (?<value>.*)");
-    private static readonly Regex _selectorPattern = new(@"    selector: (?<value>.*)");
-    private static readonly Regex _documentPattern = new(@"    document: (?<value>.*)");
-    private static readonly Regex _consensusPattern = new(@"    consensus: (?<value>.*)");
+    private static readonly Regex _idPattern = new("  - id: (?<value>.*)");
+    private static readonly Regex _selectorPattern = new("    selector: (?<value>.*)");
+    private static readonly Regex _documentPattern = new("    document: (?<value>.*)");
+    private static readonly Regex _consensusPattern = new("    consensus: (?<value>.*)");
     private static readonly string[] _notSupported =
     [
 		// dashes are not allowed in shorthand property names
@@ -168,11 +168,6 @@ public class CburgmerFeatureValidationTests
     [MemberData(nameof(TestCases))]
     public async Task Run(CburgmerTestCase testCase)
     {
-        Console.WriteLine();
-        Console.WriteLine();
-        Console.WriteLine(testCase);
-        Console.WriteLine();
-
         PathResult? actual = null;
 
         Exception? exception = null;
@@ -196,9 +191,6 @@ public class CburgmerFeatureValidationTests
 
         if (actual == null)
         {
-            if (exception != null)
-                Console.WriteLine(exception);
-
             if (testCase.Consensus == "NOT_SUPPORTED") return;
 
             if (exception != null)
@@ -216,10 +208,6 @@ public class CburgmerFeatureValidationTests
 
             Assert.Fail($"Could not parse path: {testCase.PathString}");
         }
-
-        Console.WriteLine($"Actual (values): {JsonSerializer.Serialize(actual.Matches.Select(x => x.Value), _linearSerializerOptions)}");
-        Console.WriteLine();
-        Console.WriteLine($"Actual: {JsonSerializer.Serialize(actual, _serializerOptions)}");
 
         if (testCase.Consensus == null)
         {
