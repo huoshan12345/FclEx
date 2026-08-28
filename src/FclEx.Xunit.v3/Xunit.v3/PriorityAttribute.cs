@@ -1,4 +1,4 @@
-﻿namespace Xunit.v3.Priority;
+﻿namespace Xunit.v3;
 
 /// <summary>
 /// <para>Indicates relative priority of tests for execution. Tests with the same

@@ -23,10 +23,20 @@ public class MemberComparerBuilder<T> : IComparerBuilder<T>
             .OrderBy(selector, desc, memberComparer);
     }
 
+    public static MemberComparerBuilder<T> Create<TMember>(Func<T, TMember?> selector, IComparer<TMember>? memberComparer, bool desc = false)
+    {
+        return Create(selector, desc, memberComparer);
+    }
+
     public MemberComparerBuilder<T> OrderBy<TMember>(Func<T, TMember?> selector, bool desc = false, IComparer<TMember>? memberComparer = null)
     {
         _members.Add(new OrderMember<TMember>(selector, desc, memberComparer ?? Comparer<TMember>.Default));
         return this;
+    }
+
+    public MemberComparerBuilder<T> OrderBy<TMember>(Func<T, TMember?> selector, IComparer<TMember>? memberComparer, bool desc = false)
+    {
+        return OrderBy(selector, desc, memberComparer);
     }
 
     public Comparison<T?> CreateComparison()
@@ -48,7 +58,7 @@ public class MemberComparerBuilder<T> : IComparerBuilder<T>
     }
 
     public IComparer<T> Build() => DelegateComparer.Create(CreateComparison());
-    
+
     private interface IOrderMember
     {
         int Compare(T x, T y);
