@@ -36,6 +36,64 @@ public class QueryableHelperTests
         Assert.Equal(@"%a\\\\b%", QueryableHelper.GetContainsPattern(@"a\b", escapeEscapeCharacter: true));
     }
 
+    public static TheoryData<string, bool, bool, string> ContainsPatternCases { get; } = CreateContainsPatternCases();
+
+    private static TheoryData<string, bool, bool, string> CreateContainsPatternCases()
+    {
+        var cases = new TheoryData<string, bool, bool, string>();
+        foreach (var escapeEscapeCharacter in new[] { false, true })
+        {
+            var backslash = escapeEscapeCharacter ? @"\\\\" : @"\\";
+            foreach (var escapeWildcards in new[] { false, true })
+            {
+                cases.Add("", escapeEscapeCharacter, escapeWildcards, "%%");
+                cases.Add("plain", escapeEscapeCharacter, escapeWildcards, "%plain%");
+                cases.Add("a%b", escapeEscapeCharacter, escapeWildcards, escapeWildcards ? @"%a\%b%" : "%a%b%");
+                cases.Add("a_b", escapeEscapeCharacter, escapeWildcards, escapeWildcards ? @"%a\_b%" : "%a_b%");
+                cases.Add("%_", escapeEscapeCharacter, escapeWildcards, escapeWildcards ? @"%\%\_%" : "%%_%");
+                cases.Add(@"a\b", escapeEscapeCharacter, escapeWildcards, "%a" + backslash + "b%");
+                cases.Add(@"a\", escapeEscapeCharacter, escapeWildcards, "%a" + backslash + "%");
+                cases.Add("a[bc]d", escapeEscapeCharacter, escapeWildcards, @"%a\[bc]d%");
+                cases.Add(@"\%_[", escapeEscapeCharacter, escapeWildcards,
+                    "%" + backslash + (escapeWildcards ? @"\%\_\[" : @"%_\[") + "%");
+            }
+        }
+        return cases;
+    }
+
+    [Theory]
+    [MemberData(nameof(ContainsPatternCases))]
+    public void GetContainsPattern_ShouldRespectWildcardAndEscapeOptions(
+        string value, bool escapeEscapeCharacter, bool escapeWildcards, string expected)
+    {
+        Assert.Equal(expected, QueryableHelper.GetContainsPattern(value, escapeEscapeCharacter, escapeWildcards));
+    }
+
+    [Theory]
+    [MemberData(nameof(ContainsPatternCases))]
+    public void BuildContainsAny_ShouldPassConfiguredPatternToLike(
+        string value, bool escapeEscapeCharacter, bool escapeWildcards, string expected)
+    {
+        var filter = QueryableHelper.BuildContainsAny<TestEntity>(
+            entity => entity.Name, [value],
+            escapeEscapeCharacter: escapeEscapeCharacter,
+            escapeWildcards: escapeWildcards);
+
+        Assert.NotNull(filter);
+        var call = Assert.IsAssignableFrom<MethodCallExpression>(filter.Body);
+        var patternExpression = call.Arguments[2];
+#if NET9_0_OR_GREATER
+        if (!escapeEscapeCharacter)
+        {
+            var parameter = Assert.IsAssignableFrom<MethodCallExpression>(patternExpression);
+            Assert.Equal(nameof(EF.Parameter), parameter.Method.Name);
+            patternExpression = parameter.Arguments[0];
+        }
+#endif
+        var pattern = Expression.Lambda<Func<string>>(patternExpression).Compile()();
+        Assert.Equal(expected, pattern);
+    }
+
     [Fact]
     public void BuildIdFilter_GeneratesCorrectExpression_ForIntId()
     {

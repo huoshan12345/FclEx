@@ -174,7 +174,7 @@ public static class QueryableExtensions
 
     /// <summary>
     /// Filters the query to rows whose selected string contains at least one keyword.
-    /// SQL LIKE metacharacters in keywords are treated as literal characters.
+    /// Each keyword is surrounded by <c>%</c>; LIKE wildcards in keywords are escaped by default.
     /// </summary>
     /// <param name="queryable">The query to filter.</param>
     /// <param name="selector">Selects the string column to search.</param>
@@ -185,14 +185,20 @@ public static class QueryableExtensions
     /// for Oracle's MySql.EntityFrameworkCore provider; leave it <see langword="false"/> for SQL Server,
     /// PostgreSQL, and MySqlConnector-based providers.
     /// </param>
+    /// <param name="escapeWildcards">
+    /// Whether to treat <c>%</c> and <c>_</c> in keywords literally. Defaults to <see langword="true"/>.
+    /// When <see langword="false"/>, they remain LIKE wildcards. Backslashes and opening brackets are always
+    /// treated literally; a backslash in a keyword cannot escape an individual wildcard.
+    /// </param>
     public static IQueryable<T> ContainsAny<T>(
         this IQueryable<T> queryable,
         Expression<Func<T, string?>> selector,
         IEnumerable<string> keywords,
         bool suppressValueConverter = false,
-        bool escapeEscapeCharacter = false)
+        bool escapeEscapeCharacter = false,
+        bool escapeWildcards = true)
     {
-        var where = QueryableHelper.BuildContainsAny(selector, keywords, suppressValueConverter, escapeEscapeCharacter);
+        var where = QueryableHelper.BuildContainsAny(selector, keywords, suppressValueConverter, escapeEscapeCharacter, escapeWildcards);
         return where == null
             ? queryable.Where(m => false)
             : queryable.Where(where);

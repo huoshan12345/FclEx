@@ -11,23 +11,23 @@ public static class QueryableHelper
     private static MethodInfo EfLike { get; } = typeof(DbFunctionsExtensions)
         .GetRequiredMethod(nameof(DbFunctionsExtensions.Like), 0, typeof(DbFunctions), typeof(string), typeof(string), typeof(string));
 
-    internal static string GetContainsPattern(string value)
+    internal static string GetContainsPattern(
+        string value,
+        bool escapeEscapeCharacter = false,
+        bool escapeWildcards = true)
     {
-        return GetContainsPattern(value, false);
+        return $"%{EscapeLikePattern(value, escapeEscapeCharacter, escapeWildcards)}%";
     }
 
-    internal static string GetContainsPattern(string value, bool escapeEscapeCharacter)
+    private static string EscapeLikePattern(string value, bool escapeEscapeCharacter, bool escapeWildcards)
     {
-        return $"%{EscapeLikePattern(value, escapeEscapeCharacter)}%";
-    }
-
-    private static string EscapeLikePattern(string value, bool escapeEscapeCharacter)
-    {
-        return value
+        var pattern = value
             .Replace(@"\", escapeEscapeCharacter ? @"\\\\" : @"\\")
-            .Replace("%", @"\%")
-            .Replace("_", @"\_")
             .Replace("[", @"\[");
+
+        return escapeWildcards
+            ? pattern.Replace("%", @"\%").Replace("_", @"\_")
+            : pattern;
     }
 
     /// <summary>
@@ -80,21 +80,27 @@ public static class QueryableHelper
     /// </summary>
     /// <typeparam name="T">The queried entity type.</typeparam>
     /// <param name="selector">Selects the string member to search.</param>
-    /// <param name="keywords">The keywords to combine with logical OR. SQL LIKE metacharacters are treated literally.</param>
+    /// <param name="keywords">The keywords to combine with logical OR. Each keyword is surrounded by <c>%</c> for substring matching.</param>
     /// <param name="suppressValueConverter">Whether to suppress an EF Core value converter on the selected member.</param>
     /// <param name="escapeEscapeCharacter">Whether the provider requires the SQL escape character itself to be escaped.</param>
+    /// <param name="escapeWildcards">
+    /// Whether to treat <c>%</c> and <c>_</c> in keywords literally. Defaults to <see langword="true"/>.
+    /// When <see langword="false"/>, they remain LIKE wildcards. Backslashes and opening brackets are always
+    /// treated literally; a backslash in a keyword cannot escape an individual wildcard.
+    /// </param>
     /// <returns>The combined predicate, or <see langword="null"/> when <paramref name="keywords"/> is empty.</returns>
     public static Expression<Func<T, bool>>? BuildContainsAny<T>(
         Expression<Func<T, string?>> selector,
         IEnumerable<string> keywords,
         bool suppressValueConverter = false,
-        bool escapeEscapeCharacter = false)
+        bool escapeEscapeCharacter = false,
+        bool escapeWildcards = true)
     {
         Expression<Func<T, bool>>? where = null;
         // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var keyword in keywords)
         {
-            var pattern = GetContainsPattern(keyword, escapeEscapeCharacter);
+            var pattern = GetContainsPattern(keyword, escapeEscapeCharacter, escapeWildcards);
             var expression = BuildLike(selector, pattern, suppressValueConverter, escapeEscapeCharacter);
             where = where.Or(expression);
         }

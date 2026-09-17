@@ -36,7 +36,7 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
 
         var escapeEscapeCharacter = dbDriver is DbDriver.MySql;
         var query = context.EntityWithAutoKey
-            .Where(m => m.Value == value)
+            .Where(m => m.Value == value && m.Name!.StartsWith(prefix))
             .ContainsAny(m => m.Name, keywords, escapeEscapeCharacter: escapeEscapeCharacter);
 
         Output?.WriteLine(query.ToQueryString());
@@ -68,6 +68,54 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
                 m.Append("_postfix");
             });
         }
+    }
+
+    public static TheoryData<DbDriver, bool, string, string, string> WildcardCases { get; } = CreateWildcardCases();
+
+    private static TheoryData<DbDriver, bool, string, string, string> CreateWildcardCases()
+    {
+        var cases = new TheoryData<DbDriver, bool, string, string, string>();
+        foreach (var driver in DbDrivers)
+        {
+            foreach (var escapeWildcards in new[] { false, true })
+            {
+                cases.Add(driver, escapeWildcards, "a%b", "a%b", "axyb");
+                cases.Add(driver, escapeWildcards, "a%b", "a%b", "ab");
+                cases.Add(driver, escapeWildcards, "a_b", "a_b", "axb");
+                cases.Add(driver, escapeWildcards, @"a\%b", @"a\%b", @"a\xyb");
+                cases.Add(driver, escapeWildcards, "a[bc]d", "a[bc]d", "abd");
+                cases.Add(driver, escapeWildcards, @"a\", @"a\", "a");
+            }
+        }
+        return cases;
+    }
+
+    [Theory]
+    [MemberData(nameof(WildcardCases))]
+    public async Task ContainsAny_ShouldRespectWildcardOption(
+        DbDriver dbDriver, bool escapeWildcards, string keyword, string literalValue, string alternativeValue)
+    {
+        await using var context = Fixture.CreateDbContext(dbDriver);
+        // Keep the isolation prefix free of letters that could match the keyword wildcards.
+        var prefix = string.Concat(Guid.NewGuid().ToByteArray().Select(value => value.ToString("D3")));
+        var literal = new EntityWithAutoKey { Name = $"{prefix}|{literalValue}|suffix" };
+        var alternative = new EntityWithAutoKey { Name = $"{prefix}|{alternativeValue}|suffix" };
+        var unrelated = new EntityWithAutoKey { Name = $"{prefix}|zzz|suffix" };
+        context.EntityWithAutoKey.AddRange(literal, alternative, unrelated);
+        await context.SaveChangesAsync();
+
+        var result = await context.EntityWithAutoKey
+            .Where(entity => entity.Name!.StartsWith(prefix))
+            .ContainsAny(entity => entity.Name, [keyword],
+                escapeEscapeCharacter: dbDriver is DbDriver.MySql,
+                escapeWildcards: escapeWildcards)
+            .ToListAsync();
+
+        var usesWildcard = keyword.Contains('%') || keyword.Contains('_');
+        var expectedIds = !escapeWildcards && usesWildcard
+            ? new[] { literal.Id, alternative.Id }
+            : new[] { literal.Id };
+        Assert.Equal(expectedIds.OrderBy(id => id), result.Select(entity => entity.Id).OrderBy(id => id));
     }
 
     [Theory]
