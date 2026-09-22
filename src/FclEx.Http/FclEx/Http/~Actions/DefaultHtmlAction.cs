@@ -15,7 +15,8 @@ public static class DefaultHtmlAction
     /// <remarks>The context is disposed after result conversion, including when conversion returns an error or throws. Results must not retain the document or its elements.</remarks>
     public static OperationResult<T> GetResult<T>(IHtmlAction<T> action, HttpResponse response)
     {
-        return action.GetHtml(response)
+        return response.ToOperationResult()
+            .Then(action.GetHtml)
             .Then(m => action.CreateContext(response, m))
             .Then(m =>
             {

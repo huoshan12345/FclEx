@@ -14,7 +14,8 @@ public static class DefaultJsonAction
     /// <returns>The converted result, or an error from validation, path matching, or deserialization.</returns>
     public static OperationResult<T> GetResult<T>(IJsonAction<T> action, HttpResponse response)
     {
-        return action.GetJson(response)
+        return response.ToOperationResult()
+            .Then(action.GetJson)
             .Then(m => action.CreateContext(response, m))
             .Then(action.GetResult);
     }

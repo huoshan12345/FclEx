@@ -14,7 +14,8 @@ public static class DefaultXmlAction
     /// <returns>The converted result, or an error from validation, XPath matching, or deserialization.</returns>
     public static OperationResult<T> GetResult<T>(IXmlAction<T> action, HttpResponse response)
     {
-        return action.GetXml(response)
+        return response.ToOperationResult()
+            .Then(action.GetXml)
             .Then(m => action.CreateContext(response, m))
             .Then(action.GetResult);
     }
