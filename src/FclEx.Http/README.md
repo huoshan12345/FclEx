@@ -19,3 +19,10 @@ HTTP, HTML, cookie, authentication, and web-client helpers for FclEx.
 - The action types wrap HTTP responses into `OperationResult<T>`.
 - When implementing custom actions, keep parsing and validation errors inside the action pipeline so callers can handle them consistently.
 - ASP.NET Core server-side helpers live in `FclEx.AspNetCore`.
+
+### HTML Context Lifetime
+
+Use `HtmlActionContext.Document` to access the parsed document; `Element` is obsolete and can be replaced with `Document.DocumentElement`.
+The default HTML action pipeline disposes the context after result conversion, including error and exception paths. Materialize values during `GetResult`; do not return document nodes or deferred queries over them.
+When constructing a context or calling `CreateContext` directly, dispose each successfully created context after use. Context copies share the same document.
+CSS selectors are evaluated against the document, so selectors such as `html` and `:root` can select the root element.

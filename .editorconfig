@@ -68,3 +68,6 @@ dotnet_diagnostic.IDE0306.severity = silent
 
 # CS8763: A method marked [DoesNotReturn] should not return.
 dotnet_diagnostic.CS8763.severity = none
+
+# CA1826: Use property instead of Linq Enumerable method
+dotnet_code_quality.CA1826.exclude_ordefault_methods = true

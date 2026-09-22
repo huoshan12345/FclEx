@@ -3,7 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="AngleSharp" Version="1.8.1" />
+    <PackageVersion Include="AngleSharp" Version="1.8.2" />
     <PackageVersion Include="AspectCore.Extensions.DependencyInjection" Version="3.0.0" />
     <PackageVersion Include="Confluent.Kafka" Version="2.15.1" />
     <PackageVersion Include="Dapper" Version="2.1.86" />
@@ -30,7 +30,7 @@
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Configuration" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.22.0" />
+    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.23.0" />
     <PackageVersion Include="NewRelic.Agent.Api" Version="10.55.0" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="PolySharp" Version="1.16.0" />
@@ -38,7 +38,7 @@
     <PackageVersion Include="SSH.NET" Version="2026.0.0" />
     <PackageVersion Include="Serilog.Extensions.Logging" Version="10.0.0" />
     <PackageVersion Include="SlackNet.AspNetCore" Version="0.18.0" />
-    <PackageVersion Include="StackExchange.Redis" Version="3.2.15" />
+    <PackageVersion Include="StackExchange.Redis" Version="3.3.0" />
     <PackageVersion Include="StandardSocketsHttpHandler" Version="2.2.0.10" />
     <PackageVersion Include="System.Collections.Immutable" Version="10.0.12" />
     <PackageVersion Include="System.ComponentModel.Annotations" Version="5.0.0" />

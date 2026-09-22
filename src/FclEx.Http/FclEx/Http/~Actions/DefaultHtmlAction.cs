@@ -12,11 +12,16 @@ public static class DefaultHtmlAction
     /// <param name="action">The HTML action.</param>
     /// <param name="response">The response containing HTML text.</param>
     /// <returns>The converted result, or an error from validation or selector matching.</returns>
+    /// <remarks>The context is disposed after result conversion, including when conversion returns an error or throws. Results must not retain the document or its elements.</remarks>
     public static OperationResult<T> GetResult<T>(IHtmlAction<T> action, HttpResponse response)
     {
         return action.GetHtml(response)
             .Then(m => action.CreateContext(response, m))
-            .Then(action.GetResult);
+            .Then(m =>
+            {
+                using var _ = m;
+                return action.GetResult(m);
+            });
     }
 
     /// <summary>
@@ -42,13 +47,14 @@ public static class DefaultHtmlAction
     /// <param name="response">The source response.</param>
     /// <param name="html">The HTML text to parse.</param>
     /// <returns>A context when a result element exists; otherwise an error result.</returns>
-    /// <remarks>Invalid selectors may throw so the outer action pipeline can capture them.</remarks>
+    /// <remarks>The caller must dispose a successfully returned context. Documents are disposed when selector matching fails. Invalid selectors may throw so the outer action pipeline can capture them.</remarks>
     public static OperationResult<HtmlActionContext> CreateContext<T>(IHtmlAction<T> action, HttpResponse response, string html)
     {
         var context = new HtmlActionContext(response, html, action.HtmlSelector);
         if (context.ResultElements.IsNotEmpty())
             return context;
 
+        using var _ = context;
         const string msg = "The result object does not exist in html";
         var error = action.HtmlSelector == null ? msg : msg + " at " + action.HtmlSelector;
         error = error + ": " + context.Html.Truncate(256);

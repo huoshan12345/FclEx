@@ -94,6 +94,7 @@ public class HtmlActionTests
         var result = action.CreateContext(response, "<html><body><ul><li>A</li><li>B</li></ul></body></html>");
 
         Assert.True(result.IsSuccess, result.Exception?.ToString());
+        using var context = result.Value;
         Assert.Same(response, result.Value!.Response);
         Assert.Equal("li", result.Value.HtmlSelector);
         Assert.Equal(2, result.Value.ResultElements.Count());
@@ -109,6 +110,7 @@ public class HtmlActionTests
         var result = action.CreateContext(response, "<html><body><main>content</main></body></html>");
 
         Assert.True(result.IsSuccess, result.Exception?.ToString());
+        using var context = result.Value;
         Assert.Null(result.Value!.HtmlSelector);
         Assert.Equal("HTML", result.Value.ResultElement!.TagName);
         Assert.Contains("content", result.Value.ResultElement.TextContent);
@@ -135,6 +137,7 @@ public class HtmlActionTests
         var result = action.CreateContext(response, """<html><body><span class="item">A</span><span>B</span></body></html>""");
 
         Assert.True(result.IsSuccess, result.Exception?.ToString());
+        using var context = result.Value;
         Assert.Equal(".item", result.Value!.HtmlSelector);
         Assert.Equal("A", result.Value.ResultElement!.TextContent);
     }
@@ -145,14 +148,9 @@ public class HtmlActionTests
         var response = HttpActionTestFixtures.CreateResponse();
         var action = new HtmlTextAction { HtmlSelectorValue = "[" };
 
-        try
+        Assert.Throws<AngleSharp.Dom.DomException>(() =>
         {
-            var result = action.CreateContext(response, "<html><body>ok</body></html>");
-            Assert.True(result.IsError);
-        }
-        catch (Exception ex)
-        {
-            Assert.NotNull(ex);
-        }
+            action.CreateContext(response, "<html><body>ok</body></html>");
+        });
     }
 }

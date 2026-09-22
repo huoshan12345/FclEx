@@ -22,6 +22,7 @@ public interface IHtmlAction<T> : IHttpResponseHandler<T>
     /// </summary>
     /// <param name="context">The parsed HTML context.</param>
     /// <returns>The result produced from the selected HTML elements.</returns>
+    /// <remarks>The default pipeline disposes the context after this method returns or throws. Materialize the result here; do not retain the document, its elements, or deferred queries over them.</remarks>
     OperationResult<T> GetResult(HtmlActionContext context);
 
 #if NET6_0_OR_GREATER
@@ -47,7 +48,7 @@ public interface IHtmlAction<T> : IHttpResponseHandler<T>
     /// <param name="response">The source response.</param>
     /// <param name="html">The HTML text to parse.</param>
     /// <returns>A context when the selector matches at least one element; otherwise an error result.</returns>
-    /// <remarks>Invalid selectors may throw; callers that need operation errors should invoke this through the action pipeline.</remarks>
+    /// <remarks>The caller owns a successfully returned context and must dispose it. The default pipeline handles this automatically. Invalid selectors may throw; callers that need operation errors should invoke this through the action pipeline.</remarks>
     OperationResult<HtmlActionContext> CreateContext(HttpResponse response, string html)
 #if NET6_0_OR_GREATER
         => DefaultHtmlAction.CreateContext(this, response, html);
