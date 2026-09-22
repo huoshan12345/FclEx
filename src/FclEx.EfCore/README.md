@@ -6,6 +6,7 @@ Entity Framework Core helpers for FclEx.
 
 - Query helpers for EF Core `IQueryable` and `DbContext` workflows.
 - Update and change-application helpers.
+- Context service-registration helpers.
 - Soft-delete helpers and entity-state utilities.
 - Relational schema helpers.
 - SSH tunnel helpers for database access during local or integration workflows.
@@ -30,3 +31,22 @@ Each keyword is still surrounded by `%` for substring matching. Backslashes and
 opening brackets remain literal in both modes; a backslash cannot escape an
 individual wildcard in this input format. Use `QueryableHelper.BuildLike` for a
 provider-ready pattern with explicit control over the entire LIKE expression.
+
+### Re-registering a context
+
+Call `RemoveDbContext<TContext>()` before `AddDbContext<TContext>()` to replace
+an existing context registration with new options or lifetimes:
+
+```csharp
+services.RemoveDbContext<AppDbContext>();
+services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
+```
+
+This removes every registration for `TContext` and `DbContextOptions<TContext>`,
+plus `IDbContextOptionsConfiguration<TContext>` on EF Core 9 and later. Repeated
+calls are harmless, and registrations for other context types are preserved.
+
+Use it before building the service provider. It does not remove service aliases,
+context factories, pooling services, or non-generic `DbContextOptions` registrations.
+The remaining non-generic options registrations can fail to resolve until the typed
+options are registered again. Existing providers and context instances are unaffected.
