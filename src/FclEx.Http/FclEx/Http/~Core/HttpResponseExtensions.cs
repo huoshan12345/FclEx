@@ -201,13 +201,6 @@ public static class HttpResponseExtensions
         return response.TryCreateRedirectAction(httpService, r => url);
     }
 
-    public static IAction<HttpResponse> ToAction(this HttpResponse response)
-    {
-        return response.IsError
-            ? ErrorAction.Create<HttpResponse>(response.Exception, response.Elapsed)
-            : SuccessAction.Create(response, response.Elapsed);
-    }
-
     public static OperationResult<HttpResponse> ToOperationResult(this HttpResponse response)
     {
         return response.IsError
