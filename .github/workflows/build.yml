@@ -148,11 +148,15 @@ jobs:
         shell: pwsh
         run: |
           choco install sops -y --no-progress
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          sops --version
 
       - name: Setup age
         shell: pwsh
         run: |
           choco install age.portable -y --no-progress
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          age --version
 
       - name: Decrypt appsettings
         shell: pwsh
