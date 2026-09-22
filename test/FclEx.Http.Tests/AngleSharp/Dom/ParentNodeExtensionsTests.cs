@@ -33,4 +33,344 @@ public class ParentNodeExtensionsTests
 
         Assert.Null(result);
     }
+
+    [Fact]
+    public void GetAnchor_WhenSelectedChildIsAnchor_ReturnsHtmlAnchor()
+    {
+        var document = HtmlParser.Parse("""<html><body><div><a href="/next?x=1" title="Next">Continue</a></div></body></html>""");
+        var element = document.QuerySelector("div");
+
+        var anchor = element.GetAnchor("a");
+
+        Assert.NotNull(anchor);
+        var (text, path, query, title, _) = anchor;
+        Assert.Equal("Continue", text);
+        Assert.EndsWith("/next", path);
+        Assert.Equal("1", query["x"]);
+        Assert.Equal("Next", title);
+    }
+
+    [Fact]
+    public void GetAnchor_WhenElementIsNotAnchorAndNoSelectorIsProvided_ReturnsNull()
+    {
+        var document = HtmlParser.Parse("""<html><body><div>not a link</div></body></html>""");
+
+        var anchor = document.QuerySelector("div").GetAnchor();
+
+        Assert.Null(anchor);
+    }
+
+    [Fact]
+    public void GetFormData_WhenFormDoesNotExist_ReturnsNull()
+    {
+        var document = HtmlParser.Parse("""<html><body><div></div></body></html>""");
+
+        var formData = document.Body.GetFormData("form", new Uri("https://example.com"));
+
+        Assert.Null(formData);
+    }
+
+    [Fact]
+    public void GetFormData_CollectsHiddenInputsAndEmptyTextInputs()
+    {
+        const string html = """
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <title>Form with Hidden Inputs</title>
+                                <meta charset="UTF-8">
+                            </head>
+                            <body>
+                                <form action="submit.php" method="post">
+                                    <input type="hidden" name="user_id" value="12345">
+                                    <input type="hidden" name="token" value="abcde12345">
+                                    <input type="hidden" name="referrer" value="main_page">
+
+                                    <div>
+                                        <label for="username">Username:</label>
+                                        <input type="text" id="username" name="username" required>
+                                    </div>
+
+                                    <div>
+                                        <label for="email">Email:</label>
+                                        <input type="email" id="email" name="email" required>
+                                    </div>
+
+                                    <input type="submit" value="Submit">
+                                </form>
+                            </body>
+                            </html>
+                            """;
+
+        var document = HtmlParser.Parse(html);
+        var formData = document.Body.GetFormData("form", new Uri("http://www.example.com"));
+
+        Assert.NotNull(formData);
+        Assert.Equal("http://www.example.com/submit.php", formData.SubmitUri.AbsoluteUri);
+        Assert.Equal(HttpMethod.Post, formData.Method);
+        Assert.Equal(5, formData.Params.Count);
+        Assert.Equal("12345", formData.Params["user_id"]);
+        Assert.Equal("abcde12345", formData.Params["token"]);
+        Assert.Equal("main_page", formData.Params["referrer"]);
+        Assert.Equal("", formData.Params["username"]);
+        Assert.Equal("", formData.Params["email"]);
+    }
+
+    [Fact]
+    public void GetFormData_CollectsSuccessfulControlsLikeFormSubmission()
+    {
+        const string html = """
+                            <!DOCTYPE html>
+                            <html>
+                            <body>
+                                <form action="/submit">
+                                    <input type="hidden" name="token" value="abc">
+                                    <input type="text" name="user" value="alice">
+                                    <input type="password" name="password" value="secret">
+                                    <input type="checkbox" name="enabled" checked>
+                                    <input type="checkbox" name="features" value="a" checked>
+                                    <input type="checkbox" name="features" value="b">
+                                    <input type="radio" name="role" value="user">
+                                    <input type="radio" name="role" value="admin" checked>
+                                    <input type="text" value="missing-name">
+                                    <input type="text" name="disabled" value="ignored" disabled>
+                                    <fieldset disabled>
+                                        <legend>
+                                            <input type="text" name="legendInput" value="kept">
+                                        </legend>
+                                        <input type="text" name="fieldsetDisabled" value="ignored">
+                                    </fieldset>
+                                    <input type="submit" name="submit" value="ignored">
+                                    <input type="file" name="upload" value="ignored">
+                                    <textarea name="notes">hello</textarea>
+                                    <select name="country">
+                                        <option value="cn">China</option>
+                                        <option value="us" selected>United States</option>
+                                    </select>
+                                    <select name="tags" multiple>
+                                        <option value="red" selected>Red</option>
+                                        <option value="blue">Blue</option>
+                                        <option selected>Green</option>
+                                    </select>
+                                    <select name="defaultChoice">
+                                        <option value="disabled-first" disabled>Disabled First</option>
+                                        <option value="first">First</option>
+                                        <option value="second">Second</option>
+                                    </select>
+                                    <select name="optgroupDisabledChoice">
+                                        <optgroup label="disabled group" disabled>
+                                            <option value="disabled-selected" selected>Disabled Selected</option>
+                                            <option value="disabled-default">Disabled Default</option>
+                                        </optgroup>
+                                        <option value="enabled-default">Enabled Default</option>
+                                    </select>
+                                    <select name="optgroupTags" multiple>
+                                        <optgroup label="disabled group" disabled>
+                                            <option value="disabled-tag" selected>Disabled Tag</option>
+                                        </optgroup>
+                                        <option value="enabled-tag" selected>Enabled Tag</option>
+                                    </select>
+                                </form>
+                            </body>
+                            </html>
+                            """;
+
+        var document = HtmlParser.Parse(html);
+        var formData = document.Body.GetFormData("form", new Uri("https://www.example.com/page"));
+
+        Assert.NotNull(formData);
+        Assert.Equal(HttpMethod.Get, formData.Method);
+        Assert.Equal("https://www.example.com/submit", formData.SubmitUri.AbsoluteUri);
+        Assert.Equal("abc", formData.Params["token"]);
+        Assert.Equal("alice", formData.Params["user"]);
+        Assert.Equal("secret", formData.Params["password"]);
+        Assert.Equal("on", formData.Params["enabled"]);
+        Assert.Equal("a", formData.Params["features"]);
+        Assert.Equal("admin", formData.Params["role"]);
+        Assert.Equal("hello", formData.Params["notes"]);
+        Assert.Equal("us", formData.Params["country"]);
+        Assert.Equal(["red", "Green"], formData.Params.GetValues("tags"));
+        Assert.Equal("first", formData.Params["defaultChoice"]);
+        Assert.Equal("kept", formData.Params["legendInput"]);
+        Assert.Equal("enabled-tag", formData.Params["optgroupTags"]);
+        Assert.False(formData.Params.ContainsKey("disabled"));
+        Assert.False(formData.Params.ContainsKey("fieldsetDisabled"));
+        Assert.False(formData.Params.ContainsKey("optgroupDisabledChoice"));
+        Assert.False(formData.Params.ContainsKey("submit"));
+        Assert.False(formData.Params.ContainsKey("upload"));
+    }
+
+    [Fact]
+    public void GetFormData_WhenActionIsMissing_UsesCurrentUri()
+    {
+        const string html = """
+                            <html>
+                            <body>
+                                <form method="post">
+                                    <input name="q" value="fclex">
+                                </form>
+                            </body>
+                            </html>
+                            """;
+
+        var document = HtmlParser.Parse(html);
+        var formData = document.Body.GetFormData("form", new Uri("https://www.example.com/current?x=1"));
+
+        Assert.NotNull(formData);
+        Assert.Equal(HttpMethod.Post, formData.Method);
+        Assert.Equal("https://www.example.com/current?x=1", formData.SubmitUri.AbsoluteUri);
+        Assert.Equal("fclex", formData.Params["q"]);
+    }
+
+    [Theory]
+    [InlineData("""<meta content="0; url=/next" http-equiv="refresh">""", "/next")]
+    [InlineData("""<meta http-equiv='REFRESH' content='5; URL="/quoted path"'>""", "/quoted path")]
+    [InlineData("""<meta data-x="1" http-equiv="refresh" content="0; Url='https://example.com/a?b=1'">""", "https://example.com/a?b=1")]
+    public void GetMetaRefreshUrl_ParsesRefreshMetaTagWithFlexibleHtml(string metaTag, string expected)
+    {
+        var document = HtmlParser.Parse($"""
+                                        <html>
+                                        <head>{metaTag}</head>
+                                        <body></body>
+                                        </html>
+                                        """);
+
+        var actual = document.DocumentElement.GetMetaRefreshUrl();
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void GetMetaRefreshUrl_WhenRefreshMetaTagHasNoUrl_ReturnsNull()
+    {
+        var document = HtmlParser.Parse("""
+                                        <html>
+                                        <head><meta http-equiv="refresh" content="5"></head>
+                                        <body></body>
+                                        </html>
+                                        """);
+
+        var actual = document.DocumentElement.GetMetaRefreshUrl();
+
+        Assert.Null(actual);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("a")]
+    public void GetAnchor_WhenParentIsNull_ReturnsNull(string? selector)
+    {
+        IParentNode? parent = null;
+
+        Assert.Null(parent.GetAnchor(selector));
+    }
+
+    [Fact]
+    public void GetAnchor_WhenRootIsAnchor_ReturnsRootAnchor()
+    {
+        var document = HtmlParser.Parse("""<a href="/next">Continue</a>""");
+        IParentNode parent = document.QuerySelector("a")!;
+
+        var anchor = parent.GetAnchor();
+
+        Assert.NotNull(anchor);
+        var (text, path, _, _, _) = anchor;
+        Assert.Equal("Continue", text);
+        Assert.EndsWith("/next", path);
+    }
+
+    [Theory]
+    [InlineData("a", true)]
+    [InlineData(".missing", false)]
+    [InlineData("div", false)]
+    [InlineData(null, false)]
+    public void GetAnchor_FromDocument_ReturnsOnlyMatchingAnchor(string? selector, bool expected)
+    {
+        IParentNode parent = HtmlParser.Parse("""<div><a href="/next">Continue</a></div>""");
+
+        var anchor = parent.GetAnchor(selector);
+
+        Assert.Equal(expected, anchor is not null);
+    }
+
+    [Fact]
+    public void GetFormData_WhenDocumentIsNull_ReturnsNull()
+    {
+        IDocument? document = null;
+
+        Assert.Null(document.GetFormData("form", null));
+    }
+
+    [Theory]
+    [InlineData("", null, "https://example.com/root/")]
+    [InlineData("next", null, "https://example.com/root/next")]
+    [InlineData("next", "https://override.example/path/", "https://override.example/path/next")]
+    [InlineData("https://target.example/submit", null, "https://target.example/submit")]
+    public void GetFormData_FromDocument_ResolvesActionUsingExplicitOrDocumentBaseUri(string action, string? baseUri, string expected)
+    {
+        IDocument document = HtmlParser.Parse($"""
+            <html>
+            <head><base href="https://example.com/root/"></head>
+            <body><form action="{action}"><input name="q" value="value"></form></body>
+            </html>
+            """);
+
+        var form = document.GetFormData("form", baseUri is null ? null : new Uri(baseUri));
+
+        Assert.NotNull(form);
+        Assert.Equal(expected, form.SubmitUri.AbsoluteUri);
+        Assert.Equal(HttpMethod.Get, form.Method);
+        Assert.Equal("value", form.Params["q"]);
+    }
+
+    [Fact]
+    public void GetFormData_FromDocumentFragment_CollectsFormControls()
+    {
+        var document = HtmlParser.Parse("""<form action="/submit"><input name="q" value="value"></form>""");
+        var fragment = document.CreateDocumentFragment();
+        fragment.AppendChild(document.QuerySelector("form")!);
+
+        var form = fragment.GetFormData("form", new Uri("https://example.com/"));
+
+        Assert.NotNull(form);
+        Assert.Equal("https://example.com/submit", form.SubmitUri.AbsoluteUri);
+        Assert.Equal("value", form.Params["q"]);
+    }
+
+    [Theory]
+    [InlineData("", null)]
+    [InlineData("""<meta http-equiv="refresh">""", null)]
+    [InlineData("""<meta http-equiv="other" content="0; url=/ignored">""", null)]
+    [InlineData("""<meta http-equiv="refresh" content="0; url=/first"><meta http-equiv="refresh" content="0; url=/second">""", "/first")]
+    public void GetMetaRefreshUrl_FromDocument_UsesFirstRefreshTag(string markup, string? expected)
+    {
+        IParentNode parent = HtmlParser.Parse($"<html><head>{markup}</head><body></body></html>");
+
+        Assert.Equal(expected, parent.GetMetaRefreshUrl());
+    }
+
+    [Fact]
+    public void GetAnchor_FromDocumentFragment_FindsDescendantAnchor()
+    {
+        var document = HtmlParser.Parse("""<a href="/next">Continue</a>""");
+        var fragment = document.CreateDocumentFragment();
+        fragment.AppendChild(document.QuerySelector("a")!);
+
+        var anchor = fragment.GetAnchor("a");
+
+        Assert.NotNull(anchor);
+        var (text, path, _, _, _) = anchor;
+        Assert.Equal("Continue", text);
+        Assert.EndsWith("/next", path);
+    }
+
+    [Fact]
+    public void GetMetaRefreshUrl_FromDocumentFragment_FindsRefreshTag()
+    {
+        var document = HtmlParser.Parse("""<meta http-equiv="refresh" content="0; url=/next">""");
+        var fragment = document.CreateDocumentFragment();
+        fragment.AppendChild(document.QuerySelector("meta")!);
+
+        Assert.Equal("/next", fragment.GetMetaRefreshUrl());
+    }
 }
