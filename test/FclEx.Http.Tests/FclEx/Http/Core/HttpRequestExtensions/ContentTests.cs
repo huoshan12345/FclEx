@@ -120,6 +120,20 @@ public class ContentTests
     }
 
     [Fact]
+    public async Task JsonContent_GenericOverload_SerializesUsingDeclaredType()
+    {
+        BaseJsonModel model = new DerivedJsonModel { Name = "alice", Count = 3, Detail = "extra" };
+        var typedRequest = HttpRequest.Post("https://example.com/api");
+        var runtimeTypeRequest = HttpRequest.Post("https://example.com/api");
+
+        typedRequest.JsonContent<BaseJsonModel>(model);
+        runtimeTypeRequest.JsonContent((object)model);
+
+        Assert.Equal("""{"Name":"alice","Count":3}""", await typedRequest.Content!.ReadAsStringAsync());
+        Assert.Equal("""{"Name":"alice","Count":3,"Detail":"extra"}""", await runtimeTypeRequest.Content!.ReadAsStringAsync());
+    }
+
+    [Fact]
     public async Task FormContent_CreatesFormUrlEncodedContent()
     {
         var request = HttpRequest.Post("https://example.com/api");
@@ -160,4 +174,15 @@ public class ContentTests
     }
 
     private sealed record JsonModel(string Name, int Count);
+
+    private class BaseJsonModel
+    {
+        public string Name { get; set; } = "";
+        public int Count { get; set; }
+    }
+
+    private sealed class DerivedJsonModel : BaseJsonModel
+    {
+        public string Detail { get; set; } = "";
+    }
 }

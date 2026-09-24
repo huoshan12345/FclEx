@@ -15,6 +15,36 @@ public class DirectoryInfoExtensionsTests
     }
 
     [Fact]
+    public void Sub_CombinesMultipleDirectChildNames()
+    {
+        var directory = new DirectoryInfo(Path.GetTempPath());
+
+        Assert.Equal(
+            Path.Combine(directory.FullName, "child", "grandchild"),
+            directory.Sub("child", "grandchild").FullName);
+        IEnumerable<string> names = ["child", "grandchild"];
+        Assert.Equal(Path.Combine(directory.FullName, "child", "grandchild"), directory.Sub(names).FullName);
+        Assert.Equal(directory.FullName, directory.Sub().FullName);
+        Assert.Throws<ArgumentException>(() => directory.Sub("child", ".."));
+        Assert.Throws<ArgumentException>(() => directory.Sub("child", Path.Combine("nested", "child")));
+        Assert.Throws<ArgumentNullException>(() => directory.Sub((IEnumerable<string>)null!));
+    }
+
+    [Fact]
+    public void File_CombinesDirectoryNamesAndFileName()
+    {
+        var directory = new DirectoryInfo(Path.GetTempPath());
+
+        Assert.Equal(
+            Path.Combine(directory.FullName, "reports", "2026", "summary.csv"),
+            directory.File("reports", "2026", "summary.csv").FullName);
+        Assert.Throws<ArgumentException>(() => directory.File());
+        Assert.Throws<ArgumentException>(() => directory.File("reports", "..", "summary.csv"));
+        Assert.Throws<ArgumentException>(() => directory.File("reports", Path.Combine("nested", "summary.csv")));
+        Assert.Throws<ArgumentNullException>(() => directory.File((IEnumerable<string>)null!));
+    }
+
+    [Fact]
     public void Rename_OnlyAcceptsDirectChildNames()
     {
         var directory = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()));

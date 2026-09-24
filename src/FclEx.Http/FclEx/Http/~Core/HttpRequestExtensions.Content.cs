@@ -47,8 +47,15 @@ partial class HttpRequestExtensions
     }
 
     /// <summary>
-    /// Serializes an object to JSON and sets it as UTF-8 JSON request content.
+    /// Serializes <paramref name="data"/> using its runtime type and sets it as UTF-8 JSON request content.
     /// </summary>
+    /// <param name="request">The request whose content will be replaced.</param>
+    /// <param name="data">The value to serialize.</param>
+    /// <param name="options">Serializer options, or <see langword="null"/> to use FclEx's default JSON options.</param>
+    /// <returns>The same request, for chaining.</returns>
+    /// <remarks>Unlike the generic overload, this overload selects the serialization type from <paramref name="data"/> at runtime.</remarks>
+    /// <exception cref="JsonException">Serialization fails.</exception>
+    /// <exception cref="NotSupportedException">No converter is available for the value's type.</exception>
     public static HttpRequest JsonContent(this HttpRequest request, object data, JsonSerializerOptions? options = null)
     {
         request.Content = HttpContent.Json(data, options);
@@ -56,9 +63,51 @@ partial class HttpRequestExtensions
     }
 
     /// <summary>
-    /// Serializes an object to JSON with named JSON options and sets it as UTF-8 JSON request content.
+    /// Serializes <paramref name="data"/> using its runtime type and the supplied JSON options, then sets UTF-8 JSON request content.
     /// </summary>
+    /// <param name="request">The request whose content will be replaced.</param>
+    /// <param name="data">The value to serialize.</param>
+    /// <param name="options">The JSON options to convert to serializer options.</param>
+    /// <returns>The same request, for chaining.</returns>
+    /// <remarks>Unlike the generic overload, this overload selects the serialization type from <paramref name="data"/> at runtime.</remarks>
+    /// <exception cref="JsonException">Serialization fails.</exception>
+    /// <exception cref="NotSupportedException">No converter is available for the value's type.</exception>
     public static HttpRequest JsonContent(this HttpRequest request, object data, JsonOptions options)
+    {
+        return request.JsonContent(data, JsonHelper.GetOptions(options));
+    }
+
+    /// <summary>
+    /// Serializes <paramref name="data"/> using its compile-time type and sets it as UTF-8 JSON request content.
+    /// </summary>
+    /// <typeparam name="T">The declared type used by <see cref="JsonSerializer"/> during serialization.</typeparam>
+    /// <param name="request">The request whose content will be replaced.</param>
+    /// <param name="data">The value to serialize.</param>
+    /// <param name="options">Serializer options, or <see langword="null"/> to use FclEx's default JSON options.</param>
+    /// <returns>The same request, for chaining.</returns>
+    /// <remarks>
+    /// Use the overload accepting <see cref="object"/> when serialization should use the value's runtime type.
+    /// </remarks>
+    /// <exception cref="JsonException">Serialization fails.</exception>
+    /// <exception cref="NotSupportedException">No converter is available for the value's type.</exception>
+    public static HttpRequest JsonContent<T>(this HttpRequest request, T data, JsonSerializerOptions? options = null)
+    {
+        request.Content = HttpContent.Json(data, options);
+        return request;
+    }
+
+    /// <summary>
+    /// Serializes <paramref name="data"/> using its compile-time type and the supplied JSON options, then sets UTF-8 JSON request content.
+    /// </summary>
+    /// <typeparam name="T">The declared type used by <see cref="JsonSerializer"/> during serialization.</typeparam>
+    /// <param name="request">The request whose content will be replaced.</param>
+    /// <param name="data">The value to serialize.</param>
+    /// <param name="options">The JSON options to convert to serializer options.</param>
+    /// <returns>The same request, for chaining.</returns>
+    /// <remarks>Use the overload accepting <see cref="object"/> when serialization should use the value's runtime type.</remarks>
+    /// <exception cref="JsonException">Serialization fails.</exception>
+    /// <exception cref="NotSupportedException">No converter is available for the value's type.</exception>
+    public static HttpRequest JsonContent<T>(this HttpRequest request, T data, JsonOptions options)
     {
         return request.JsonContent(data, JsonHelper.GetOptions(options));
     }

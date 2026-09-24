@@ -46,12 +46,67 @@ public static class DirectoryInfoExtensions
         return new(Path.Combine(dir.FullName, name));
     }
 
+    /// <summary>
+    /// Gets a directory beneath <paramref name="dir"/> by combining the supplied direct-child names in order.
+    /// </summary>
+    /// <param name="dir">The directory from which to start.</param>
+    /// <param name="names">Zero or more names, each identifying a direct child directory.</param>
+    /// <returns>A <see cref="DirectoryInfo"/> for the resulting path. With no names, returns the directory path itself.</returns>
+    /// <remarks>The returned object represents a path; this method does not create the directory or check whether it exists.</remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="dir"/> or <paramref name="names"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">A name is empty, rooted, a dot segment, or contains a directory separator.</exception>
+    public static DirectoryInfo Sub(this DirectoryInfo dir, params IEnumerable<string> names)
+    {
+        Check.NotNull(dir);
+        Check.NotNull(names);
+
+        var builder = new PathBuilder(dir.FullName);
+        foreach (var name in names)
+        {
+            ValidateDirectChildName(name);
+            builder.Add(name);
+        }
+
+        var path = builder.Build();
+        return new DirectoryInfo(path);
+    }
+
     [MethodImpl(AggressiveInlining)]
     public static FileInfo File(this DirectoryInfo dir, string name)
     {
         Check.NotNull(dir);
         ValidateDirectChildName(name);
         return new FileInfo(Path.Combine(dir.FullName, name));
+    }
+
+    /// <summary>
+    /// Gets a file beneath <paramref name="dir"/> by combining the supplied direct-child names in order.
+    /// </summary>
+    /// <param name="dir">The directory from which to start.</param>
+    /// <param name="names">One or more names; the last identifies the file and any preceding names identify directories.</param>
+    /// <returns>A <see cref="FileInfo"/> for the resulting path.</returns>
+    /// <remarks>The returned object represents a path; this method does not create the file or check whether it exists.</remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="dir"/> or <paramref name="names"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">No names are supplied, or a name is empty, rooted, a dot segment, or contains a directory separator.</exception>
+    public static FileInfo File(this DirectoryInfo dir, params IEnumerable<string> names)
+    {
+        Check.NotNull(dir);
+        Check.NotNull(names);
+
+        var builder = new PathBuilder(dir.FullName);
+        var hasName = false;
+        foreach (var name in names)
+        {
+            ValidateDirectChildName(name);
+            builder.Add(name);
+            hasName = true;
+        }
+
+        if (hasName == false)
+            throw new ArgumentException("At least one name is required to identify a file.", nameof(names));
+
+        var path = builder.Build();
+        return new FileInfo(path);
     }
 
     /// <summary>
@@ -90,8 +145,8 @@ public static class DirectoryInfoExtensions
 
         if (Path.IsPathRooted(name)
             || name is "." or ".."
-            || name.IndexOf(Path.DirectorySeparatorChar) >= 0
-            || name.IndexOf(Path.AltDirectorySeparatorChar) >= 0)
+            || name.Contains(Path.DirectorySeparatorChar)
+            || name.Contains(Path.AltDirectorySeparatorChar))
         {
             throw new ArgumentException("The name must identify one direct child and cannot contain a path.", nameof(name));
         }
