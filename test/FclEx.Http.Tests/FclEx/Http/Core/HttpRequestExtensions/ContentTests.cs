@@ -95,7 +95,7 @@ public class ContentTests
 
         Assert.Same(request, result);
         Assert.Equal("""{"Name":"alice","Count":3}""", await request.Content!.ReadAsStringAsync());
-        Assert.Equal(MediaTypes.Json, request.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(MediaTypeNames.Application.Json, request.Content.Headers.ContentType?.MediaType);
     }
 
     [Fact]

@@ -1,3 +1,5 @@
+#pragma warning disable RS1035
+
 using System;
 using System.Globalization;
 using System.IO;
@@ -7,15 +9,11 @@ using System.Threading.Tasks;
 using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
 using Microsoft.CodeAnalysis.Diagnostics;
-#pragma warning disable RS1035
 
 namespace FclEx.Sources;
 
 internal static class UnicodeScalarHelperSource
 {
-    private static readonly bool IsGithubAction = Environment.GetEnvironmentVariable("GITHUB_ACTION") is { Length: > 0 };
-    private static readonly bool IsDependabot = Environment.GetEnvironmentVariable("GITHUB_DEPENDABOT_JOB_TOKEN") is { Length: > 0 };
-
     internal static SourceInfo Generate(SourceProductionContext context, AnalyzerConfigOptionsProvider options)
     {
         const string @namespace = "FclEx.Helpers";
@@ -77,32 +75,10 @@ internal static class UnicodeScalarHelperSource
 
     private static async Task<SortedSet<int>?> GetAllEmojiCodes(SourceProductionContext context, AnalyzerConfigOptionsProvider options)
     {
-        await Task.Yield();
-
-        const string key = "build_property.projectdir";
-        var path = options.GetGlobalOption(key);
-        if (path is null)
-        {
-            Report("Cannot find global option by key '{0}'", key);
+        var resourcesDir = GetResourcesDir();
+        if (resourcesDir is null)
             return null;
-        }
 
-        var index = path.IndexOf("src", StringComparison.Ordinal);
-        if (index < 0)
-        {
-            Report("Cannot locate src directory from current path: {0}", path);
-            return null;
-        }
-
-        var assembly = typeof(UnicodeScalarHelperSource).Assembly.GetName().Name;
-        var projectDir = Path.Combine(path[..index], "src", assembly);
-        if (Directory.Exists(projectDir) == false)
-        {
-            Report("Source generator project directory does not exist: {0}", projectDir);
-            return null;
-        }
-
-        var resourcesDir = Path.Combine(projectDir, "Resources");
         var file = new FileInfo(Path.Combine(resourcesDir, "emoji-codes.txt"));
         if (file.Exists)
         {
@@ -134,6 +110,20 @@ internal static class UnicodeScalarHelperSource
         }
 
         return codes;
+
+        string? GetResourcesDir()
+        {
+            try
+            {
+                var projectDir = options.GetProjectDir();
+                return Path.Combine(projectDir, "Resources");
+            }
+            catch (Exception ex)
+            {
+                Report(ex.Message);
+                return null;
+            }
+        }
 
         void Report(string messageFormat, params object?[]? args)
         {

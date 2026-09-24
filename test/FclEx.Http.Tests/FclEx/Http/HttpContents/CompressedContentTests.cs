@@ -10,7 +10,7 @@ public class CompressedContentTests
 #endif
     public void ToCompressed_AddsContentEncodingHeader(CompressionMethod method, string expectedEncoding)
     {
-        using var source = new StringContent("payload", Encoding.UTF8, MediaTypes.Text);
+        using var source = new StringContent("payload", Encoding.UTF8, MediaTypeNames.Text.Plain);
         using var content = source.ToCompressed(method);
 
         Assert.Contains(expectedEncoding, content.Headers.ContentEncoding);
@@ -19,14 +19,14 @@ public class CompressedContentTests
     [Fact]
     public void Constructor_CopiesSourceHeadersExceptLengthAndExistingEncoding()
     {
-        using var source = new StringContent("payload", Encoding.UTF8, MediaTypes.Json);
+        using var source = new StringContent("payload", Encoding.UTF8, MediaTypeNames.Application.Json);
         source.Headers.ContentLanguage.Add("en-US");
         source.Headers.ContentEncoding.Add("identity");
         source.Headers.ContentLength = 999;
 
         using var content = source.ToGZip();
 
-        Assert.Equal(MediaTypes.Json, content.Headers.ContentType?.MediaType);
+        Assert.Equal(MediaTypeNames.Application.Json, content.Headers.ContentType?.MediaType);
         Assert.Equal(Encoding.UTF8.WebName, content.Headers.ContentType?.CharSet);
         Assert.Contains("en-US", content.Headers.ContentLanguage);
         Assert.DoesNotContain("identity", content.Headers.ContentEncoding);
@@ -60,7 +60,7 @@ public class CompressedContentTests
     [Fact]
     public async Task CopyToAsync_WritesReadableGZipPayload()
     {
-        using var source = new StringContent("payload", Encoding.UTF8, MediaTypes.Text);
+        using var source = new StringContent("payload", Encoding.UTF8, MediaTypeNames.Text.Plain);
         using var content = source.ToGZip();
         using var destination = new MemoryStream();
 

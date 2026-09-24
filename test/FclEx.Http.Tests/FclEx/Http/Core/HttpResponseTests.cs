@@ -122,7 +122,7 @@ public class HttpResponseTests : HttpServerTests
 
         Assert.True(found);
         Assert.NotNull(mediaType);
-        Assert.Equal(MediaTypes.Json, mediaType.MediaType);
+        Assert.Equal(MediaTypeNames.Application.Json, mediaType.MediaType);
         Assert.Equal("utf-8", mediaType.CharSet);
     }
 

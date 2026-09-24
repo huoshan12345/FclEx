@@ -213,7 +213,7 @@ public class HttpServiceExtensionsBatchDownloadTests
                 StatusCode = HttpStatusCode.OK,
                 ResponseBytes = Encoding.UTF8.GetBytes("file"),
             };
-            response.Headers.Add(HttpHeaderNames.ContentType, MediaTypes.Text);
+            response.Headers.Add(HttpHeaderNames.ContentType, MediaTypeNames.Text.Plain);
             response.VisitedUris.Add(request.GetUri());
             return Task.FromResult(response);
         }

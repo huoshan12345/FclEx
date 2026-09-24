@@ -18,7 +18,7 @@ public class HttpContentHeadersExtensionsTests
     [Fact]
     public void CopyTo_ExcludesHeadersCaseInsensitively()
     {
-        using var source = new StringContent("source", Encoding.UTF8, MediaTypes.Text);
+        using var source = new StringContent("source", Encoding.UTF8, MediaTypeNames.Text.Plain);
         using var destination = new ByteArrayContent([]);
         source.Headers.TryAddWithoutValidation("X-Custom", "value");
 

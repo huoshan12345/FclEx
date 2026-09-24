@@ -172,7 +172,7 @@ public class HttpServerFixture : CoreTestsFixture
 
         app.MapGet(TestApiPaths.CharsetDetectGb2312, async context =>
         {
-            context.Response.ContentType = MediaTypes.Html; // do not set charset, to test auto-detect encoding
+            context.Response.ContentType = MediaTypeNames.Text.Html; // do not set charset, to test auto-detect encoding
             await context.Response.WriteAsync(VisitorHtml.Value, Gb2312);
         });
 

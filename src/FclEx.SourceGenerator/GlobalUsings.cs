@@ -9,3 +9,4 @@ global using FclEx.Extensions;
 global using FclEx.Sources;
 global using FclEx.Utils;
 global using Microsoft.CodeAnalysis;
+global using static FclEx.Constants;

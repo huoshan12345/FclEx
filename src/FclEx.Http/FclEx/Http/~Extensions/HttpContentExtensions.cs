@@ -139,7 +139,7 @@ public static class HttpContentExtensions
         /// </summary>
         public static StringContent FromJson(string json)
         {
-            return new StringContent(json, Encoding.UTF8, MediaTypes.Json);
+            return new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json);
         }
 
         /// <summary>
@@ -148,7 +148,7 @@ public static class HttpContentExtensions
         public static StringContent Json<T>(T obj, JsonSerializerOptions? options = null)
         {
             var json = obj.ToJson(options);
-            return new StringContent(json, Encoding.UTF8, MediaTypes.Json);
+            return new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json);
         }
 
         /// <summary>
@@ -163,7 +163,7 @@ public static class HttpContentExtensions
         /// <summary>
         /// Creates UTF-8 string content and wraps it in GZip compression for sending.
         /// </summary>
-        public static GZipContent GZip(string content, string contentType = MediaTypes.Text)
+        public static GZipContent GZip(string content, string contentType = MediaTypeNames.Text.Plain)
         {
             return new StringContent(content, Encoding.UTF8, contentType).ToGZip();
         }

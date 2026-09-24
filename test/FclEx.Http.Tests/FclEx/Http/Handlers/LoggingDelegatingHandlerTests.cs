@@ -94,7 +94,7 @@ public class LoggingDelegatingHandlerTests
         using var loggerFactory = LoggerFactory.Create(builder => builder.AddProvider(loggerProvider));
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://example.com/api/items?id=1")
         {
-            Content = new StringContent("payload", Encoding.UTF8, MediaTypes.Json),
+            Content = new StringContent("payload", Encoding.UTF8, MediaTypeNames.Application.Json),
         };
         using var handler = new LoggingDelegatingHandler(loggerFactory)
         {
