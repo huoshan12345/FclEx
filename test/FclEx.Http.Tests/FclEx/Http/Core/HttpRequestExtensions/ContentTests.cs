@@ -122,7 +122,7 @@ public class ContentTests
     [Fact]
     public async Task JsonContent_GenericOverload_SerializesUsingDeclaredType()
     {
-        BaseJsonModel model = new DerivedJsonModel { Name = "alice", Count = 3, Detail = "extra" };
+        var model = new DerivedJsonModel { Name = "alice", Count = 3, Detail = "extra" };
         var typedRequest = HttpRequest.Post("https://example.com/api");
         var runtimeTypeRequest = HttpRequest.Post("https://example.com/api");
 
@@ -130,7 +130,7 @@ public class ContentTests
         runtimeTypeRequest.JsonContent((object)model);
 
         Assert.Equal("""{"Name":"alice","Count":3}""", await typedRequest.Content!.ReadAsStringAsync());
-        Assert.Equal("""{"Name":"alice","Count":3,"Detail":"extra"}""", await runtimeTypeRequest.Content!.ReadAsStringAsync());
+        Assert.Equal("""{"Detail":"extra","Name":"alice","Count":3}""", await runtimeTypeRequest.Content!.ReadAsStringAsync());
     }
 
     [Fact]

@@ -115,7 +115,11 @@ partial class HttpRequestExtensions
     /// <summary>
     /// Sets the request body to <see cref="FormUrlEncodedContent"/> built from the supplied name-value pairs.
     /// </summary>
-    public static HttpRequest FormContent(this HttpRequest request, IEnumerable<KeyValuePair<string, string>> nameValueCollection)
+    public static HttpRequest FormContent(this HttpRequest request, IEnumerable<KeyValuePair<
+#nullable disable
+        string, string
+#nullable restore
+    >> nameValueCollection)
     {
         request.Content = new FormUrlEncodedContent(nameValueCollection);
         return request;

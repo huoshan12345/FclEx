@@ -24,7 +24,11 @@ partial class HttpRequestExtensions
     /// <summary>
     /// Adds multiple query parameters to the request URI builder.
     /// </summary>
-    public static HttpRequest AddQueryParam(this HttpRequest request, IEnumerable<KeyValuePair<string, string>> pairs)
+    public static HttpRequest AddQueryParam(this HttpRequest request, IEnumerable<KeyValuePair<
+#nullable disable
+        string, string
+#nullable restore
+    >> pairs)
     {
         request.Query.Add(pairs);
         return request;
@@ -42,7 +46,11 @@ partial class HttpRequestExtensions
     /// <summary>
     /// Adds multiple query parameters with multiple values per key.
     /// </summary>
-    public static HttpRequest AddQueryParam<T>(this HttpRequest request, IEnumerable<KeyValuePair<string, T>> pairs)
+    public static HttpRequest AddQueryParam<T>(this HttpRequest request, IEnumerable<KeyValuePair<
+#nullable disable
+        string
+#nullable restore
+        , T>> pairs)
         where T : IEnumerable<string>
     {
         request.Query.Add(pairs);

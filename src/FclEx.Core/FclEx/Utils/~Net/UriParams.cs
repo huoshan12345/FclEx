@@ -74,7 +74,11 @@ public sealed class UriParams() : NameValues<UriParams>(StringComparer.Ordinal),
     /// </summary>
     /// <param name="pairs">The sequence of key-value pairs to add to the collection.</param>
     /// <returns>A new UriParams instance containing the provided parameters.</returns>
-    public static UriParams From(IEnumerable<KeyValuePair<string, string>> pairs) => new UriParams().Add(pairs);
+    public static UriParams From(IEnumerable<KeyValuePair<
+#nullable disable
+        string, string
+#nullable restore
+    >> pairs) => new UriParams().Add(pairs);
 
     /// <summary>
     /// Creates a new UriParams collection with a single key-value pair.

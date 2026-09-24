@@ -24,7 +24,11 @@ partial class HttpRequestExtensions
     /// <summary>
     /// Adds multiple form parameters that will be used to create <see cref="FormUrlEncodedContent"/>.
     /// </summary>
-    public static HttpRequest AddFormParam(this HttpRequest request, IEnumerable<KeyValuePair<string, string>> pairs)
+    public static HttpRequest AddFormParam(this HttpRequest request, IEnumerable<KeyValuePair<
+#nullable disable
+        string, string
+#nullable restore
+    >> pairs)
     {
         request.Form.Add(pairs);
         return request;
@@ -42,7 +46,11 @@ partial class HttpRequestExtensions
     /// <summary>
     /// Adds multiple form parameters with multiple values per key.
     /// </summary>
-    public static HttpRequest AddFormParam<T>(this HttpRequest request, IEnumerable<KeyValuePair<string, T>> pairs)
+    public static HttpRequest AddFormParam<T>(this HttpRequest request, IEnumerable<KeyValuePair<
+#nullable disable
+        string
+#nullable restore
+        , T>> pairs)
         where T : IEnumerable<string>
     {
         request.Form.Add(pairs);

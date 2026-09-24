@@ -132,8 +132,8 @@ public static class DefaultNameValuesBuilder
 
 public class NameValuesBuilder : INameValuesBuilder
 {
-    public virtual NameValuesBuilderOptions Options { get; }
-        = NameValuesBuilderOptions.Default;
+    public virtual NameValuesBuilderOptions Options { get; } = NameValuesBuilderOptions.Default;
+
     public virtual List<KeyValuePair<string, string>> Build()
         => DefaultNameValuesBuilder.Build(this);
 

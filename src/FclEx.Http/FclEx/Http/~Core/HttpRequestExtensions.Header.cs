@@ -65,7 +65,11 @@ partial class HttpRequestExtensions
     /// <summary>
     /// Adds multiple header values while preserving existing values for the same header names.
     /// </summary>
-    public static HttpRequest AddHeader(this HttpRequest request, IEnumerable<KeyValuePair<string, string>> pairs)
+    public static HttpRequest AddHeader(this HttpRequest request, IEnumerable<KeyValuePair<
+#nullable disable
+        string, string
+#nullable restore
+    >> pairs)
     {
         request.Headers.Add(pairs);
         return request;
@@ -74,7 +78,11 @@ partial class HttpRequestExtensions
     /// <summary>
     /// Replaces header values from multiple name-value pairs.
     /// </summary>
-    public static HttpRequest SetHeader(this HttpRequest request, IEnumerable<KeyValuePair<string, string>> pairs)
+    public static HttpRequest SetHeader(this HttpRequest request, IEnumerable<KeyValuePair<
+#nullable disable
+        string, string
+#nullable restore
+    >> pairs)
     {
         request.Headers.Set(pairs);
         return request;
@@ -83,7 +91,11 @@ partial class HttpRequestExtensions
     /// <summary>
     /// Adds multiple multi-value headers while preserving existing values for the same header names.
     /// </summary>
-    public static HttpRequest AddHeader<T>(this HttpRequest request, IEnumerable<KeyValuePair<string, T>> pairs)
+    public static HttpRequest AddHeader<T>(this HttpRequest request, IEnumerable<KeyValuePair<
+#nullable disable
+        string
+#nullable restore
+        , T>> pairs)
         where T : IEnumerable<string>
     {
         request.Headers.Add(pairs);
@@ -93,7 +105,11 @@ partial class HttpRequestExtensions
     /// <summary>
     /// Replaces multiple multi-value headers.
     /// </summary>
-    public static HttpRequest SetHeader<T>(this HttpRequest request, IEnumerable<KeyValuePair<string, T>> pairs)
+    public static HttpRequest SetHeader<T>(this HttpRequest request, IEnumerable<KeyValuePair<
+#nullable disable
+        string
+#nullable restore
+        , T>> pairs)
         where T : IEnumerable<string>
     {
         request.Headers.Set(pairs);
