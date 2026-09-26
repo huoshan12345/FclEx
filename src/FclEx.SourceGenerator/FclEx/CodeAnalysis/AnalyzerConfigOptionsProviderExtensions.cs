@@ -1,3 +1,4 @@
+#pragma warning disable RS1035
 #pragma warning disable IDE0005
 using System;
 using System.IO;
@@ -23,35 +24,32 @@ public static class AnalyzerConfigOptionsProviderExtensions
             throw new InvalidOperationException($"Cannot find global option by key '{key}'");
         }
 
-        var segments = path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-        var index = FindRootIndex(segments);
-        if (index < 0)
+        var root = FindSolutionRoot(path);
+        if (root is null)
             throw new InvalidOperationException($"Cannot locate solution directory from current path: {path}");
 
         var assembly = typeof(AnalyzerConfigOptionsProviderExtensions).Assembly.GetName().Name;
-        var parts = segments.Take(index + 1).ToList();
-        parts.Add("src");
-        parts.Add(assembly);
-        var projectDir = Path.Combine(parts.ToArray());
+        var projectDir = Path.Combine(root.FullName, "src", assembly);
 
-#pragma warning disable RS1035 // Do not use APIs banned for analyzers
         return Directory.Exists(projectDir)
-#pragma warning restore RS1035 // Do not use APIs banned for analyzers
             ? projectDir
             : throw new InvalidOperationException($"Source generator project directory does not exist: {projectDir}");
 
-        static int FindRootIndex(string[] segments)
+        static DirectoryInfo? FindSolutionRoot(string path)
         {
-            for (var i = 0; i < segments.Length - 1; i++)
+            DirectoryInfo? cur = new(path);
+            while (cur != null)
             {
-                if (segments[i] == "FclEx"
-                    && segments[i + 1] is "src" or "test")
+                if (cur.Name is "src" or "test"
+                   && cur.Parent is { Name: "FclEx" } parent)
                 {
-                    return i;
+                    return parent;
                 }
+
+                cur = cur.Parent;
             }
 
-            return -1;
+            return null;
         }
 
     }
