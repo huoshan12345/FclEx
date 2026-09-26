@@ -22,6 +22,10 @@
     <PackageReference Include="System.Text.Encoding.CodePages" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\FclEx.SourceGenerator\FclEx.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <Import Project="..\..\build\EmitGeneratedFiles.props" />
+  <ItemGroup>
     <None Include="xunit.runner.debug.json" CopyToOutputDirectory="PreserveNewest" TargetPath="xunit.runner.json" Condition="'$(Configuration)' == 'Debug'" />
     <None Include="xunit.runner.release.json" CopyToOutputDirectory="PreserveNewest" TargetPath="xunit.runner.json" Condition="'$(Configuration)' == 'Release'" />
   </ItemGroup>

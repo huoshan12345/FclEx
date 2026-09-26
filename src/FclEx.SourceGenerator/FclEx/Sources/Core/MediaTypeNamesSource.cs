@@ -4,12 +4,11 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using System;
 using System.IO;
 using System.Net.Http;
-using System.Text.RegularExpressions;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using AngleSharp.Common;
 
-namespace FclEx.Sources;
+namespace FclEx.Sources.Core;
 
 internal class MediaTypeNamesSource
 {
@@ -24,14 +23,12 @@ internal class MediaTypeNamesSource
     internal static IEnumerable<SourceInfo> Generate(SourceProductionContext context, AnalyzerConfigOptionsProvider options)
     {
         SynchronizationContext.SetSynchronizationContext(null);
-        var source = GetSource(context, options).GetAwaiter().GetResult();
-        if (source is null)
+        var nestedClasses = GetNestedClasses(context, options).GetAwaiter().GetResult();
+        if (nestedClasses is null)
         {
             yield return SourceInfo.Failed;
             yield break;
         }
-
-        var nestedClasses = MediaTypeNamesParser.Parse(source);
 
         var missingClasses = new Dictionary<string, string>
         {
@@ -105,10 +102,14 @@ internal class MediaTypeNamesSource
         builder.WriteClosingBracket();
     }
 
+    private static readonly Regex _regSeeCref = new($"""<see cref="(?<type>{typeName}).[^"]+"\s*/>""", RegexOptions.Compiled);
+
     private static void WriteMissingClass(SourceBuilder builder, NestedClass nestedClass)
     {
+        const string className = $"{typeName}Extensions";
+
         // Class declaration
-        builder.WriteLine($"public static partial class {typeName}Extensions")
+        builder.WriteLine($"public static partial class {className}")
             .WriteOpeningBracket();
 
         var name = nestedClass.Name;
@@ -122,7 +123,13 @@ internal class MediaTypeNamesSource
 
         foreach (var field in nestedClass.Fields)
         {
-            builder.WriteLine($"public const string {name}_{field.Name} = \"{field.Value}\";");
+            foreach (var line in field.DocLines)
+            {
+                var l = _regSeeCref.Replace(line, m => m.Groups["type"].Replace(line, s => className));
+
+                builder.WriteLine(l);
+            }
+            builder.WriteLine($"public readonly string {field.Name} = \"{field.Value}\";");
         }
 
         // End class declaration
@@ -134,6 +141,10 @@ internal class MediaTypeNamesSource
         builder.WriteLine($"extension({typeName})")
             .WriteOpeningBracket();
 
+        foreach (var line in nestedClass.DocLines)
+        {
+            builder.WriteLine(line);
+        }
         builder.WriteLine($"public static {name} {name} => {name}.Instance;");
 
         // End class extension declaration
@@ -143,7 +154,7 @@ internal class MediaTypeNamesSource
         builder.WriteClosingBracket();
     }
 
-    private static async Task<string?> GetSource(SourceProductionContext context, AnalyzerConfigOptionsProvider options)
+    private static async Task<IReadOnlyList<NestedClass>?> GetNestedClasses(SourceProductionContext context, AnalyzerConfigOptionsProvider options)
     {
         await Task.Yield();
 
@@ -151,14 +162,15 @@ internal class MediaTypeNamesSource
         if (resourcesDir is null)
             return null;
 
-        var file = new FileInfo(Path.Combine(resourcesDir, $"{typeName}.txt"));
+        var file = new FileInfo(Path.Combine(resourcesDir, $"{typeName}.json"));
         if (file.Exists)
         {
             // file is updated within 7 days
             // Or it is running under GitHub action
             if (file.LastWriteTimeUtc > DateTime.UtcNow.AddDays(-7) || IsGithubAction || IsDependabot)
             {
-                return File.ReadAllText(file.FullName);
+                var text = File.ReadAllText(file.FullName);
+                return JsonSerializer.Deserialize<IReadOnlyList<NestedClass>>(text);
             }
         }
 
@@ -167,10 +179,16 @@ internal class MediaTypeNamesSource
         if (Directory.Exists(resourcesDir) == false)
             Directory.CreateDirectory(resourcesDir);
 
-        using var writer = new StreamWriter(file.FullName, false);
-        await writer.WriteAsync(source);
+        var nestedClasses = MediaTypeNamesParser.Parse(source);
+        var json = JsonSerializer.Serialize(nestedClasses, new JsonSerializerOptions
+        {
+            WriteIndented = true,
+        });
 
-        return source;
+        using var writer = new StreamWriter(file.FullName, false);
+        await writer.WriteAsync(json);
+
+        return nestedClasses;
 
         string? GetResourcesDir()
         {
@@ -190,7 +208,7 @@ internal class MediaTypeNamesSource
         {
             var descriptor = new DiagnosticDescriptor(
                 id: "FclEx",
-                title: nameof(GetSource),
+                title: nameof(GetNestedClasses),
                 messageFormat: messageFormat,
                 category: nameof(MediaTypeNamesSource),
                 defaultSeverity: DiagnosticSeverity.Error,
@@ -212,7 +230,7 @@ internal class MediaTypeNamesSource
 }
 
 public sealed record ConstField(string Name, string Value, string[] DocLines);
-public sealed record NestedClass(string Name, IReadOnlyList<ConstField> Fields);
+public sealed record NestedClass(string Name, IReadOnlyList<ConstField> Fields, string[] DocLines);
 
 public static class MediaTypeNamesParser
 {
@@ -228,12 +246,12 @@ public static class MediaTypeNamesParser
     // this is what keeps the match from swallowing sibling classes (non-greedy alone isn't enough,
     // since a naive .*? would still stop at the first brace at any indent).
     private static readonly Regex NestedClassRegex = new(
-        @"public static class (?<name>\w+)\s*\r?\n(?<indent>[ \t]*)\{(?<body>.*?)\r?\n\k<indent>\}",
+        @"(?<doc>(?:[ \t]*///[^\r\n]*\r?\n)+)[ \t]*public static class (?<name>\w+)\s*\r?\n(?<indent>[ \t]*)\{(?<body>.*?)\r?\n\k<indent>\}",
         RegexOptions.Singleline | RegexOptions.Compiled);
 
     // Step 3: within a nested class body, match each doc-commented const string field.
     private static readonly Regex FieldRegex = new(
-        @"(?<doc>(?:[ \t]*///[^\r\n]*\r?\n)+)[ \t]*public const string (?<name>\w+)\s*=\s*""(?<value>[^""]*)"";",
+        """(?<doc>(?:[ \t]*///[^\r\n]*\r?\n)+)[ \t]*public const string (?<name>\w+)\s*=\s*"(?<value>[^"]*)";""",
         RegexOptions.Compiled);
 
     public static IReadOnlyList<NestedClass> Parse(string source)
@@ -250,16 +268,15 @@ public static class MediaTypeNamesParser
             var className = classMatch.Groups["name"].Value;
             var classBody = classMatch.Groups["body"].Value;
 
+            var classDoc = classMatch.Groups["doc"].Value;
+            var classDocLines = GetDocLines(classDoc);
+
             var fields = new List<ConstField>();
             // ReSharper disable once LoopCanBeConvertedToQuery
             foreach (Match fieldMatch in FieldRegex.Matches(classBody))
             {
-                var docLines = fieldMatch.Groups["doc"].Value
-                    .Replace("\r\n", "\n")
-                    .Split('\n')
-                    .Select(m => m.TrimStart())
-                    .Where(m => m.Length > 0)
-                    .ToArray();
+                var doc = fieldMatch.Groups["doc"].Value;
+                var docLines = GetDocLines(doc);
 
                 fields.Add(new ConstField(
                     fieldMatch.Groups["name"].Value,
@@ -267,9 +284,19 @@ public static class MediaTypeNamesParser
                     docLines));
             }
 
-            result.Add(new NestedClass(className, fields));
+            result.Add(new NestedClass(className, fields, classDocLines));
         }
 
         return result;
+
+        static string[] GetDocLines(string text)
+        {
+            return text
+                .Replace("\r\n", "\n")
+                .Split('\n')
+                .Select(m => m.TrimStart())
+                .Where(m => m.Length > 0)
+                .ToArray();
+        }
     }
 }

@@ -1,4 +1,6 @@
 using FclEx.Sources.Abp;
+using FclEx.Sources.Core;
+using FclEx.Sources.Core.Tests;
 using FclEx.Sources.DependencyInjection;
 using FclEx.Sources.Http;
 using FclEx.Sources.Xunit;
@@ -36,6 +38,10 @@ public class SourceGenerator : IIncrementalGenerator
                     HashExtensionsSource.Generate(),
                     OperationResultExtensionsSource.Generate(),
                     ..MediaTypeNamesSource.Generate(ctx, value.Right),
+                ],
+                "FclEx.Core.Tests" =>
+                [
+                    MediaTypeNamesSourceTestsSource.Generate(ctx, value.Right),
                 ],
                 "FclEx.Http" =>
                 [

@@ -1,7 +1,7 @@
 using System;
 using System.Text;
 
-namespace FclEx.Sources;
+namespace FclEx.Sources.Core;
 
 internal class NumberExtensionsSource
 {
