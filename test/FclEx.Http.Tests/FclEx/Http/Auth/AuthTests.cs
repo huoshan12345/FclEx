@@ -7,7 +7,8 @@ public class AuthTests : HttpServerTests
         return new ServiceCollection()
             .AddTestTokenProvider(handler)
             .BuildServiceProvider()
-            .GetRequiredService<IAccessTokenProvider>();
+            .GetRequiredService<IAccessTokenProviderFactory>()
+            .GetRequired(string.Empty);
     }
 }
 
@@ -20,12 +21,12 @@ public static class AuthTestsExtensions
             .AddHttpClient(nameof(ClientCredentialsTokenProvider))
             .AddHttpMessageHandler(m => handler);
 
-        services.AddSingletonBy<IAccessTokenProvider, IHttpClientFactory>(m => new ClientCredentialsTokenProvider(new()
+        services.AddClientCredentialsTokenProvider(options =>
         {
-            Authority = TestUri.WithPath("/oauth").AbsoluteUri,
-            ClientId = "client",
-            ClientSecret = "secret",
-        }, m));
+            options.Authority = TestUri.WithPath("/oauth").AbsoluteUri;
+            options.ClientId = "client";
+            options.ClientSecret = "secret";
+        });
 
         return services;
     }

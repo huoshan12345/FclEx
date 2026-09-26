@@ -37,6 +37,29 @@ public static partial class HttpClientBuilderExtensions
         return builder.AddHttpMessageHandler(m => configureHandler(m.GetRequiredService<TDependency>()));
     }
 
+    public static IHttpClientBuilder AddAuthenticationHandler(
+        this IHttpClientBuilder builder,
+        string[]? scopes = null,
+        bool requireToken = true)
+    {
+        return builder.AddAuthenticationHandler(string.Empty, scopes, requireToken);
+    }
+
+    public static IHttpClientBuilder AddAuthenticationHandler(
+        this IHttpClientBuilder builder,
+        string tokenProviderName,
+        string[]? scopes = null,
+        bool requireToken = true)
+    {
+        Check.NotNull(builder);
+        Check.NotNull(tokenProviderName);
+
+        return builder.AddHttpMessageHandler(serviceProvider => new AuthenticationHandler(
+            serviceProvider.GetRequiredService<IAccessTokenProviderFactory>().GetRequired(tokenProviderName),
+            scopes,
+            requireToken));
+    }
+
     /// <summary>
     /// Adds a policy handler built from a dependency supplied by a factory.
     /// The dependency is resolved each time the HTTP client factory asks for a policy for a request.
