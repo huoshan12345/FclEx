@@ -24,7 +24,7 @@ public static class AnalyzerConfigOptionsProviderExtensions
         }
 
         var segments = path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-        var index = Array.FindLastIndex(segments, s => string.Equals(s, "FclEx", StringComparison.Ordinal));
+        var index = FindRootIndex(segments);
         if (index < 0)
             throw new InvalidOperationException($"Cannot locate solution directory from current path: {path}");
 
@@ -39,6 +39,20 @@ public static class AnalyzerConfigOptionsProviderExtensions
 #pragma warning restore RS1035 // Do not use APIs banned for analyzers
             ? projectDir
             : throw new InvalidOperationException($"Source generator project directory does not exist: {projectDir}");
+
+        static int FindRootIndex(string[] segments)
+        {
+            for (var i = 0; i < segments.Length - 1; i++)
+            {
+                if (segments[i] == "FclEx"
+                    && segments[i + 1] is "src" or "test")
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
 
     }
 }
