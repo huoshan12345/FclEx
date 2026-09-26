@@ -1,6 +1,6 @@
 using System;
 
-namespace FclEx.Sources;
+namespace FclEx.Sources.Core;
 
 internal static class BytesExtensionsSource
 {

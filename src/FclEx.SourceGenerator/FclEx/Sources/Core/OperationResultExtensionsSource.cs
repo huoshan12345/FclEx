@@ -1,4 +1,4 @@
-namespace FclEx.Sources;
+namespace FclEx.Sources.Core;
 
 internal static class OperationResultExtensionsSource
 {

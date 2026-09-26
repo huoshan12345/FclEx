@@ -1,6 +1,10 @@
+#pragma warning disable RS1035
+#pragma warning disable IDE0005
 using System;
-using Microsoft.CodeAnalysis.Diagnostics;
 using System.IO;
+using System.Linq;
+using Microsoft.CodeAnalysis.Diagnostics;
+#pragma warning restore IDE0005
 
 namespace FclEx.CodeAnalysis;
 
@@ -20,20 +24,33 @@ public static class AnalyzerConfigOptionsProviderExtensions
             throw new InvalidOperationException($"Cannot find global option by key '{key}'");
         }
 
-        var index = path.IndexOf("src", StringComparison.Ordinal);
-        if (index < 0)
-        {
-            throw new InvalidOperationException($"Cannot locate src directory from current path: {path}");
-        }
+        var root = FindSolutionRoot(path);
+        if (root is null)
+            throw new InvalidOperationException($"Cannot locate solution directory from current path: {path}");
 
         var assembly = typeof(AnalyzerConfigOptionsProviderExtensions).Assembly.GetName().Name;
-        var projectDir = Path.Combine(path[..index], "src", assembly);
+        var projectDir = Path.Combine(root.FullName, "src", assembly);
 
-#pragma warning disable RS1035 // Do not use APIs banned for analyzers
         return Directory.Exists(projectDir)
-#pragma warning restore RS1035 // Do not use APIs banned for analyzers
-            ? projectDir 
+            ? projectDir
             : throw new InvalidOperationException($"Source generator project directory does not exist: {projectDir}");
+
+        static DirectoryInfo? FindSolutionRoot(string path)
+        {
+            DirectoryInfo? cur = new(path);
+            while (cur != null)
+            {
+                if (cur.Name is "src" or "test"
+                   && cur.Parent is { Name: "FclEx" } parent)
+                {
+                    return parent;
+                }
+
+                cur = cur.Parent;
+            }
+
+            return null;
+        }
 
     }
 }

@@ -1,18 +1,19 @@
-namespace FclEx.Sources;
+namespace FclEx.Sources.Core;
 
-internal static class AsyncEventHandlerExtensionsSource
+internal static class TypeExtensionsSource
 {
     private const int Max = 8;
     private static readonly string[] _usings =
     [
-        "FclEx"
+        "System",
+        "System.Reflection"
     ];
 
     internal static SourceInfo Generate()
     {
         const string @namespace = "FclEx.Extensions";
-        const string className = "AsyncEventHandlerExtensions";
-        const string methodName = "public static Task InvokeAsync";
+        const string className = "TypeExtensions";
+        const string methodName = "public static Type MakeGenericType";
 
         using var builder = new SourceBuilder()
             .WriteGeneratedHeader()
@@ -30,13 +31,12 @@ internal static class AsyncEventHandlerExtensionsSource
 
         for (var i = 1; i <= Max; i++)
         {
-            var types = Enumerable.Range(1, i).Select(m => $"T{m}").Prepend("TSender").JoinWith(", ");
-            var @params = Enumerable.Range(1, i).Select(m => $"T{m} arg{m}").Prepend("TSender sender").JoinWith(", ");
-            var args = Enumerable.Range(1, i).Select(m => $"arg{m}").Prepend("sender").JoinWith(", ");
-            var handlerType = $"AsyncEventHandler<{types}>";
-            builder.WriteLine($"{methodName}<{types}>(this {handlerType} handler, {@params})");
+            var types = Enumerable.Range(1, i).Select(m => "T" + m).ToArray();
+            var typeParams = types.JoinWith(", ");
+            builder.WriteLine($"{methodName}<{typeParams}>(this Type type)");
             builder.WriteOpeningBracket();
-            builder.WriteLine($"return handler.GetInvocationList<{handlerType}>().Select(m => m({args})).WhenAll();");
+            var typeArgs = types.Select(m => $"typeof({m})").JoinWith(", ");
+            builder.WriteLine($"return type.MakeGenericType({typeArgs});");
             builder.WriteClosingBracket();
             builder.WriteLine();
         }

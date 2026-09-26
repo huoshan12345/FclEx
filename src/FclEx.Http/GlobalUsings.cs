@@ -46,6 +46,7 @@ global using Microsoft.Extensions.DependencyInjection.Extensions;
 global using Microsoft.Extensions.Http;
 global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Logging.Abstractions;
+global using Microsoft.Extensions.Options;
 global using Polly;
 global using Polly.Timeout;
 global using SleepDurationProvider = System.Func<int, System.TimeSpan>;

@@ -1,0 +1,414 @@
+[
+  {
+    "Name": "Application",
+    "Fields": [
+      {
+        "Name": "FormUrlEncoded",
+        "Value": "application/x-www-form-urlencoded",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Application\u0022/\u003E data consists of url-encoded key-value pairs.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "GZip",
+        "Value": "application/gzip",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Application\u0022/\u003E data is in gzip format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Json",
+        "Value": "application/json",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Application\u0022/\u003E data is in JSON format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "JsonPatch",
+        "Value": "application/json-patch\u002Bjson",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Application\u0022/\u003E data is in JSON patch format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "JsonSequence",
+        "Value": "application/json-seq",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Application\u0022/\u003E data is in JSON text sequence format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Manifest",
+        "Value": "application/manifest\u002Bjson",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Application\u0022/\u003E data is in Web Application Manifest.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Octet",
+        "Value": "application/octet-stream",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Application\u0022/\u003E data is not interpreted.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Pdf",
+        "Value": "application/pdf",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Application\u0022/\u003E data is in Portable Document Format (PDF).\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "ProblemJson",
+        "Value": "application/problem\u002Bjson",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Application\u0022/\u003E data is in JSON problem detail format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "ProblemXml",
+        "Value": "application/problem\u002Bxml",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Application\u0022/\u003E data is in XML problem detail format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Rtf",
+        "Value": "application/rtf",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Application\u0022/\u003E data is in Rich Text Format (RTF).\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Soap",
+        "Value": "application/soap\u002Bxml",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Application\u0022/\u003E data is a SOAP document.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Wasm",
+        "Value": "application/wasm",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Application\u0022/\u003E data is in WASM format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Xml",
+        "Value": "application/xml",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Application\u0022/\u003E data is in XML format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "XmlDtd",
+        "Value": "application/xml-dtd",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Application\u0022/\u003E data is in XML Document Type Definition format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "XmlPatch",
+        "Value": "application/xml-patch\u002Bxml",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Application\u0022/\u003E data is in XML patch format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Yaml",
+        "Value": "application/yaml",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Application\u0022/\u003E data is in YAML format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Zip",
+        "Value": "application/zip",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Application\u0022/\u003E data is compressed.\u003C/summary\u003E"
+        ]
+      }
+    ],
+    "DocLines": [
+      "/// \u003Csummary\u003ESpecifies the kind of application data in an email message attachment.\u003C/summary\u003E"
+    ]
+  },
+  {
+    "Name": "Font",
+    "Fields": [
+      {
+        "Name": "Collection",
+        "Value": "font/collection",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Font\u0022/\u003E data is in font type collection format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Otf",
+        "Value": "font/otf",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Font\u0022/\u003E data is in OpenType Layout (OTF) format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Sfnt",
+        "Value": "font/sfnt",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Font\u0022/\u003E data is in SFNT format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Ttf",
+        "Value": "font/ttf",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Font\u0022/\u003E data is in TrueType font (TTF) format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Woff",
+        "Value": "font/woff",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Font\u0022/\u003E data is in WOFF format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Woff2",
+        "Value": "font/woff2",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Font\u0022/\u003E data is in WOFF2 format.\u003C/summary\u003E"
+        ]
+      }
+    ],
+    "DocLines": [
+      "/// \u003Csummary\u003ESpecifies the kind of font data in an email message attachment.\u003C/summary\u003E"
+    ]
+  },
+  {
+    "Name": "Image",
+    "Fields": [
+      {
+        "Name": "Avif",
+        "Value": "image/avif",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Image\u0022/\u003E data is in AVIF format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Bmp",
+        "Value": "image/bmp",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Image\u0022/\u003E data is in BMP format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Gif",
+        "Value": "image/gif",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Image\u0022/\u003E data is in GIF format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Icon",
+        "Value": "image/x-icon",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Image\u0022/\u003E data is in ICO format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Jpeg",
+        "Value": "image/jpeg",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Image\u0022/\u003E data is in JPEG format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Png",
+        "Value": "image/png",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Image\u0022/\u003E data is in PNG format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Svg",
+        "Value": "image/svg\u002Bxml",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Image\u0022/\u003E data is in SVG format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Tiff",
+        "Value": "image/tiff",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Image\u0022/\u003E data is in TIFF format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Webp",
+        "Value": "image/webp",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Image\u0022/\u003E data is in WEBP format.\u003C/summary\u003E"
+        ]
+      }
+    ],
+    "DocLines": [
+      "/// \u003Csummary\u003ESpecifies the kind of image data in an email message attachment.\u003C/summary\u003E"
+    ]
+  },
+  {
+    "Name": "Multipart",
+    "Fields": [
+      {
+        "Name": "ByteRanges",
+        "Value": "multipart/byteranges",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Multipart\u0022/\u003E data consists of multiple byte ranges.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "FormData",
+        "Value": "multipart/form-data",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Multipart\u0022/\u003E data is in form data format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Mixed",
+        "Value": "multipart/mixed",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Multipart\u0022/\u003E data is in mixed format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Related",
+        "Value": "multipart/related",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Multipart\u0022/\u003E data is in related format.\u003C/summary\u003E"
+        ]
+      }
+    ],
+    "DocLines": [
+      "/// \u003Csummary\u003ESpecifies the kind of multipart data in an email message attachment.\u003C/summary\u003E"
+    ]
+  },
+  {
+    "Name": "Text",
+    "Fields": [
+      {
+        "Name": "Css",
+        "Value": "text/css",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Text\u0022/\u003E data is in CSS format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Csv",
+        "Value": "text/csv",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Text\u0022/\u003E data is in CSV format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "EventStream",
+        "Value": "text/event-stream",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Text\u0022/\u003E data is in event stream format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Html",
+        "Value": "text/html",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Text\u0022/\u003E data is in HTML format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "JavaScript",
+        "Value": "text/javascript",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Text\u0022/\u003E data is in JavaScript format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Markdown",
+        "Value": "text/markdown",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Text\u0022/\u003E data is in Markdown format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Plain",
+        "Value": "text/plain",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Text\u0022/\u003E data is in plain text format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "RichText",
+        "Value": "text/richtext",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Text\u0022/\u003E data is in Rich Text Format (RTF).\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Rtf",
+        "Value": "text/rtf",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Text\u0022/\u003E data is in Rich Text Format (RTF).\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Xml",
+        "Value": "text/xml",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Text\u0022/\u003E data is in XML format.\u003C/summary\u003E"
+        ]
+      }
+    ],
+    "DocLines": [
+      "/// \u003Csummary\u003ESpecifies the kind of text data in an email message attachment.\u003C/summary\u003E"
+    ]
+  },
+  {
+    "Name": "Video",
+    "Fields": [
+      {
+        "Name": "Mp4",
+        "Value": "video/mp4",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Video\u0022/\u003E data is in MP4 format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Mpeg",
+        "Value": "video/mpeg",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Video\u0022/\u003E data is in MPEG format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "Ogg",
+        "Value": "video/ogg",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Video\u0022/\u003E data is in Ogg format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "QuickTime",
+        "Value": "video/quicktime",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Video\u0022/\u003E data is in QuickTime format.\u003C/summary\u003E"
+        ]
+      },
+      {
+        "Name": "WebM",
+        "Value": "video/webm",
+        "DocLines": [
+          "/// \u003Csummary\u003ESpecifies that the \u003Csee cref=\u0022MediaTypeNames.Video\u0022/\u003E data is in WebM format.\u003C/summary\u003E"
+        ]
+      }
+    ],
+    "DocLines": [
+      "/// \u003Csummary\u003ESpecifies the kind of video data in an email message attachment.\u003C/summary\u003E"
+    ]
+  }
+]

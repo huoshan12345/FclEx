@@ -7,7 +7,7 @@ public class AuthenticationHandlerTests : AuthTests
         var provider = new ServiceCollection()
             .AddTestTokenProvider(handler)
             .AddHttpClient(string.Empty)
-            .AddHttpMessageHandlerBy<IAccessTokenProvider>(m => new AuthenticationHandler(m, scopes, requireToken))
+            .AddAuthenticationHandler(scopes, requireToken)
             .Services
             .BuildServiceProvider();
 

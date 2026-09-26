@@ -4,6 +4,7 @@ global using System.Collections.Generic;
 global using System.Diagnostics;
 global using System.Linq;
 global using System.Security.Cryptography;
+global using System.Text.RegularExpressions;
 global using FclEx.CodeAnalysis;
 global using FclEx.Extensions;
 global using FclEx.Sources;

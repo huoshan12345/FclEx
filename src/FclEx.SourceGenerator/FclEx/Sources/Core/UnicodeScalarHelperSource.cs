@@ -10,7 +10,7 @@ using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace FclEx.Sources;
+namespace FclEx.Sources.Core;
 
 internal static class UnicodeScalarHelperSource
 {
