@@ -12,4 +12,4 @@ xUnit v3 source generator for FclEx test serialization helpers.
 
 - This project is packaged as an analyzer dependency of `FclEx.Xunit.v3`.
 - It is not intended as a runtime library.
-- Use `FclEx.Xunit.SourceGenerator` with xUnit v2 projects.
+- This generator is used by `FclEx.Xunit.v3`; there is no separate xUnit v2 generator package.

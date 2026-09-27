@@ -70,7 +70,7 @@ For example:
 - Use [FclEx.DependencyInjection](src/FclEx.DependencyInjection) for registration helpers around `IServiceCollection`.
 - Use [FclEx.Http](src/FclEx.Http) for reusable HTTP request/response workflows.
 - Use [FclEx.AspNetCore](src/FclEx.AspNetCore) when those HTTP helpers need to live inside an ASP.NET Core app.
-- Use [FclEx.Xunit](src/FclEx.Xunit) or [FclEx.Xunit.v3](src/FclEx.Xunit.v3) from test projects, depending on the xUnit generation you target.
+- Use [FclEx.Xunit.v3](src/FclEx.Xunit.v3) for xUnit v3 test projects. It includes the FclEx test helpers and an xUnit v3 adaptation of the `xRetry.v3` source.
 
 ## Repository Layout
 
