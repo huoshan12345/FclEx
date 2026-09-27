@@ -1,10 +1,12 @@
 namespace FclEx.Http;
 
+/// <summary>
+/// Configures which access token provider and scopes an <see cref="AuthenticationHandler"/> uses.
+/// </summary>
 public class AuthenticationHandlerOptions
 {
     /// <summary>
-    /// The name of the <see cref="IAccessTokenProvider"/> to use for acquiring tokens.<br/>
-    /// This is used when multiple providers are registered in DI.
+    /// The registered provider name to use for acquiring tokens. An empty string selects the default provider.
     /// </summary>
     public string TokenProviderName { get; set; } = string.Empty;
 
@@ -27,7 +29,8 @@ public class AuthenticationHandlerOptions
 /// When token acquisition is enabled, the handler asks the configured <see cref="IAccessTokenProvider"/> for a token,
 /// assigns it to <see cref="HttpRequestHeaders.Authorization"/>, and sends the request. If the response status is
 /// <see cref="HttpStatusCode.Unauthorized"/>, the response is disposed, a second token is requested with
-/// <c>forceRefresh: true</c>, and the same request message is sent one more time.
+/// <c>forceRefresh: true</c>, and the same request message is sent one more time. The provider is selected once when the
+/// handler is constructed; registration extensions resolve it by <see cref="AuthenticationHandlerOptions.TokenProviderName"/>.
 /// </remarks>
 public class AuthenticationHandler : DelegatingHandler
 {
@@ -45,6 +48,13 @@ public class AuthenticationHandler : DelegatingHandler
         _options = options;
     }
 
+    /// <summary>
+    /// Initializes a handler that selects its provider from a named provider factory.
+    /// </summary>
+    /// <param name="options">The provider name, scopes, and token requirement used by the handler.</param>
+    /// <param name="tokenProviderFactory">The factory that resolves the provider named in <paramref name="options"/>.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="options"/> or <paramref name="tokenProviderFactory"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException">No provider is registered under the configured name.</exception>
     public AuthenticationHandler(AuthenticationHandlerOptions options, IAccessTokenProviderFactory tokenProviderFactory)
     {
         _tokenProvider = tokenProviderFactory.GetRequired(options.TokenProviderName);
