@@ -96,6 +96,27 @@ public static partial class ServiceCollectionExtensions
     }
 
     /// <summary>
+    /// Registers the default access token provider only when no provider factory has already been registered under the empty name.
+    /// </summary>
+    /// <remarks>
+    /// The provider is created lazily on first resolution and cached for the service-provider lifetime. Its factory receives
+    /// the root service provider and must not resolve scoped services. The factory owns the returned provider and disposes it
+    /// with the service provider if it implements <see cref="IDisposable"/>.
+    /// </remarks>
+    /// <typeparam name="TProvider">The provider implementation type.</typeparam>
+    /// <param name="services">The service collection to add the provider registration to.</param>
+    /// <param name="factory">Creates the provider when the default name is first requested.</param>
+    /// <returns>The same service collection, for chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> or <paramref name="factory"/> is <see langword="null"/>.</exception>
+    public static IServiceCollection TryAddAccessTokenProvider<TProvider>(
+        this IServiceCollection services,
+        Func<IServiceProvider, TProvider> factory)
+        where TProvider : class, IAccessTokenProvider
+    {
+        return services.TryAddAccessTokenProvider(string.Empty, factory);
+    }
+
+    /// <summary>
     /// Registers the default provider for OAuth/OIDC client-credentials token acquisition.
     /// </summary>
     /// <remarks>
@@ -113,6 +134,25 @@ public static partial class ServiceCollectionExtensions
         Action<ClientCredentialsTokenProviderOptions> configureOptions)
     {
         return services.AddClientCredentialsTokenProvider(string.Empty, configureOptions);
+    }
+
+    /// <summary>
+    /// Registers the default client-credentials provider only if no provider is registered under the empty name.
+    /// </summary>
+    /// <remarks>
+    /// The options callback runs lazily when the provider is first requested. If a provider is already registered under
+    /// the empty name, this callback is not invoked. The selected provider is cached for the service-provider lifetime.
+    /// This registration requires <see cref="IHttpClientFactory"/> to be registered, for example by calling <c>AddHttpClient</c>.
+    /// </remarks>
+    /// <param name="services">The service collection to add the provider registration to.</param>
+    /// <param name="configureOptions">Configures the authority, client credentials, and discovery policy.</param>
+    /// <returns>The same service collection, for chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> or <paramref name="configureOptions"/> is <see langword="null"/>.</exception>
+    public static IServiceCollection TryAddClientCredentialsTokenProvider(
+        this IServiceCollection services,
+        Action<ClientCredentialsTokenProviderOptions> configureOptions)
+    {
+        return services.TryAddClientCredentialsTokenProvider(string.Empty, configureOptions);
     }
 
     /// <summary>
@@ -140,6 +180,34 @@ public static partial class ServiceCollectionExtensions
         Check.NotNull(configureOptions);
 
         return services.AddAccessTokenProvider(name, serviceProvider =>
+        {
+            var options = new ClientCredentialsTokenProviderOptions();
+            configureOptions(options);
+            return new ClientCredentialsTokenProvider(options, serviceProvider.GetRequiredService<IHttpClientFactory>());
+        });
+    }
+
+    /// <summary>
+    /// Registers a named client-credentials provider only if no provider is already registered under that name.
+    /// </summary>
+    /// <remarks>
+    /// The options callback runs lazily on first resolution. If the name is already registered, this callback is not invoked
+    /// and the existing registration is kept. The provider is cached for the service-provider lifetime. The registration
+    /// requires <see cref="IHttpClientFactory"/> and uses the HTTP client named after <see cref="ClientCredentialsTokenProvider"/>.
+    /// </remarks>
+    /// <param name="services">The service collection to add the provider registration to.</param>
+    /// <param name="name">The provider name. Use an empty string for the default provider.</param>
+    /// <param name="configureOptions">Configures the authority, client credentials, and discovery policy.</param>
+    /// <returns>The same service collection, for chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/>, <paramref name="name"/>, or <paramref name="configureOptions"/> is <see langword="null"/>.</exception>
+    public static IServiceCollection TryAddClientCredentialsTokenProvider(
+        this IServiceCollection services,
+        string name,
+        Action<ClientCredentialsTokenProviderOptions> configureOptions)
+    {
+        Check.NotNull(configureOptions);
+
+        return services.TryAddAccessTokenProvider(name, serviceProvider =>
         {
             var options = new ClientCredentialsTokenProviderOptions();
             configureOptions(options);
@@ -176,6 +244,33 @@ public static partial class ServiceCollectionExtensions
     }
 
     /// <summary>
+    /// Registers a named client-credentials provider configured with root services only if its name is not already registered.
+    /// </summary>
+    /// <remarks>
+    /// The callback runs lazily once when the provider is first requested and receives the root service provider. Do not
+    /// resolve scoped services from it. If the name already has a registration, the callback is not invoked and the existing
+    /// registration is kept. The provider is cached for the service-provider lifetime.
+    /// </remarks>
+    /// <param name="services">The service collection to add the provider registration to.</param>
+    /// <param name="name">The provider name. Use an empty string for the default provider.</param>
+    /// <param name="configureOptions">Configures the authority, client credentials, and discovery policy using root services.</param>
+    /// <returns>The same service collection, for chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/>, <paramref name="name"/>, or <paramref name="configureOptions"/> is <see langword="null"/>.</exception>
+    public static IServiceCollection TryAddClientCredentialsTokenProvider(
+        this IServiceCollection services,
+        string name,
+        Action<ClientCredentialsTokenProviderOptions, IServiceProvider> configureOptions)
+    {
+        Check.NotNull(configureOptions);
+        return services.TryAddAccessTokenProvider(name, provider =>
+        {
+            var options = new ClientCredentialsTokenProviderOptions();
+            configureOptions(options, provider);
+            return new ClientCredentialsTokenProvider(options, provider.GetRequiredService<IHttpClientFactory>());
+        });
+    }
+
+    /// <summary>
     /// Registers a named client-credentials provider whose options are created from the root service provider.
     /// </summary>
     /// <remarks>
@@ -195,6 +290,32 @@ public static partial class ServiceCollectionExtensions
     {
         Check.NotNull(optionsFactory);
         return services.AddAccessTokenProvider(name, provider =>
+        {
+            var options = optionsFactory(provider);
+            return new ClientCredentialsTokenProvider(options, provider.GetRequiredService<IHttpClientFactory>());
+        });
+    }
+
+    /// <summary>
+    /// Registers a named client-credentials provider whose options come from root services, unless that name is already registered.
+    /// </summary>
+    /// <remarks>
+    /// The options factory runs lazily once when the provider is first requested and receives the root service provider. Do
+    /// not resolve scoped services from it. If the name already has a registration, the factory is not invoked and the
+    /// existing registration is kept. The provider is cached for the service-provider lifetime.
+    /// </remarks>
+    /// <param name="services">The service collection to add the provider registration to.</param>
+    /// <param name="name">The provider name. Use an empty string for the default provider.</param>
+    /// <param name="optionsFactory">Creates options containing the authority, client credentials, and discovery policy.</param>
+    /// <returns>The same service collection, for chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/>, <paramref name="name"/>, or <paramref name="optionsFactory"/> is <see langword="null"/>.</exception>
+    public static IServiceCollection TryAddClientCredentialsTokenProvider(
+        this IServiceCollection services,
+        string name,
+        Func<IServiceProvider, ClientCredentialsTokenProviderOptions> optionsFactory)
+    {
+        Check.NotNull(optionsFactory);
+        return services.TryAddAccessTokenProvider(name, provider =>
         {
             var options = optionsFactory(provider);
             return new ClientCredentialsTokenProvider(options, provider.GetRequiredService<IHttpClientFactory>());
@@ -233,6 +354,37 @@ public static partial class ServiceCollectionExtensions
     }
 
     /// <summary>
+    /// Registers a named client-credentials provider configured from a root dependency only if the name is not already registered.
+    /// </summary>
+    /// <remarks>
+    /// The dependency is resolved from the root service provider and the callback runs once when the provider is first
+    /// requested, so the dependency must not be scoped. If the name is already registered, the dependency is not resolved
+    /// and the callback is not invoked. The provider is cached for the service-provider lifetime.
+    /// </remarks>
+    /// <typeparam name="TDependency">The registered dependency used to configure the provider.</typeparam>
+    /// <param name="services">The service collection to add the provider registration to.</param>
+    /// <param name="name">The provider name. Use an empty string for the default provider.</param>
+    /// <param name="configureOptions">Configures the authority, client credentials, and discovery policy.</param>
+    /// <returns>The same service collection, for chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/>, <paramref name="name"/>, or <paramref name="configureOptions"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException"><typeparamref name="TDependency"/> is not registered and this registration is selected.</exception>
+    public static IServiceCollection TryAddClientCredentialsTokenProviderBy<TDependency>(
+        this IServiceCollection services,
+        string name,
+        Action<ClientCredentialsTokenProviderOptions, TDependency> configureOptions)
+        where TDependency : class
+    {
+        Check.NotNull(configureOptions);
+        return services.TryAddAccessTokenProvider(name, provider =>
+        {
+            var options = new ClientCredentialsTokenProviderOptions();
+            var dependency = provider.GetRequiredService<TDependency>();
+            configureOptions(options, dependency);
+            return new ClientCredentialsTokenProvider(options, provider.GetRequiredService<IHttpClientFactory>());
+        });
+    }
+
+    /// <summary>
     /// Registers a named client-credentials provider whose options are created from a registered dependency.
     /// </summary>
     /// <remarks>
@@ -255,6 +407,36 @@ public static partial class ServiceCollectionExtensions
     {
         Check.NotNull(optionsFactory);
         return services.AddAccessTokenProvider(name, provider =>
+        {
+            var dependency = provider.GetRequiredService<TDependency>();
+            var options = optionsFactory(dependency);
+            return new ClientCredentialsTokenProvider(options, provider.GetRequiredService<IHttpClientFactory>());
+        });
+    }
+
+    /// <summary>
+    /// Registers a named client-credentials provider whose options come from a root dependency, unless the name is already registered.
+    /// </summary>
+    /// <remarks>
+    /// The dependency is resolved from the root service provider and the options factory runs once when the provider is first
+    /// requested, so the dependency must not be scoped. If the name is already registered, neither is resolved or invoked.
+    /// The provider is cached for the service-provider lifetime.
+    /// </remarks>
+    /// <typeparam name="TDependency">The registered dependency used to create the options.</typeparam>
+    /// <param name="services">The service collection to add the provider registration to.</param>
+    /// <param name="name">The provider name. Use an empty string for the default provider.</param>
+    /// <param name="optionsFactory">Creates options containing the authority, client credentials, and discovery policy.</param>
+    /// <returns>The same service collection, for chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/>, <paramref name="name"/>, or <paramref name="optionsFactory"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException"><typeparamref name="TDependency"/> is not registered and this registration is selected.</exception>
+    public static IServiceCollection TryAddClientCredentialsTokenProviderBy<TDependency>(
+        this IServiceCollection services,
+        string name,
+        Func<TDependency, ClientCredentialsTokenProviderOptions> optionsFactory)
+        where TDependency : class
+    {
+        Check.NotNull(optionsFactory);
+        return services.TryAddAccessTokenProvider(name, provider =>
         {
             var dependency = provider.GetRequiredService<TDependency>();
             var options = optionsFactory(dependency);

@@ -90,6 +90,20 @@ public class AccessTokenProviderRegistrationTests
     }
 
     [Fact]
+    public void TryAddAccessTokenProvider_WithoutName_RegistersDefaultOnlyWhenMissing()
+    {
+        var expected = new TestAccessTokenProvider("default");
+        var services = new ServiceCollection()
+            .TryAddAccessTokenProvider(_ => expected)
+            .TryAddAccessTokenProvider<TestAccessTokenProvider>(_ => throw new InvalidOperationException("The existing registration should be kept."));
+
+        using var serviceProvider = services.BuildServiceProvider();
+        var factory = serviceProvider.GetRequiredService<IAccessTokenProviderFactory>();
+
+        Assert.Same(expected, factory.GetRequired(string.Empty));
+    }
+
+    [Fact]
     public void AddClientCredentialsTokenProvider_WithDifferentNames_CachesOneProviderPerName()
     {
         var services = new ServiceCollection()
@@ -152,6 +166,83 @@ public class AccessTokenProviderRegistrationTests
             Assert.Same(provider, factory.GetRequired(name));
             Assert.Equal(1, callbacks[name]);
         }
+    }
+
+    [Fact]
+    public void TryAddClientCredentialsTokenProvider_WhenNamesAreMissing_RegistersAllOverloads()
+    {
+        var dependencyOptions = new ClientCredentialsTokenProviderOptions { ClientId = "dependency" };
+        var services = new ServiceCollection()
+            .AddSingleton(dependencyOptions)
+            .AddHttpClient(nameof(ClientCredentialsTokenProvider))
+            .Services
+            .TryAddClientCredentialsTokenProvider(new Action<ClientCredentialsTokenProviderOptions>(options => options.ClientId = "default"))
+            .TryAddClientCredentialsTokenProvider("named", new Action<ClientCredentialsTokenProviderOptions>(options => options.ClientId = "named"))
+            .TryAddClientCredentialsTokenProvider("service-callback", new Action<ClientCredentialsTokenProviderOptions, IServiceProvider>((options, provider) =>
+            {
+                options.ClientId = provider.GetRequiredService<ClientCredentialsTokenProviderOptions>().ClientId;
+            }))
+            .TryAddClientCredentialsTokenProvider("service-factory", new Func<IServiceProvider, ClientCredentialsTokenProviderOptions>(provider =>
+                new() { ClientId = provider.GetRequiredService<ClientCredentialsTokenProviderOptions>().ClientId }))
+            .TryAddClientCredentialsTokenProviderBy<ClientCredentialsTokenProviderOptions>("dependency-callback", (options, dependency) =>
+            {
+                options.ClientId = dependency.ClientId;
+            })
+            .TryAddClientCredentialsTokenProviderBy<ClientCredentialsTokenProviderOptions>("dependency-factory", dependency =>
+                new() { ClientId = dependency.ClientId });
+
+        using var serviceProvider = services.BuildServiceProvider();
+        var factory = serviceProvider.GetRequiredService<IAccessTokenProviderFactory>();
+        var expectedClients = new Dictionary<string, string>
+        {
+            [string.Empty] = "default",
+            ["named"] = "named",
+            ["service-callback"] = "dependency",
+            ["service-factory"] = "dependency",
+            ["dependency-callback"] = "dependency",
+            ["dependency-factory"] = "dependency",
+        };
+
+        foreach (var (name, expectedClientId) in expectedClients)
+        {
+            var provider = factory.GetRequired(name);
+            Assert.Equal(expectedClientId, GetOptions(provider).ClientId);
+            Assert.Same(provider, factory.GetRequired(name));
+        }
+    }
+
+    [Fact]
+    public void TryAddClientCredentialsTokenProvider_WhenNamesAlreadyExist_KeepsExistingProvidersWithoutInvokingCallbacks()
+    {
+        var names = new[] { string.Empty, "named", "service-callback", "service-factory", "dependency-callback", "dependency-factory" };
+        var existingProviders = names.ToDictionary(name => name, name => new TestAccessTokenProvider(name));
+        var callbackCount = 0;
+        var services = new ServiceCollection();
+        foreach (var (name, provider) in existingProviders)
+            services.AddAccessTokenProvider(name, _ => provider);
+
+        services
+            .TryAddClientCredentialsTokenProvider(new Action<ClientCredentialsTokenProviderOptions>(_ => callbackCount++))
+            .TryAddClientCredentialsTokenProvider("named", new Action<ClientCredentialsTokenProviderOptions>(_ => callbackCount++))
+            .TryAddClientCredentialsTokenProvider("service-callback", new Action<ClientCredentialsTokenProviderOptions, IServiceProvider>((_, _) => callbackCount++))
+            .TryAddClientCredentialsTokenProvider("service-factory", new Func<IServiceProvider, ClientCredentialsTokenProviderOptions>(_ =>
+            {
+                callbackCount++;
+                return new();
+            }))
+            .TryAddClientCredentialsTokenProviderBy<UnregisteredDependency>("dependency-callback", (_, _) => callbackCount++)
+            .TryAddClientCredentialsTokenProviderBy<UnregisteredDependency>("dependency-factory", _ =>
+            {
+                callbackCount++;
+                return new();
+            });
+
+        using var serviceProvider = services.BuildServiceProvider();
+        var factory = serviceProvider.GetRequiredService<IAccessTokenProviderFactory>();
+
+        foreach (var (name, provider) in existingProviders)
+            Assert.Same(provider, factory.GetRequired(name));
+        Assert.Equal(0, callbackCount);
     }
 
     [Fact]
@@ -238,6 +329,10 @@ public class AccessTokenProviderRegistrationTests
         }
 
         public void Dispose() => onDispose();
+    }
+
+    private sealed class UnregisteredDependency
+    {
     }
 
     private static ClientCredentialsTokenProviderOptions GetOptions(IAccessTokenProvider provider)
