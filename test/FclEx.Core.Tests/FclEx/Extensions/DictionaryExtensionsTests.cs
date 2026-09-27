@@ -38,4 +38,36 @@ public class DictionaryExtensionsTests
 
         Assert.Equal([1, 2], dictionary["numbers"]);
     }
+
+    [Fact]
+    public void TrySet_WhenOverwriteIsFalse_AddsOnlyMissingKeys()
+    {
+        IDictionary<string, int> dictionary = new Dictionary<string, int> { ["existing"] = 1 };
+
+        Assert.True(dictionary.TrySet("new", 2, overwrite: false));
+        Assert.False(dictionary.TrySet("existing", 3, overwrite: false));
+
+        Assert.Equal(2, dictionary["new"]);
+        Assert.Equal(1, dictionary["existing"]);
+    }
+
+    [Fact]
+    public void TrySet_WhenOverwriteIsTrue_AddsOrReplacesTheValue()
+    {
+        IDictionary<string, int> dictionary = new Dictionary<string, int> { ["existing"] = 1 };
+
+        Assert.True(dictionary.TrySet("new", 2, overwrite: true));
+        Assert.True(dictionary.TrySet("existing", 3, overwrite: true));
+
+        Assert.Equal(2, dictionary["new"]);
+        Assert.Equal(3, dictionary["existing"]);
+    }
+
+    [Fact]
+    public void TrySet_WhenDictionaryIsNull_ThrowsArgumentNullException()
+    {
+        IDictionary<string, int>? dictionary = null;
+
+        Assert.Throws<ArgumentNullException>(() => dictionary!.TrySet("key", 1, overwrite: true));
+    }
 }

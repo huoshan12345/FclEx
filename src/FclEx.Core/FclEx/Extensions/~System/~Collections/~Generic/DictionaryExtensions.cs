@@ -128,4 +128,48 @@ public static partial class DictionaryExtensions
         return true;
     }
 #endif
+
+    /// <summary>
+    /// Attempts to set the value for the specified key in the dictionary.
+    /// When <paramref name="overwrite"/> is <c>true</c>, the value is always written,
+    /// equivalent to <c>dictionary[key] = value</c>.
+    /// When <paramref name="overwrite"/> is <c>false</c>, the value is only added
+    /// if the key does not already exist, equivalent to <c>TryAdd</c>.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the dictionary's keys.</typeparam>
+    /// <typeparam name="TValue">The type of the dictionary's values.</typeparam>
+    /// <param name="dictionary">The dictionary to modify.</param>
+    /// <param name="key">The key of the element to set.</param>
+    /// <param name="value">The value to set.</param>
+    /// <param name="overwrite">
+    /// <c>true</c> to overwrite an existing value for <paramref name="key"/>;
+    /// <c>false</c> to only add the value when <paramref name="key"/> is not already present.
+    /// </param>
+    /// <returns>
+    /// <c>true</c> if the value was written (either added or overwritten);
+    /// <c>false</c> if <paramref name="overwrite"/> is <c>false</c> and the key already
+    /// existed, in which case no change was made.
+    /// </returns>
+    public static bool TrySet<TKey, TValue>(
+        this IDictionary<TKey, TValue> dictionary,
+        TKey key,
+        TValue value,
+        bool overwrite)
+    {
+        Check.NotNull(dictionary);
+
+        if (overwrite)
+        {
+            dictionary[key] = value;
+            return true;
+        }
+
+        if (dictionary.ContainsKey(key))
+        {
+            return false;
+        }
+
+        dictionary.Add(key, value);
+        return true;
+    }
 }

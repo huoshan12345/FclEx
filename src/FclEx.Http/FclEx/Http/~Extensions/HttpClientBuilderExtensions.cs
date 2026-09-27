@@ -42,8 +42,8 @@ public static partial class HttpClientBuilderExtensions
     /// </summary>
     /// <remarks>
     /// The default provider is the provider registered with an empty name. Register it with
-    /// <see cref="AccessTokenProviderServiceCollectionExtensions.AddClientCredentialsTokenProvider(IServiceCollection, Action{ClientCredentialsTokenProviderOptions})"/>
-    /// or <see cref="AccessTokenProviderServiceCollectionExtensions.AddAccessTokenProvider{TProvider}(IServiceCollection, Func{IServiceProvider, TProvider})"/>.
+    /// <see cref="ServiceCollectionExtensions.AddClientCredentialsTokenProvider(IServiceCollection, Action{ClientCredentialsTokenProviderOptions})"/>
+    /// or <see cref="ServiceCollectionExtensions.AddAccessTokenProvider{TProvider}(IServiceCollection, Func{IServiceProvider, TProvider})"/>.
     /// The handler is created when <see cref="IHttpClientFactory"/> builds the client's handler chain.
     /// </remarks>
     /// <param name="builder">The HTTP client builder to add the authentication handler to.</param>
@@ -63,14 +63,29 @@ public static partial class HttpClientBuilderExtensions
         return builder.AddAuthenticationHandler(string.Empty, scopes, requireToken);
     }
 
+    public static IHttpClientBuilder AddAuthenticationHandler(
+        this IHttpClientBuilder builder,
+        Func<IServiceProvider, AuthenticationHandlerOptions> optionsFactory)
+    {
+        Check.NotNull(builder);
+        Check.NotNull(optionsFactory);
+
+        return builder.AddHttpMessageHandler(provider =>
+        {
+            var options = optionsFactory(provider);
+            var factory = provider.GetRequiredService<IAccessTokenProviderFactory>();
+            return new AuthenticationHandler(options, factory);
+        });
+    }
+
     /// <summary>
     /// Adds an <see cref="AuthenticationHandler"/> that uses the named access token provider.
     /// </summary>
     /// <remarks>
     /// Register a client-credentials provider with the same name using
-    /// <see cref="AccessTokenProviderServiceCollectionExtensions.AddClientCredentialsTokenProvider(IServiceCollection, string, Action{ClientCredentialsTokenProviderOptions})"/>,
+    /// <see cref="ServiceCollectionExtensions.AddClientCredentialsTokenProvider(IServiceCollection, string, Action{ClientCredentialsTokenProviderOptions})"/>,
     /// or register a custom implementation using
-    /// <see cref="AccessTokenProviderServiceCollectionExtensions.AddAccessTokenProvider{TProvider}(IServiceCollection, string, Func{IServiceProvider, TProvider})"/>.
+    /// <see cref="ServiceCollectionExtensions.AddAccessTokenProvider{TProvider}(IServiceCollection, string, Func{IServiceProvider, TProvider})"/>.
     /// The provider name is independent of the HTTP client's name, so multiple clients can share one provider. The handler
     /// is created when <see cref="IHttpClientFactory"/> builds the client's handler chain.
     /// </remarks>
@@ -93,10 +108,12 @@ public static partial class HttpClientBuilderExtensions
         Check.NotNull(builder);
         Check.NotNull(tokenProviderName);
 
-        return builder.AddHttpMessageHandler(serviceProvider => new AuthenticationHandler(
-            serviceProvider.GetRequiredService<IAccessTokenProviderFactory>().GetRequired(tokenProviderName),
-            scopes,
-            requireToken));
+        return builder.AddAuthenticationHandler(s => new AuthenticationHandlerOptions
+        {
+            TokenProviderName = tokenProviderName,
+            Scopes = scopes ?? [],
+            RequireToken = requireToken
+        });
     }
 
     /// <summary>

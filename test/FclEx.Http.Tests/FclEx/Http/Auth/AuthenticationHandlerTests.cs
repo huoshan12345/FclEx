@@ -110,7 +110,10 @@ public class AuthenticationHandlerTests : AuthTests
     {
         var tokenProvider = new TestAccessTokenProvider("expired-token", "fresh-token");
         var innerHandler = new UnauthorizedThenOkHandler();
-        using var handler = new AuthenticationHandler(tokenProvider, [RequiredScope])
+        using var handler = new AuthenticationHandler(new AuthenticationHandlerOptions
+        {
+            Scopes = [RequiredScope],
+        }, tokenProvider)
         {
             InnerHandler = innerHandler,
         };
@@ -136,7 +139,10 @@ public class AuthenticationHandlerTests : AuthTests
     {
         var tokenProvider = new TestAccessTokenProvider("expired-token", "fresh-token");
         var innerHandler = new UnauthorizedThenOkHandler();
-        using var handler = new AuthenticationHandler(tokenProvider, [RequiredScope])
+        using var handler = new AuthenticationHandler(new AuthenticationHandlerOptions
+        {
+            Scopes = [RequiredScope],
+        }, tokenProvider)
         {
             InnerHandler = innerHandler,
         };
@@ -157,7 +163,11 @@ public class AuthenticationHandlerTests : AuthTests
     {
         var tokenProvider = new TestAccessTokenProvider("unused-token");
         var innerHandler = new CaptureAuthorizationHandler();
-        using var handler = new AuthenticationHandler(tokenProvider, [RequiredScope], requireToken: false)
+        using var handler = new AuthenticationHandler(new AuthenticationHandlerOptions
+        {
+            Scopes = [RequiredScope],
+            RequireToken = false,
+        }, tokenProvider)
         {
             InnerHandler = innerHandler,
         };
@@ -172,11 +182,11 @@ public class AuthenticationHandlerTests : AuthTests
     }
 
     [Fact]
-    public async Task SendAsync_WhenScopesAreNull_RequestsTokenWithEmptyScopes()
+    public async Task SendAsync_WhenScopesAreEmpty_RequestsTokenWithEmptyScopes()
     {
         var tokenProvider = new TestAccessTokenProvider("token");
         var innerHandler = new CaptureAuthorizationHandler();
-        using var handler = new AuthenticationHandler(tokenProvider, scopes: null)
+        using var handler = new AuthenticationHandler(new AuthenticationHandlerOptions(), tokenProvider)
         {
             InnerHandler = innerHandler,
         };
@@ -198,7 +208,10 @@ public class AuthenticationHandlerTests : AuthTests
         var tokenProvider = new TestAccessTokenProvider("expired-token", "fresh-token");
         var firstContent = new TrackingContent();
         var innerHandler = new UnauthorizedThenOkHandler(firstContent);
-        using var handler = new AuthenticationHandler(tokenProvider, [RequiredScope])
+        using var handler = new AuthenticationHandler(new AuthenticationHandlerOptions
+        {
+            Scopes = [RequiredScope],
+        }, tokenProvider)
         {
             InnerHandler = innerHandler,
         };

@@ -1,5 +1,25 @@
 namespace FclEx.Http;
 
+public class AuthenticationHandlerOptions
+{
+    /// <summary>
+    /// The name of the <see cref="IAccessTokenProvider"/> to use for acquiring tokens.<br/>
+    /// This is used when multiple providers are registered in DI.
+    /// </summary>
+    public string TokenProviderName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The scopes to pass to the provider.
+    /// </summary>
+    public string[] Scopes { get; set; } = [];
+
+    /// <summary>
+    /// Whether requests should include a bearer token. When <see langword="false"/>, the handler forwards requests without
+    /// calling <see cref="IAccessTokenProvider"/>.
+    /// </summary>
+    public bool RequireToken { get; set; } = true;
+}
+
 /// <summary>
 /// Adds a bearer token to outgoing requests and retries once with a refreshed token after a 401 response.
 /// </summary>
@@ -11,34 +31,34 @@ namespace FclEx.Http;
 /// </remarks>
 public class AuthenticationHandler : DelegatingHandler
 {
-    private readonly string[] _scopes;
-    private readonly bool _requireToken;
+    private readonly AuthenticationHandlerOptions _options;
     private readonly IAccessTokenProvider _tokenProvider;
 
     /// <summary>
     /// Initializes a handler that can attach bearer tokens to outgoing requests.
     /// </summary>
+    /// <param name="options">The options used to configure the handler.</param>
     /// <param name="tokenProvider">The provider used to acquire access tokens.</param>
-    /// <param name="scopes">The scopes to pass to the provider. <see langword="null"/> is treated as an empty scope list.</param>
-    /// <param name="requireToken">
-    /// Whether requests should include a bearer token. When <see langword="false"/>, the handler forwards requests without
-    /// calling <paramref name="tokenProvider"/>.
-    /// </param>
-    public AuthenticationHandler(IAccessTokenProvider tokenProvider, string[]? scopes = null, bool requireToken = true)
+    public AuthenticationHandler(AuthenticationHandlerOptions options, IAccessTokenProvider tokenProvider)
     {
         _tokenProvider = tokenProvider;
-        _scopes = scopes ?? [];
-        _requireToken = requireToken;
+        _options = options;
+    }
+
+    public AuthenticationHandler(AuthenticationHandlerOptions options, IAccessTokenProviderFactory tokenProviderFactory)
+    {
+        _tokenProvider = tokenProviderFactory.GetRequired(options.TokenProviderName);
+        _options = options;
     }
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        if (_requireToken == false)
+        if (_options.RequireToken == false)
         {
             return await base.SendAsync(request, cancellationToken);
         }
 
-        var token = await _tokenProvider.GetTokenAsync(_scopes, forceRefresh: false, cancellationToken);
+        var token = await _tokenProvider.GetTokenAsync(_options.Scopes, forceRefresh: false, cancellationToken);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var response = await base.SendAsync(request, cancellationToken);
@@ -48,7 +68,7 @@ public class AuthenticationHandler : DelegatingHandler
 
         response.Dispose();
 
-        var newToken = await _tokenProvider.GetTokenAsync(_scopes, forceRefresh: true, cancellationToken);
+        var newToken = await _tokenProvider.GetTokenAsync(_options.Scopes, forceRefresh: true, cancellationToken);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", newToken);
         return await base.SendAsync(request, cancellationToken);
     }

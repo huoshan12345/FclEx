@@ -77,6 +77,29 @@ public class ServiceCollectionExtensionsTests
     }
 
     [Fact]
+    public void AddHttpClientWithPollyBy_ResolvesDependencyAndConfiguresNamedClient()
+    {
+        var options = new HttpClientOptions
+        {
+            BaseAddress = new Uri("https://dependency.example.test/"),
+            TotalTimeout = TimeSpan.FromSeconds(23),
+            RetryPolicyOptions = new()
+            {
+                AutoUpdateTotalTimeout = false,
+            },
+        };
+        var services = new ServiceCollection()
+            .AddSingleton(new ClientOptionsProvider { Options = options });
+        services.AddHttpClientWithPollyBy<ClientOptionsProvider>("configured-by-dependency", dependency => dependency.Options);
+        using var provider = services.BuildServiceProvider();
+
+        var client = provider.GetRequiredService<IHttpClientFactory>().CreateClient("configured-by-dependency");
+
+        Assert.Equal(options.BaseAddress, client.BaseAddress);
+        Assert.Equal(options.TotalTimeout, client.Timeout);
+    }
+
+    [Fact]
     public void AddHttpClientWithPolly_WhenOptionsFactoryIsUsed_AppliesHandlerOptions()
     {
         var proxy = WebProxy.Create("http://127.0.0.1:8888");

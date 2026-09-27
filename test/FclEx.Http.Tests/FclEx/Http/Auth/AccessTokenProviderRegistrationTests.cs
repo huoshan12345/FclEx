@@ -62,6 +62,34 @@ public class AccessTokenProviderRegistrationTests
     }
 
     [Fact]
+    public void TryAddAccessTokenProvider_WhenNameAlreadyExists_KeepsExistingProvider()
+    {
+        var first = new TestAccessTokenProvider("first");
+        var second = new TestAccessTokenProvider("second");
+        var services = new ServiceCollection()
+            .AddAccessTokenProvider("shared", _ => first)
+            .TryAddAccessTokenProvider("shared", _ => second);
+
+        using var serviceProvider = services.BuildServiceProvider();
+        var factory = serviceProvider.GetRequiredService<IAccessTokenProviderFactory>();
+
+        Assert.Same(first, factory.GetRequired("shared"));
+    }
+
+    [Fact]
+    public void TryAddAccessTokenProvider_WhenNameIsNotRegistered_AddsProvider()
+    {
+        var expected = new TestAccessTokenProvider("new");
+        var services = new ServiceCollection()
+            .TryAddAccessTokenProvider("new", _ => expected);
+
+        using var serviceProvider = services.BuildServiceProvider();
+        var factory = serviceProvider.GetRequiredService<IAccessTokenProviderFactory>();
+
+        Assert.Same(expected, factory.GetRequired("new"));
+    }
+
+    [Fact]
     public void AddClientCredentialsTokenProvider_WithDifferentNames_CachesOneProviderPerName()
     {
         var services = new ServiceCollection()
@@ -81,6 +109,49 @@ public class AccessTokenProviderRegistrationTests
         Assert.NotSame(first, second);
         Assert.Same(first, factory.GetRequired("first"));
         Assert.Same(second, factory.GetRequired("second"));
+    }
+
+    [Fact]
+    public void AddClientCredentialsTokenProvider_WithServiceCallbacks_CreatesAndCachesConfiguredProviders()
+    {
+        var serviceOptions = new ClientCredentialsTokenProviderOptions { ClientId = "service-provider" };
+        var callbacks = new Dictionary<string, int>();
+        var services = new ServiceCollection()
+            .AddSingleton(serviceOptions)
+            .AddHttpClient(nameof(ClientCredentialsTokenProvider))
+            .Services
+            .AddClientCredentialsTokenProvider("service-callback", new Action<ClientCredentialsTokenProviderOptions, IServiceProvider>((options, provider) =>
+            {
+                Increment(callbacks, "service-callback");
+                options.ClientId = provider.GetRequiredService<ClientCredentialsTokenProviderOptions>().ClientId;
+            }))
+            .AddClientCredentialsTokenProvider("service-factory", new Func<IServiceProvider, ClientCredentialsTokenProviderOptions>(provider =>
+            {
+                Increment(callbacks, "service-factory");
+                return new() { ClientId = provider.GetRequiredService<ClientCredentialsTokenProviderOptions>().ClientId };
+            }))
+            .AddClientCredentialsTokenProviderBy<ClientCredentialsTokenProviderOptions>("dependency-callback", (options, dependency) =>
+            {
+                Increment(callbacks, "dependency-callback");
+                options.ClientId = dependency.ClientId;
+            })
+            .AddClientCredentialsTokenProviderBy<ClientCredentialsTokenProviderOptions>("dependency-factory", dependency =>
+            {
+                Increment(callbacks, "dependency-factory");
+                return new() { ClientId = dependency.ClientId };
+            });
+
+        using var serviceProvider = services.BuildServiceProvider();
+        var factory = serviceProvider.GetRequiredService<IAccessTokenProviderFactory>();
+
+        var names = new[] { "service-callback", "service-factory", "dependency-callback", "dependency-factory" };
+        foreach (var name in names)
+        {
+            var provider = factory.GetRequired(name);
+            Assert.Equal("service-provider", GetOptions(provider).ClientId);
+            Assert.Same(provider, factory.GetRequired(name));
+            Assert.Equal(1, callbacks[name]);
+        }
     }
 
     [Fact]
@@ -167,5 +238,17 @@ public class AccessTokenProviderRegistrationTests
         }
 
         public void Dispose() => onDispose();
+    }
+
+    private static ClientCredentialsTokenProviderOptions GetOptions(IAccessTokenProvider provider)
+    {
+        return typeof(ClientCredentialsTokenProvider)
+            .GetRequiredField("_options")
+            .GetRequiredValue<ClientCredentialsTokenProviderOptions>(provider);
+    }
+
+    private static void Increment(Dictionary<string, int> counts, string key)
+    {
+        counts[key] = counts.TryGetValue(key, out var count) ? count + 1 : 1;
     }
 }
