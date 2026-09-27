@@ -17,12 +17,7 @@
     <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <EanableNet90>false</EanableNet90>
-    <EanableNet90 Condition="'$(DISABLE_NET90)' != 'true'">true</EanableNet90>
-  </PropertyGroup>
-  <PropertyGroup>
-    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
-    <TargetFrameworks Condition="$(EanableNet90)">$(TargetFrameworks);net9.0</TargetFrameworks>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <TargetFrameworks Condition="$(IsWindows)">$(TargetFrameworks);net472</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">

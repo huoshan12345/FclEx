@@ -182,9 +182,7 @@ jobs:
 
       - name: Test Release
         timeout-minutes: 10
-        run: |
-          $env:DISABLE_NET90 = "true"
-          dotnet test --solution ${{ env.SOLUTION }} -c Release --no-restore --no-build
+        run: dotnet test --solution ${{ env.SOLUTION }} -c Release --no-restore --no-build
 
       - name: Test Report
         uses: dorny/test-reporter@main
