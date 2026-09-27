@@ -7,7 +7,8 @@ namespace FclEx.Http;
 /// The discovery document is loaded once and shared across requests. Access tokens are cached per joined scope string;
 /// concurrent requests for the same scope are serialized so only one token request is made for a missing or expired token.
 /// Cached refresh tokens are tried before falling back to a client-credentials token request. Cached access tokens are
-/// treated as expired 30 seconds before the server-reported expiration.
+/// treated as expired 30 seconds before the server-reported expiration. These caches belong to this provider instance, so
+/// keep and reuse one provider for each distinct credential configuration instead of creating one per HTTP handler.
 /// </remarks>
 public class ClientCredentialsTokenProvider : IAccessTokenProvider
 {

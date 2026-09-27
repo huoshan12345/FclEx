@@ -50,6 +50,24 @@ services.AddHttpClient("captcha-api-b")
 
 The name passed to `AddAuthenticationHandler` selects the token provider; it is independent of the `HttpClient` name. Multiple clients can share a provider name, and their handlers can request different scopes. Each provider instance retains its discovery-document and access-token caches for the lifetime of the service provider. Re-registering a name replaces that name's previous provider factory or client-credentials configuration; registrations are not merged. The handler overload without a provider name selects the default provider.
 
+`AddAccessTokenProvider<TProvider>` registers a custom `IAccessTokenProvider` in the same named registry. Its overload without a name targets the default provider. The corresponding `TryAddAccessTokenProvider<TProvider>` overloads, with or without a name, keep an existing registration; when no name is supplied they target the default provider.
+
+Each `AddClientCredentialsTokenProvider` and `AddClientCredentialsTokenProviderBy<TDependency>` overload also has a corresponding `TryAdd` form. These keep an existing registration with the same name and do not invoke the options callback or resolve the dependency for the skipped registration. Names are compared ordinally and are case-sensitive. Registration callbacks run lazily, the first time that name is requested, and the selected provider is cached for the service-provider lifetime.
+
+Client-credentials registrations also support options callbacks that receive `IServiceProvider`, options factories, and `AddClientCredentialsTokenProviderBy<TDependency>` overloads that resolve a registered dependency. Those provider-registration callbacks execute from the root service provider, so the dependency and any services they resolve must not be scoped. If scoped services are needed to configure handler options, use `AddAuthenticationHandlerBy<TDependency>`; its dependency is resolved from the HTTP handler scope.
+
+For example, a custom provider can be registered and selected in the same way:
+
+```csharp
+services.AddAccessTokenProvider<MyAccessTokenProvider>("custom", provider =>
+    new MyAccessTokenProvider(provider.GetRequiredService<ITokenClient>()));
+
+services.AddHttpClient("custom-api")
+    .AddAuthenticationHandler("custom", ["api.read"]);
+```
+
+The registration factory owns the provider instance. Do not return an instance that is also registered for disposal by DI; if a provider implements `IDisposable`, it is disposed when the service provider is disposed. Register one provider per credential configuration and let the named factory cache it, so its discovery and token caches remain effective.
+
 Client-credentials providers send discovery and token requests through the HTTP client named `ClientCredentialsTokenProvider`. Configure that named client if those requests need custom transport settings such as a proxy or timeout.
 
 ### HTML Context Lifetime
