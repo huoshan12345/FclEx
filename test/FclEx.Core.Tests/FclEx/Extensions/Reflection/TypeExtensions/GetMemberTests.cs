@@ -153,6 +153,45 @@ public class GetMemberTests
         Assert.Equal(nameof(Model.GenericMethod), method.Name);
     }
 
+    public static TheoryData<string, int, Type[]?, bool, bool> MethodParameterMatchingCases => new()
+    {
+        { nameof(Model.Method), 0, null, false, true },
+        { nameof(Model.Method), 0, [], false, true },
+        { nameof(Model.MethodWithParameter), 0, null, false, true },
+        { nameof(Model.MethodWithParameter), 0, [], false, false },
+        { nameof(Model.MethodWithParameter), 0, [typeof(string)], false, true },
+        { nameof(Model.MethodWithParameter), 0, [typeof(int)], false, false },
+        { nameof(Model.MethodWithParameter), 0, [typeof(string), typeof(string)], false, false },
+        { nameof(Model.GenericMethod), 1, null, false, true },
+        { nameof(Model.GenericMethod), 0, null, false, false },
+        { nameof(Model.GenericMethod), 1, [], false, false },
+        { nameof(BaseModel.BaseMethod), 0, null, false, false },
+        { nameof(BaseModel.BaseMethod), 0, null, true, true },
+        { nameof(BaseModel.BaseMethod), 0, [], true, true },
+        { "Missing", 0, null, true, false },
+    };
+
+    [Theory]
+    [MemberData(nameof(MethodParameterMatchingCases))]
+    public void GetMethod_ShouldMatchParametersOnlyWhenSpecified(
+        string name, int genericArgumentCount, Type[]? paramTypes, bool searchBaseTypes, bool shouldMatch)
+    {
+        var method = typeof(Model).GetMethod(name, genericArgumentCount, paramTypes, searchBaseTypes);
+
+        if (shouldMatch)
+        {
+            Assert.NotNull(method);
+            Assert.Equal(name, method.Name);
+            Assert.Equal(genericArgumentCount, method.GetGenericArguments().Length);
+            if (paramTypes is not null)
+                Assert.Equal(paramTypes, method.GetParameters().Select(p => p.ParameterType));
+        }
+        else
+        {
+            Assert.Null(method);
+        }
+    }
+
     [Fact]
     public void GetRequiredMethod_WithSignature_ShouldThrow_WhenMethodIsMissing()
     {

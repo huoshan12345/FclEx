@@ -71,3 +71,6 @@ dotnet_diagnostic.CS8763.severity = none
 
 # CA1826: Use property instead of Linq Enumerable method
 dotnet_code_quality.CA1826.exclude_ordefault_methods = true
+
+# IDE0120: Simplify LINQ expression
+dotnet_diagnostic.IDE0120.severity = silent
