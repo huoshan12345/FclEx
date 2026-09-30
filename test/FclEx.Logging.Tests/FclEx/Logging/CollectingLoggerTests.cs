@@ -136,6 +136,74 @@ public class CollectingLoggerTests
         Assert.Empty(Assert.Single(second.Entries).Scopes);
     }
 
+    [Fact]
+    public void Clear_PreservesSnapshotsAndActiveScopes()
+    {
+        var logger = new CollectingLogger();
+        Assert.Empty(logger.Entries);
+        logger.Clear();
+
+        using (logger.BeginScope("scope"))
+        {
+            logger.LogInformation("before clear");
+            var snapshot = logger.Entries;
+            logger.Clear();
+            Assert.Empty(logger.Entries);
+            logger.LogInformation("after clear");
+            Assert.Equal("before clear", Assert.Single(snapshot).Message);
+            Assert.Equal(new object?[] { "scope" }, Assert.Single(logger.Entries).Scopes);
+        }
+    }
+
+    [Fact]
+    public void Log_FormatterThrows_DoesNotAppendAnEntry()
+    {
+        var logger = new CollectingLogger();
+        var error = new InvalidOperationException("formatter failed");
+        var actual = Assert.Throws<InvalidOperationException>(() =>
+            logger.Log(LogLevel.Information, default, "state", null, (_, _) => throw error));
+        Assert.Same(error, actual);
+        Assert.Empty(logger.Entries);
+    }
+
+    [Fact]
+    public void Log_MutableStateAndScope_AreRetainedByReference()
+    {
+        var logger = new CollectingLogger();
+        var state = new List<string> { "before" };
+        var scope = new Dictionary<string, object?> { ["key"] = "before" };
+        using (logger.BeginScope(scope))
+        {
+            logger.Log(LogLevel.Information, default, state, null, (value, _) => value[0]);
+        }
+
+        state[0] = "after";
+        scope["key"] = "after";
+        var entry = Assert.Single(logger.Entries);
+        Assert.Equal("before", entry.Message);
+        Assert.Same(state, entry.State);
+        Assert.Same(scope, Assert.Single(entry.Scopes));
+    }
+
+    [Fact]
+    public async Task Log_ConcurrentWritesAndSnapshots_PreserveEveryEntry()
+    {
+        var logger = new CollectingLogger();
+        var writers = Enumerable.Range(0, 8).Select(worker => Task.Run(() =>
+        {
+            for (var i = 0; i < 50; i++)
+            {
+                logger.LogInformation("{Id}", worker * 50 + i);
+                _ = logger.Entries;
+            }
+        }));
+        await Task.WhenAll(writers);
+
+        var entries = logger.Entries;
+        Assert.Equal(400, entries.Count);
+        Assert.Equal(400, entries.Select(entry => entry.Message).Distinct().Count());
+    }
+
     private static void AssertScopeProperty(object? scope, string key, object value)
     {
         var properties = Assert.IsAssignableFrom<IEnumerable<KeyValuePair<string, object?>>>(scope);

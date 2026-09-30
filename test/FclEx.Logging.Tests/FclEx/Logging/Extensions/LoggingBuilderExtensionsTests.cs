@@ -2,6 +2,20 @@ namespace FclEx.Logging.Extensions;
 
 public class LoggingBuilderExtensionsTests
 {
+    [Fact]
+    public void AddCollecting_RespectsFactoryFiltersAndClearProviders()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging(builder => builder.AddCollecting().ClearProviders().AddCollecting()
+            .SetMinimumLevel(LogLevel.Warning));
+        using var serviceProvider = services.BuildServiceProvider();
+        var logger = serviceProvider.GetRequiredService<ILogger<LoggingBuilderExtensionsTests>>();
+        var provider = serviceProvider.GetRequiredService<CollectingLoggerProvider>();
+        logger.LogInformation("filtered");
+        logger.LogWarning("collected");
+        Assert.Equal("collected", Assert.Single(provider.Entries).Message);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

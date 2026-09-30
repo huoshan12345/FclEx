@@ -3,6 +3,67 @@ namespace FclEx.Logging;
 public class CollectingLoggerProviderTests
 {
     [Fact]
+    public void CreateLogger_CollectorsShareEntriesAndClearing()
+    {
+        using var provider = new CollectingLoggerProvider();
+        var first = Assert.IsType<CollectingLogger>(provider.CreateLogger("first"));
+        var second = provider.CreateLogger("second");
+        first.LogInformation("first");
+        second.LogInformation("second");
+        Assert.Equal(2, first.Entries.Count);
+        first.Clear();
+        Assert.Empty(provider.Entries);
+        second.LogInformation("after clear");
+        Assert.Equal("after clear", Assert.Single(first.Entries).Message);
+    }
+
+    [Fact]
+    public void SetScopeProvider_Null_DoesNotReplaceExistingContext()
+    {
+        using var provider = new CollectingLoggerProvider();
+        var logger = provider.CreateLogger("category");
+        using (logger.BeginScope("scope"))
+        {
+            var exception = Assert.Throws<ArgumentNullException>(() => provider.SetScopeProvider(null!));
+            Assert.Equal("scopeProvider", exception.ParamName);
+            logger.LogInformation("message");
+        }
+        Assert.Equal(new object?[] { "scope" }, Assert.Single(provider.Entries).Scopes);
+    }
+
+    [Fact]
+    public void Dispose_PreservesCollectedEntries()
+    {
+        var provider = new CollectingLoggerProvider();
+        provider.CreateLogger("category").LogInformation("message");
+        provider.Dispose();
+        Assert.Equal("message", Assert.Single(provider.Entries).Message);
+    }
+
+    [Fact]
+    public async Task Log_ConcurrentCategories_ShareOneStore()
+    {
+        using var provider = new CollectingLoggerProvider();
+        var writers = Enumerable.Range(0, 8).Select(worker => Task.Run(() =>
+        {
+            var logger = provider.CreateLogger(worker.ToString());
+            using (logger.BeginScope(worker))
+            {
+                for (var i = 0; i < 50; i++)
+                    logger.LogInformation("{Id}", i);
+            }
+        }));
+        await Task.WhenAll(writers);
+
+        Assert.Equal(400, provider.Entries.Count);
+        foreach (var group in provider.Entries.GroupBy(entry => entry.Category))
+        {
+            Assert.Equal(50, group.Count());
+            Assert.All(group, entry => Assert.Equal(int.Parse(entry.Category), Assert.Single(entry.Scopes)));
+        }
+    }
+
+    [Fact]
     public void Factory_ScopesAreSharedAcrossCategoriesAndRestoredOnDispose()
     {
         using var provider = new CollectingLoggerProvider();
