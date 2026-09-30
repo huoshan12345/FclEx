@@ -6,9 +6,15 @@ public sealed class CollectingLoggerProvider : ILoggerProvider, ISupportExternal
     private readonly object _lock = new();
     private IExternalScopeProvider _scopeProvider = new LoggerExternalScopeProvider();
 
-    public CollectingLogger Logger => new("", _entries, _lock, () => _scopeProvider);
+    public IReadOnlyList<LogEntry> Entries
+    {
+        get { lock (_lock) return _entries.ToList(); }
+    }
 
-    public IReadOnlyList<LogEntry> Entries => Logger.Entries;
+    public void Clear()
+    {
+        lock (_lock) _entries.Clear();
+    }
 
     public ILogger CreateLogger(string categoryName)
         => new CollectingLogger(categoryName, _entries, _lock, () => _scopeProvider);

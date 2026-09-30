@@ -1,6 +1,5 @@
 namespace FclEx.Logging;
 
-/// <summary>收集日志的 ILogger,用于单元测试断言。线程安全。</summary>
 public class CollectingLogger : ILogger
 {
     private readonly List<LogEntry> _entries;
@@ -24,10 +23,6 @@ public class CollectingLogger : ILogger
     {
         get { lock (_lock) return _entries.ToList(); }
     }
-
-    public IEnumerable<LogEntry> At(LogLevel level) => Entries.Where(e => e.Level == level);
-    public IEnumerable<LogEntry> Errors => At(LogLevel.Error);
-    public IEnumerable<LogEntry> Warnings => At(LogLevel.Warning);
 
     public void Clear()
     {
@@ -60,10 +55,4 @@ public class CollectingLogger : ILogger
         var scopeProvider = new LoggerExternalScopeProvider();
         return () => scopeProvider;
     }
-}
-
-/// <summary>直接注入到 ctor(ILogger&lt;T&gt;) 的场景。</summary>
-public sealed class CollectingLogger<T> : CollectingLogger, ILogger<T>
-{
-    public CollectingLogger() : base(typeof(T).FullName ?? typeof(T).Name) { }
 }
