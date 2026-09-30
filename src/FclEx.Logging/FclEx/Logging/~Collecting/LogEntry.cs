@@ -6,4 +6,7 @@ public sealed record LogEntry(
     EventId EventId,
     string Message,
     Exception? Exception,
-    object? State);
+    object? State)
+{
+    public IReadOnlyList<object?> Scopes { get; init; } = [];
+}
