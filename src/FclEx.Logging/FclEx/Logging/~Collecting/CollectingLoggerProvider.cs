@@ -1,13 +1,11 @@
 namespace FclEx.Logging;
 
-/// <summary>注册到 ILoggerFactory / DI,所有类别的日志汇总到同一个列表。</summary>
 public sealed class CollectingLoggerProvider : ILoggerProvider, ISupportExternalScope
 {
     private readonly List<LogEntry> _entries = [];
     private readonly object _lock = new();
     private IExternalScopeProvider _scopeProvider = new LoggerExternalScopeProvider();
 
-    /// <summary>汇总所有类别的日志。</summary>
     public CollectingLogger Logger => new("", _entries, _lock, () => _scopeProvider);
 
     public IReadOnlyList<LogEntry> Entries => Logger.Entries;

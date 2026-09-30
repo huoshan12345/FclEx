@@ -24,13 +24,19 @@ public static class LoggerFactoryExtensions
         return factory ?? NullLoggerFactory.Instance;
     }
 
-    public static ILogger CreateLoggerOrDefault(this ILoggerFactory? loggerFactory, Type type)
+    public static ILogger CreateLoggerOrDefault(this ILoggerFactory? factory, Type type)
     {
-        return loggerFactory.DefaultIfNull().CreateLogger(type);
+        return factory.DefaultIfNull().CreateLogger(type);
     }
 
-    public static ILogger<T> CreateLoggerOrDefault<T>(this ILoggerFactory? loggerFactory)
+    public static ILogger<T> CreateLoggerOrDefault<T>(this ILoggerFactory? factory)
     {
-        return loggerFactory.DefaultIfNull().CreateLogger<T>();
+        return factory.DefaultIfNull().CreateLogger<T>();
+    }
+
+    public static ILoggerFactory AddCollecting(this ILoggerFactory factory)
+    {
+        factory.AddProvider(new CollectingLoggerProvider());
+        return factory;
     }
 }

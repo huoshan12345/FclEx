@@ -36,14 +36,9 @@ public static partial class Extensions
         return factory;
     }
 
-    public static IServiceCollection AddXunitLogging(this IServiceCollection services, bool consoleFallback = true)
-    {
-        return services.AddSingleton<ILoggerProvider>(new XunitLoggerProvider(GetOutput, consoleFallback));
-    }
-
     public static ILoggingBuilder AddXunit(this ILoggingBuilder builder, bool consoleFallback = true)
     {
-        builder.Services.AddXunitLogging(consoleFallback);
+        builder.Services.AddSingleton<ILoggerProvider>(new XunitLoggerProvider(GetOutput, consoleFallback));
         return builder;
     }
 }
