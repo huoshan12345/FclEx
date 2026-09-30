@@ -13,7 +13,9 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddCollecting(this IServiceCollection services)
     {
         services.TryAddSingleton<CollectingLoggerProvider>();
-        services.AddSingleton<ILoggerProvider>(sp => sp.GetRequiredService<CollectingLoggerProvider>());
+        services.TryAddEnumerable(
+            ServiceDescriptor.Singleton<ILoggerProvider, CollectingLoggerProvider>(
+                sp => sp.GetRequiredService<CollectingLoggerProvider>()));
         return services;
     }
 }
