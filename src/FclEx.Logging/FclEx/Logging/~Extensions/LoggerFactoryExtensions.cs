@@ -34,9 +34,12 @@ public static class LoggerFactoryExtensions
         return factory.DefaultIfNull().CreateLogger<T>();
     }
 
-    public static ILoggerFactory AddCollecting(this ILoggerFactory factory)
+    public static CollectingLoggerProvider AddCollecting(this ILoggerFactory factory)
     {
-        factory.AddProvider(new CollectingLoggerProvider());
-        return factory;
+        Check.NotNull(factory);
+
+        var provider = new CollectingLoggerProvider();
+        factory.AddProvider(provider);
+        return provider;
     }
 }
