@@ -191,23 +191,55 @@ partial class TypeExtensions
     }
 
     /// <summary>
-    /// Retrieves a generic or non-generic method by name, generic argument count, and exact parameter types,
+    /// Retrieves a generic or non-generic method by name and generic argument count, optionally matching exact parameter types,
     /// and throws when it cannot be found.
     /// </summary>
     /// <param name="type">The type to inspect.</param>
     /// <param name="name">The method name.</param>
     /// <param name="genericArgumentCount">The number of generic method parameters.</param>
-    /// <param name="paramTypes">The exact method parameter types.</param>
+    /// <param name="paramTypes">
+    /// The exact method parameter types in declaration order, or <see langword="null"/> to ignore method parameters.
+    /// An empty array matches only parameterless methods.
+    /// </param>
     /// <param name="searchBaseTypes">
     /// <see langword="true"/> to continue searching base types when the method is not declared on
     /// <paramref name="type"/>; otherwise, <see langword="false"/>.
     /// </param>
-    /// <returns>The matching method.</returns>
+    /// <returns>The first matching method.</returns>
     /// <exception cref="InvalidOperationException">No matching method is found.</exception>
-    public static MethodInfo GetRequiredMethod(this Type type, string name, int genericArgumentCount, Type[] paramTypes, bool searchBaseTypes)
+    /// <remarks>
+    /// Includes public and non-public, instance and static methods declared on each inspected type.
+    /// When multiple declared methods match, returns the first in reflection enumeration order.
+    /// The specified type is searched before its base types.
+    /// </remarks>
+    public static MethodInfo GetRequiredMethod(this Type type, string name, int genericArgumentCount, Type[]? paramTypes, bool searchBaseTypes)
     {
         return type.GetMethod(name, genericArgumentCount, paramTypes, searchBaseTypes)
-               ?? throw new InvalidOperationException($"Cannot find method '{name}<`{genericArgumentCount}>({paramTypes.Select(m => m.Name).JoinWith(", ")})' in type '{type.FullName}'");
+               ?? throw new InvalidOperationException($"Cannot find method '{name}<`{genericArgumentCount}>({paramTypes?.Select(m => m.Name).JoinWith(", ")})' in type '{type.FullName}'");
+    }
+
+    /// <summary>
+    /// Retrieves a generic or non-generic method by name and generic argument count without matching its parameters,
+    /// and throws when it cannot be found.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="name">The method name.</param>
+    /// <param name="genericArgumentCount">The number of generic method parameters; zero matches non-generic methods.</param>
+    /// <param name="searchBaseTypes">
+    /// <see langword="true"/> to continue searching base types when no matching method is declared on
+    /// <paramref name="type"/>; otherwise, <see langword="false"/>. The default is <see langword="false"/>.
+    /// </param>
+    /// <returns>The first matching method.</returns>
+    /// <exception cref="InvalidOperationException">No matching method is found.</exception>
+    /// <remarks>
+    /// Includes public and non-public, instance and static methods declared on each inspected type.
+    /// When multiple declared methods match, returns the first in reflection enumeration order.
+    /// The specified type is searched before its base types. To match only parameterless methods,
+    /// use the parameter-types overload with an empty array.
+    /// </remarks>
+    public static MethodInfo GetRequiredMethod(this Type type, string name, int genericArgumentCount, bool searchBaseTypes = false)
+    {
+        return type.GetRequiredMethod(name, genericArgumentCount, null, searchBaseTypes);
     }
 
     /// <summary>
@@ -220,6 +252,10 @@ partial class TypeExtensions
     /// <param name="paramTypes">The exact method parameter types.</param>
     /// <returns>The matching method.</returns>
     /// <exception cref="InvalidOperationException">No matching method is found.</exception>
+    /// <remarks>
+    /// Pass an explicit empty array to match only parameterless methods. Omitting the parameter-types argument
+    /// selects the overload that ignores method parameters.
+    /// </remarks>
     public static MethodInfo GetRequiredMethod(this Type type, string name, int genericArgumentCount, params Type[] paramTypes)
     {
         return type.GetRequiredMethod(name, genericArgumentCount, paramTypes, false);
