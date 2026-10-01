@@ -87,18 +87,20 @@ public static class DbTransactionExtensions
     /// <param name="entity">The entity whose mapped values are inserted.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="returnGeneratedKey">Whether to return the single generated key when one is mapped.</param>
-    /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
+    /// <param name="commandOptions">Command execution, adapter, and mapping options. The receiver transaction is assigned automatically.</param>
+    /// <param name="cancellationToken">The token used to cancel connection opening and command execution.</param>
     /// <returns>The generated key converted to <typeparamref name="TKey"/> when requested and supported; otherwise the default value.</returns>
     /// <exception cref="ArgumentOutOfRangeException"><see cref="CommandOptions.TimeoutSeconds"/> is negative.</exception>
     /// <exception cref="InvalidOperationException"><paramref name="transaction"/> is no longer associated with a connection.</exception>
     /// <exception cref="ArgumentException"><paramref name="commandOptions"/> is already bound to another transaction.</exception>
-    /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is cancelled.</exception>
     public static Task<TKey?> InsertAsync<TEntity, TKey>(
         this DbTransaction transaction,
         TEntity entity,
         string? schema = null,
         bool returnGeneratedKey = true,
-        CommandOptions commandOptions = default)
+        CommandOptions commandOptions = default,
+        CancellationToken cancellationToken = default)
         where TEntity : class
     {
         var boundOptions = commandOptions.BindTransaction(transaction);
@@ -106,7 +108,8 @@ public static class DbTransactionExtensions
             entity,
             schema,
             returnGeneratedKey,
-            boundOptions);
+            boundOptions,
+            cancellationToken);
     }
 
     /// <summary>
@@ -117,25 +120,28 @@ public static class DbTransactionExtensions
     /// <param name="entity">The entity whose mapped values are inserted.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="returnGeneratedKey">Whether to return the single generated key when one is mapped.</param>
-    /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
+    /// <param name="commandOptions">Command execution, adapter, and mapping options. The receiver transaction is assigned automatically.</param>
+    /// <param name="cancellationToken">The token used to cancel connection opening and command execution.</param>
     /// <returns>The generated key converted to <see langword="long"/> when requested and supported; otherwise the default value.</returns>
     /// <exception cref="ArgumentOutOfRangeException"><see cref="CommandOptions.TimeoutSeconds"/> is negative.</exception>
     /// <exception cref="InvalidOperationException"><paramref name="transaction"/> is no longer associated with a connection.</exception>
     /// <exception cref="ArgumentException"><paramref name="commandOptions"/> is already bound to another transaction.</exception>
-    /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is cancelled.</exception>
     public static Task<long> InsertAsync<TEntity>(
         this DbTransaction transaction,
         TEntity entity,
         string? schema = null,
         bool returnGeneratedKey = true,
-        CommandOptions commandOptions = default)
+        CommandOptions commandOptions = default,
+        CancellationToken cancellationToken = default)
         where TEntity : class
     {
         return transaction.InsertAsync<TEntity, long>(
             entity,
             schema,
             returnGeneratedKey,
-            commandOptions);
+            commandOptions,
+            cancellationToken);
     }
 
     /// <summary>
@@ -145,13 +151,14 @@ public static class DbTransactionExtensions
     /// <param name="transaction">The transaction assigned to the insert command.</param>
     /// <param name="entity">The entity containing the generated key values to insert.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
-    /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
+    /// <param name="commandOptions">Command execution, adapter, and mapping options. The receiver transaction is assigned automatically.</param>
+    /// <param name="cancellationToken">The token used to cancel connection opening and command execution.</param>
     /// <returns>A task representing the insert operation.</returns>
     /// <exception cref="DataException">The entity mapping does not contain a database-generated key.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><see cref="CommandOptions.TimeoutSeconds"/> is negative.</exception>
     /// <exception cref="InvalidOperationException"><paramref name="transaction"/> is no longer associated with a connection.</exception>
     /// <exception cref="ArgumentException"><paramref name="commandOptions"/> is already bound to another transaction.</exception>
-    /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is cancelled.</exception>
     /// <remarks>
     /// This operation does not advance or reset a provider identity, sequence, or auto-increment counter.
     /// The caller must keep that state consistent so later generated keys do not conflict with the inserted values.
@@ -160,14 +167,16 @@ public static class DbTransactionExtensions
         this DbTransaction transaction,
         TEntity entity,
         string? schema = null,
-        CommandOptions commandOptions = default)
+        CommandOptions commandOptions = default,
+        CancellationToken cancellationToken = default)
         where TEntity : class
     {
         var boundOptions = commandOptions.BindTransaction(transaction);
         return transaction.Connection!.InsertWithExplicitGeneratedKeysAsync(
             entity,
             schema,
-            boundOptions);
+            boundOptions,
+            cancellationToken);
     }
 
     /// <summary>
@@ -178,13 +187,14 @@ public static class DbTransactionExtensions
     /// <param name="entities">The entities to insert.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="includeAutoKey">Whether to insert mapped generated keys explicitly.</param>
-    /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
+    /// <param name="commandOptions">Command execution, adapter, and mapping options. The receiver transaction is assigned automatically.</param>
+    /// <param name="cancellationToken">The token used to cancel connection opening and command execution.</param>
     /// <returns>The total affected rows reported by all batches, or zero for an empty collection.</returns>
     /// <exception cref="ArgumentOutOfRangeException"><see cref="CommandOptions.TimeoutSeconds"/> is negative.</exception>
     /// <exception cref="InvalidOperationException"><paramref name="transaction"/> is no longer associated with a connection.</exception>
     /// <exception cref="ArgumentException"><paramref name="commandOptions"/> is already bound to another transaction.</exception>
     /// <exception cref="NotSupportedException">The mapped row shape cannot be represented by the selected adapter.</exception>
-    /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is cancelled.</exception>
     /// <remarks>
     /// When <paramref name="includeAutoKey"/> is <see langword="true"/>, this operation does not advance or reset a
     /// provider identity, sequence, or auto-increment counter. The caller must keep that state consistent so later
@@ -195,7 +205,8 @@ public static class DbTransactionExtensions
         IReadOnlyCollection<T> entities,
         string? schema = null,
         bool includeAutoKey = false,
-        CommandOptions commandOptions = default)
+        CommandOptions commandOptions = default,
+        CancellationToken cancellationToken = default)
         where T : class
     {
         var boundOptions = commandOptions.BindTransaction(transaction);
@@ -203,7 +214,8 @@ public static class DbTransactionExtensions
             entities,
             schema,
             includeAutoKey,
-            boundOptions);
+            boundOptions,
+            cancellationToken);
     }
 
     /// <summary>
@@ -213,24 +225,27 @@ public static class DbTransactionExtensions
     /// <param name="transaction">The transaction assigned to the query.</param>
     /// <param name="id">The key value to find.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
-    /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
+    /// <param name="commandOptions">Command execution, adapter, and mapping options. The receiver transaction is assigned automatically.</param>
+    /// <param name="cancellationToken">The token used to cancel connection opening and command execution.</param>
     /// <returns>The matching entity, or <see langword="null"/> when no row matches.</returns>
     /// <exception cref="DataException">The mapping does not define exactly one key.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><see cref="CommandOptions.TimeoutSeconds"/> is negative.</exception>
     /// <exception cref="InvalidOperationException"><paramref name="transaction"/> is no longer associated with a connection.</exception>
     /// <exception cref="ArgumentException"><paramref name="commandOptions"/> is already bound to another transaction.</exception>
-    /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is cancelled.</exception>
     public static Task<T?> GetAsync<T>(
         this DbTransaction transaction,
         object id,
         string? schema = null,
-        CommandOptions commandOptions = default)
+        CommandOptions commandOptions = default,
+        CancellationToken cancellationToken = default)
     {
         var boundOptions = commandOptions.BindTransaction(transaction);
         return transaction.Connection!.GetAsync<T>(
             id,
             schema,
-            boundOptions);
+            boundOptions,
+            cancellationToken);
     }
 
     /// <summary>
@@ -240,23 +255,26 @@ public static class DbTransactionExtensions
     /// <param name="transaction">The transaction assigned to the delete command.</param>
     /// <param name="id">The key value to delete.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
-    /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
+    /// <param name="commandOptions">Command execution, adapter, and mapping options. The receiver transaction is assigned automatically.</param>
+    /// <param name="cancellationToken">The token used to cancel connection opening and command execution.</param>
     /// <returns>The affected row count.</returns>
     /// <exception cref="DataException">The mapping does not define exactly one key.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><see cref="CommandOptions.TimeoutSeconds"/> is negative.</exception>
     /// <exception cref="InvalidOperationException"><paramref name="transaction"/> is no longer associated with a connection.</exception>
     /// <exception cref="ArgumentException"><paramref name="commandOptions"/> is already bound to another transaction.</exception>
-    /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is cancelled.</exception>
     public static Task<int> DeleteAsync<T>(
         this DbTransaction transaction,
         object id,
         string? schema = null,
-        CommandOptions commandOptions = default)
+        CommandOptions commandOptions = default,
+        CancellationToken cancellationToken = default)
     {
         var boundOptions = commandOptions.BindTransaction(transaction);
         return transaction.Connection!.DeleteAsync<T>(
             id,
             schema,
-            boundOptions);
+            boundOptions,
+            cancellationToken);
     }
 }

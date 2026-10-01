@@ -109,7 +109,16 @@ var id = await connection.InsertAsync(new Widget { Name = "mapped" }, commandOpt
 
 ## Commands, Connections, and Transactions
 
-`CommandOptions` carries the command timeout, local transaction, adapter override, mapping source, and cancellation token. The same options shape is accepted by connection and transaction CRUD methods.
+`CommandOptions` carries the command timeout, local transaction, adapter override, and mapping source. The same options shape is accepted by connection and transaction CRUD methods. Cancellation is supplied separately through the final optional `cancellationToken` parameter, which covers connection opening and command execution.
+
+```csharp
+await connection.BulkInsertAsync(
+    entities,
+    commandOptions: options,
+    cancellationToken: cancellationToken);
+```
+
+Migration note: `CommandOptions.CancellationToken` has been removed. Pass the token directly to each asynchronous CRUD method instead. This is a breaking API change; consumers must rebuild, and calls that initialized the removed property must be updated.
 
 CRUD helpers record the connection's initial state. A connection opened by the helper is closed before the operation returns; a connection supplied already open remains open. Transaction extension methods bind the receiver transaction to the generated command.
 

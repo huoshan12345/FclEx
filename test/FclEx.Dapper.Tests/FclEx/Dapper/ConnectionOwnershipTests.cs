@@ -64,10 +64,10 @@ public class ConnectionOwnershipTests
             connection.InsertAsync<MissingTableEntity, object>(new MissingTableEntity { Value = 1 }));
         Assert.Equal(ConnectionState.Closed, connection.State);
 
-        var commandOptions = new CommandOptions { CancellationToken = new(true) };
+        var cancellationToken = new CancellationToken(true);
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.InsertAsync<SqliteMigrationTestEntity, long>(
             new SqliteMigrationTestEntity { Name = "cancelled", Value = 2 },
-            commandOptions: commandOptions));
+            cancellationToken: cancellationToken));
         Assert.Equal(ConnectionState.Closed, connection.State);
     }
 

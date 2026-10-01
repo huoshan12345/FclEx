@@ -45,11 +45,11 @@ public class CommandOptionsTests
         using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
         using var transaction = connection.BeginTransaction();
-        using var cancellationSource = new CancellationTokenSource();
         var options = new CommandOptions
         {
             TimeoutSeconds = 17,
-            CancellationToken = cancellationSource.Token,
+            SqlAdapter = new SqliteAdapter(),
+            EntityMappingSource = new DataAnnotationsEntityMappingSource(),
         };
 
         var boundOptions = options.BindTransaction(transaction);
@@ -57,7 +57,8 @@ public class CommandOptionsTests
         Assert.Null(options.Transaction);
         Assert.Same(transaction, boundOptions.Transaction);
         Assert.Equal(options.TimeoutSeconds, boundOptions.TimeoutSeconds);
-        Assert.Equal(options.CancellationToken, boundOptions.CancellationToken);
+        Assert.Same(options.SqlAdapter, boundOptions.SqlAdapter);
+        Assert.Same(options.EntityMappingSource, boundOptions.EntityMappingSource);
         Assert.Equal(boundOptions, boundOptions.BindTransaction(transaction));
     }
 
