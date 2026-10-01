@@ -1,3 +1,5 @@
+using System.Data.Common;
+
 namespace FclEx.Dapper.SqlAdapters;
 
 /// <summary>
@@ -9,6 +11,32 @@ public class NpgsqlAdapter : SqlAdapterBase
 
     /// <inheritdoc />
     protected override QuotationMarks QuotationMarks { get; } = new('"');
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Converts <see cref="ushort"/> to <see cref="int"/>, <see cref="uint"/> to <see cref="long"/>, and
+    /// <see cref="ulong"/> to <see cref="decimal"/> without losing precision, allowing Npgsql to infer
+    /// PostgreSQL integer, bigint, and numeric parameters. Byte values remain unchanged.
+    /// Explicit oid, xid, xid8, cid, regtype, and regconfig parameters retain their original
+    /// values because these PostgreSQL types use unsigned representations. Null becomes <see cref="DBNull.Value"/>.
+    /// An explicit store type still determines the provider parameter type and may reject an incompatible value.
+    /// </remarks>
+    public override DbParameter CreateParameter(string name, object? value, string? storeTypeName = null)
+    {
+        if (storeTypeName?.Trim().ToLowerInvariant() is not
+            ("oid" or "xid" or "xid8" or "cid" or "regtype" or "regconfig"))
+        {
+            value = value switch
+            {
+                ushort unsignedValue => (int)unsignedValue,
+                uint unsignedValue => (long)unsignedValue,
+                ulong unsignedValue => (decimal)unsignedValue,
+                _ => value,
+            };
+        }
+
+        return base.CreateParameter(name, value, storeTypeName);
+    }
 
     /// <inheritdoc />
     /// <remarks>Applies PostgreSQL's 65,535-parameter command limit.</remarks>

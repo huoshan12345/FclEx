@@ -119,6 +119,8 @@ CRUD helpers record the connection's initial state. A connection opened by the h
 
 `BulkInsertAsync` emits bounded multi-row INSERT commands; it does not silently execute one command per entity. A batch contains at most 500 rows and may be smaller because of provider row or parameter limits. Multiple rows with no insertable properties are rejected when the adapter cannot express an efficient bulk form.
 
+`NpgsqlAdapter` converts scalar `ushort`, `uint`, and `ulong` parameter values to `int`, `long`, and `decimal`, respectively. These conversions preserve their full ranges and allow PostgreSQL `integer`, `bigint`, and `numeric` parameters to be inferred. `byte` values remain unchanged. The conversion applies to generated insert commands, including bulk inserts; it does not change ordinary Dapper calls or configure table column types. Explicit PostgreSQL unsigned types (`oid`, `xid`, `xid8`, `cid`, `regtype`, and `regconfig`) retain their original values. Other explicit store types still determine the parameter type and must accept the supplied value.
+
 Canonical CRUD command text is cached by adapter instance, immutable mapping identity, operation shape, and batch row count. Per-call schema and adapter overrides do not enter the process-wide cache. This avoids repeated SQL string construction without permanently retaining open-ended override values.
 
 ## Explicit Generated Keys
