@@ -22,7 +22,7 @@ public static class DbSetExtensions
     {
         Check.NotNull(dbSet);
         var context = dbSet.GetService<ICurrentDbContext>().Context;
-        return DbContextExtensions.TruncateTableAsync(context, dbSet.EntityType, null, false, cancellationToken);
+        return context.TruncateAsync(dbSet.EntityType, cancellationToken);
     }
 
     /// <summary>Truncates this entity set's entire physical table with explicit identity and cascade behavior.</summary>
@@ -48,6 +48,6 @@ public static class DbSetExtensions
     {
         Check.NotNull(dbSet);
         var context = dbSet.GetService<ICurrentDbContext>().Context;
-        return DbContextExtensions.TruncateTableAsync(context, dbSet.EntityType, restartIdentity, cascade, cancellationToken);
+        return context.TruncateAsync(dbSet.EntityType, restartIdentity, cascade, cancellationToken);
     }
 }

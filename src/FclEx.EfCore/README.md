@@ -23,13 +23,16 @@ Entity Framework Core helpers for FclEx.
 ```csharp
 await context.TruncateAsync<Customer>(cancellationToken);
 await context.Set<Customer>().TruncateAsync(cancellationToken);
+await context.TruncateAsync(context.Model.FindEntityType(typeof(Customer))!, cancellationToken);
 ```
 
 `TruncateAsync` removes every row from the entity's entire physical table, ignoring
 query filters and soft-delete rules. It does not synchronize tracked entities.
 Only exclusive, single-table mappings without inheritance are supported; multi-table
 and shared-table mappings are rejected. A named shared-type entity set is supported
-when it owns its table exclusively; use the `DbSet` overload to preserve its identity.
+when it owns its table exclusively; use the `DbSet` or `IEntityType` overload to
+preserve its identity. The `IEntityType` overloads require metadata from the context's
+runtime model; metadata from a different model throws `ArgumentException`.
 
 SQL Server, PostgreSQL, and the Oracle, Pomelo, and Microting MySQL providers are
 supported. SQLite and unknown providers throw `NotSupportedException`; no `DELETE`

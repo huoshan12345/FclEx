@@ -115,13 +115,64 @@ public static partial class DbContextExtensions
         return context.TruncateAsync(typeof(TEntity), restartIdentity, cascade, cancellationToken);
     }
 
-    internal static Task TruncateTableAsync(
+    /// <summary>Truncates the entire physical table identified by entity metadata using the provider's native behavior.</summary>
+    /// <param name="context">The context whose model and connection are used.</param>
+    /// <param name="entityType">Entity metadata from this context's runtime model, including named shared-type entities.</param>
+    /// <param name="cancellationToken">A token to observe while executing the command.</param>
+    /// <returns>A task that completes when the table has been truncated.</returns>
+    /// <exception cref="ArgumentNullException">The context or entity metadata is null.</exception>
+    /// <exception cref="ArgumentException">The entity metadata does not belong to the context's runtime model.</exception>
+    /// <exception cref="NotSupportedException">The provider or table mapping is unsupported.</exception>
+    /// <remarks>
+    /// Uses native identity and transaction behavior, bypasses query filters and soft deletion,
+    /// and does not synchronize tracked entities. The entity must exclusively map to one table without inheritance.
+    /// See <see cref="TruncateAsync(DbContext, Type, CancellationToken)"/> for supported providers and database side effects.
+    /// </remarks>
+    public static Task TruncateAsync(
+        this DbContext context,
+        IEntityType entityType,
+        CancellationToken cancellationToken = default)
+    {
+        return TruncateTableAsync(context, entityType, null, false, cancellationToken);
+    }
+
+    /// <summary>Truncates the entire physical table identified by entity metadata with explicit identity and cascade behavior.</summary>
+    /// <param name="context">The context whose model and connection are used.</param>
+    /// <param name="entityType">Entity metadata from this context's runtime model, including named shared-type entities.</param>
+    /// <param name="restartIdentity">Whether to reset identity values. SQL Server and MySQL require true.</param>
+    /// <param name="cascade">Whether PostgreSQL should also truncate referencing tables.</param>
+    /// <param name="cancellationToken">A token to observe while executing the command.</param>
+    /// <returns>A task that completes when truncation has completed.</returns>
+    /// <exception cref="ArgumentNullException">The context or entity metadata is null.</exception>
+    /// <exception cref="ArgumentException">The entity metadata does not belong to the context's runtime model.</exception>
+    /// <exception cref="NotSupportedException">The provider, options, or table mapping are unsupported.</exception>
+    /// <remarks>
+    /// Bypasses query filters and soft deletion and does not synchronize tracked entities.
+    /// See <see cref="TruncateAsync(DbContext, Type, bool, bool, CancellationToken)"/> for option support,
+    /// cascade side effects, mapping restrictions, and transaction behavior.
+    /// </remarks>
+    public static Task TruncateAsync(
+        this DbContext context,
+        IEntityType entityType,
+        bool restartIdentity,
+        bool cascade,
+        CancellationToken cancellationToken = default)
+    {
+        return TruncateTableAsync(context, entityType, restartIdentity, cascade, cancellationToken);
+    }
+
+    private static Task TruncateTableAsync(
         DbContext context,
         IEntityType entityType,
         bool? restartIdentity,
         bool cascade,
         CancellationToken cancellationToken)
     {
+        Check.NotNull(context);
+        Check.NotNull(entityType);
+        if (!ReferenceEquals(entityType.Model, context.Model))
+            throw new ArgumentException("The entity metadata must belong to this DbContext's runtime model.", nameof(entityType));
+
         var provider = context.Database.ProviderName;
         switch (provider)
         {

@@ -2,7 +2,7 @@ using static FclEx.EfCore.Extensions.TruncateTestContext;
 
 namespace FclEx.EfCore.Extensions;
 
-public class DbContextTruncateTests
+public partial class DbContextTruncateTests
 {
     public static TheoryData<int, string> ProviderCases => new()
     {
@@ -162,10 +162,10 @@ public class DbContextTruncateTests
         await Assert.ThrowsAsync<ArgumentNullException>(() => ((DbContext)null!).TruncateAsync<Item>());
         var recorder = new CommandRecorder();
         await using var context = Create(0, "simple", recorder);
-        await Assert.ThrowsAsync<ArgumentNullException>(() => context.TruncateAsync(null!));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => context.TruncateAsync((Type)null!));
         await Assert.ThrowsAsync<ArgumentNullException>(() => ((DbContext)null!).TruncateAsync<Item>(true, false));
         await Assert.ThrowsAsync<ArgumentNullException>(() => ((DbContext)null!).TruncateAsync(typeof(Item), true, false));
-        await Assert.ThrowsAsync<ArgumentNullException>(() => context.TruncateAsync(null!, true, false));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => context.TruncateAsync((Type)null!, true, false));
     }
 
     [Theory]
