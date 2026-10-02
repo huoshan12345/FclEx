@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 
 namespace FclEx.Databases;
 
-public record ConnectionStrings(DatabasesConfig Config, string Database, DatabaseUser User)
+public record ConnectionStrings(DatabasesConfig Config, DatabaseUser User)
 {
     private DatabaseConfig Get(DbDriver dbDriver)
     {
@@ -20,7 +20,7 @@ public record ConnectionStrings(DatabasesConfig Config, string Database, Databas
         };
     }
 
-    private ConnectionStringBuilder Create(DbDriver dbDriver, bool isUser, string? database)
+    private ConnectionStringBuilder Create(DbDriver dbDriver, bool isUser, string database)
     {
         var config = Get(dbDriver);
         var (username, password) = isUser
@@ -29,21 +29,16 @@ public record ConnectionStrings(DatabasesConfig Config, string Database, Databas
         var builder = new ConnectionStringBuilder(
             DbDriver: dbDriver,
             Config: config with { UserName = username, Password = password },
-            Database: database ?? Database);
+            Database: database);
         return builder;
     }
 
-    private static readonly ConcurrentDictionary<(DbDriver, bool, string?), ConnectionStringBuilder> _cache = new();
+    private static readonly ConcurrentDictionary<(DbDriver, bool, string), ConnectionStringBuilder> _cache = new();
 
-    public ConnectionStringBuilder Get(DbDriver dbDriver, bool isUser, string? database = null)
+    public ConnectionStringBuilder Get(DbDriver dbDriver, string database, bool isUser = false)
     {
         var key = (dbDriver, isUser, database);
         var builder = _cache.GetOrAdd(key, k => Create(k.Item1, k.Item2, k.Item3));
         return builder;
-    }
-
-    public ConnectionStringBuilder Get(DbDriver dbDriver, string? database, bool isUser = false)
-    {
-        return Get(dbDriver, isUser, database);
     }
 }

@@ -15,8 +15,8 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
         };
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
         var id = await con.InsertAsync<EntityWithAutoKey, int>(entity, schema);
-
         var e = await con.GetAsync<EntityWithAutoKey>(id, schema);
+
         Assert.NotNull(e);
         Assert.Equal(entity.Name, e.Name);
         Assert.Equal(entity.Value, e.Value);

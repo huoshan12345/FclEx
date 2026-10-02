@@ -2,6 +2,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using Npgsql;
+using static Google.Protobuf.Compiler.CodeGeneratorResponse.Types;
 
 namespace FclEx.Dapper;
 
@@ -21,7 +22,7 @@ public class DapperTestsFixture : CoreTestsFixture
     public DapperTestsFixture()
     {
         DefaultUser = new(WithAssemblyInfo(UserName), UserPassword, WithAssemblyInfo(UserSchema));
-        ConnectionStrings = new(Databases, WithAssemblyInfo(DbName), DefaultUser);
+        ConnectionStrings = new(Databases, DefaultUser);
     }
 
     public static readonly string?[] SchemaNames =
@@ -43,7 +44,7 @@ public class DapperTestsFixture : CoreTestsFixture
                 : [DbDriver.Npgsql,]
             : [
                 //DbDriver.MySql,
-                //DbDriver.MySqlConnector,
+                DbDriver.MySqlConnector,
                 //DbDriver.Npgsql,
                 //DbDriver.SqlServer,
 #if SUPPORT_ORACLE
@@ -70,7 +71,11 @@ public class DapperTestsFixture : CoreTestsFixture
 
     public DbConnection CreateDbConnection(DbDriver dbDriver, string? schema, bool isUser = false)
     {
-        var database = dbDriver.IsMySql() ? schema : null;
+        var database = WithAssemblyInfo(DbName);
+
+        if (dbDriver.IsMySql() || dbDriver is DbDriver.Oracle)
+            database = schema ?? database;
+
         return ConnectionStrings.Get(dbDriver, database, isUser).CreateDbConnection();
     }
 
@@ -100,5 +105,11 @@ public class DapperTestsFixture : CoreTestsFixture
                   );
                   """;
         return con.ExecuteScalarAsync<int>(sql);
+    }
+
+    public ConnectionStringBuilder GetConnectionStringBuilder(DbDriver dbDriver, bool isUser)
+    {
+        var database = WithAssemblyInfo(DbName);
+        return ConnectionStrings.Get(dbDriver, database, isUser);
     }
 }

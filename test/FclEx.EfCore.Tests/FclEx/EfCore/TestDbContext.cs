@@ -162,8 +162,8 @@ public class TestDbContext(
         {
             sb.UserID = schema;
         }
-
-        sb.UserID = $"\"{sb.UserID}\""; // to keep the case, we need to quote it. Otherwise, Oracle will convert it to uppercase.
+        // oracle requires the username to be double-quoted to preserve case sensitivity
+        sb.UserID = sb.UserID.EnsureDoubleQuoted();
         var str = sb.ConnectionString;
         builder.UseOracle(str);
         connectionString = str;

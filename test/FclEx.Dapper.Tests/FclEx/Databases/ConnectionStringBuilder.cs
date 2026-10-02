@@ -49,7 +49,7 @@ public record ConnectionStringBuilder(
             DbDriver.Oracle => new OracleConnectionStringBuilder
             {
                 DataSource = $"{Config.Host}:{Config.Port}/{Config.ServiceName}",
-                UserID = $"\"{Database}\"",
+                UserID = Database.EnsureDoubleQuoted(), // oracle requires the username to be double-quoted to preserve case sensitivity
                 Password = Config.Password,
             }.ConnectionString,
 #endif

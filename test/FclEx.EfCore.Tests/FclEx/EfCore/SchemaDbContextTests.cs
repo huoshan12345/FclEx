@@ -24,24 +24,28 @@ public class SchemaDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 
     private async Task<string?> GetUserDefaultSchema(DbDriver dbDriver)
     {
-        var cs = Fixture.ConnectionStrings;
         switch (dbDriver)
         {
             case DbDriver.Npgsql:
             {
-                await using var con = cs.Get(DbDriver.Npgsql, true).CreateDbConnection();
+                await using var con = Fixture.GetConnectionStringBuilder(DbDriver.Npgsql, true).CreateDbConnection();
                 return await con.ExecuteScalarAsync<string>("SHOW SEARCH_PATH;");
             }
             case DbDriver.MySql:
             case DbDriver.MySqlConnector:
             {
-                await using var con = cs.Get(dbDriver, true).CreateDbConnection();
+                await using var con = Fixture.GetConnectionStringBuilder(dbDriver, true).CreateDbConnection();
                 return await con.ExecuteScalarAsync<string>("SELECT SCHEMA();");
             }
             case DbDriver.SqlServer:
             {
-                await using var con = cs.Get(DbDriver.SqlServer, true).CreateDbConnection();
+                await using var con = Fixture.GetConnectionStringBuilder(DbDriver.SqlServer, true).CreateDbConnection();
                 return await con.ExecuteScalarAsync<string>("SELECT SCHEMA_NAME();");
+            }
+            case DbDriver.Oracle:
+            {
+                await using var con = Fixture.GetConnectionStringBuilder(DbDriver.Oracle, false).CreateDbConnection();
+                return await con.ExecuteScalarAsync<string>("SELECT USER FROM dual;");
             }
             case DbDriver.Sqlite:
             default:
@@ -61,7 +65,7 @@ public class SchemaDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         else if (dbDriver.IsMySql())
         {
             Assert.NotNull(defaultSchema);
-            var conStr = Fixture.ConnectionStrings.Get(dbDriver, true);
+            var conStr = Fixture.GetConnectionStringBuilder(dbDriver, true);
             Assert.Equal(conStr.Database, defaultSchema);
         }
         else

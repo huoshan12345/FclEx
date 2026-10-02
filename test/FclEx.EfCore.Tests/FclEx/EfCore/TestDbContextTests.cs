@@ -1,3 +1,5 @@
+using static Org.BouncyCastle.Math.EC.ECCurve;
+
 namespace FclEx.EfCore;
 
 public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
@@ -25,7 +27,8 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     public async Task SetupDatabase(DbDriver dbDriver, string assemblyName, int dotNetVersion, string os)
     {
         var defaultUser = new DatabaseUser(WithAssemblyInfo(UserName), UserPassword, WithAssemblyInfo(UserSchema));
-        var connectionString = Fixture.ConnectionStrings.Get(dbDriver, false).Build();
+        var database = WithAssemblyInfo(DbName);
+        var connectionString = Fixture.ConnectionStrings.Get(dbDriver, database).Build();
 
         foreach (var (_, schema, isFirst, _) in SchemaNames.IndexEx())
         {
@@ -33,8 +36,8 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 
             if (isFirst || dbDriver.IsMySql() || dbDriver is DbDriver.Oracle)
             {
-                await DropDatabase(context);
-                await CreateDatabase(context);
+                await DropDatabase(context, database);
+                await CreateDatabase(context, database);
 
                 if (isFirst && dbDriver is not DbDriver.Oracle)
                 {
@@ -63,21 +66,26 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         }
     }
 
-    private static async Task DropDatabase(TestDbContext context)
+    private static async Task DropDatabase(TestDbContext context, string database)
     {
         if (context.DbDriver.IsMySql())
         {
-            var databaseName = context.Database.GetDbConnection().Database;
+            var config = DapperTestsFixture.Databases.MySql;
+            var builder = new ConnectionStringBuilder(DbDriver.MySql, config, "");
+
+            var databaseName = context.Schema ?? database;
             var sql = $"""
                        SET unique_checks = 0;
                        SET foreign_key_checks = 0;
                        SET GLOBAL innodb_stats_on_metadata = 0;
-                       DROP DATABASE {databaseName};
+                       DROP DATABASE IF EXISTS {databaseName};
                        SET GLOBAL innodb_stats_on_metadata = 1;
                        SET foreign_key_checks = 1;
                        SET unique_checks = 1;
                        """;
-            await context.Database.ExecuteSqlRawAsync(sql);
+
+            await using var con = builder.CreateDbConnection();
+            await con.ExecuteAsync(sql);
         }
         else
         {
@@ -85,13 +93,13 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         }
     }
 
-    private async Task CreateDatabase(TestDbContext context)
+    private static async Task CreateDatabase(TestDbContext context, string database)
     {
         if (context.DbDriver is DbDriver.Oracle)
         {
             var config = DapperTestsFixture.Databases.Oracle;
             var builder = new ConnectionStringBuilder(DbDriver.Oracle, config, config.UserName);
-            var userName = context.Schema ?? Fixture.ConnectionStrings.Database;
+            var userName = context.Schema ?? database;
             await using var con = builder.CreateDbConnection();
             await CreateUser(context.DbDriver, con, new(userName, config.Password, userName));
         }

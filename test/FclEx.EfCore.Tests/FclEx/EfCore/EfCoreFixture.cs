@@ -9,7 +9,7 @@ public class EfCoreFixture : DapperTestsFixture
 
     public TestDbContext CreateDbContext(DbDriver dbDriver, string? schema = null, bool isUser = false)
     {
-        var con = ConnectionStrings.Get(dbDriver, isUser).Build();
+        var con = GetConnectionStringBuilder(dbDriver, isUser).Build();
         return new(dbDriver, con, schema);
     }
 }

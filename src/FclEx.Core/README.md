@@ -53,3 +53,29 @@ with `ArgumentNullException`. Empty strings produce a bare pair.
 "(value)".WrapWithParentheses(); // "((value))"
 "".WrapWithSquareBrackets();    // "[]"
 ```
+
+For custom delimiters, use `IsWrappedWith`, `WrapWith`, `TrimWrapper`, and
+`EnsureWrappedWith`. Each has `string` and `char` overloads. Omitting `close` (or passing
+null) uses `open` on both ends; closing brackets are not inferred. String delimiters
+must be non-null and non-empty and are matched using `StringComparison.Ordinal`.
+Matching requires both complete delimiters without overlap.
+
+`EnsureWrappedWith` returns the original string if it already has the specified outer
+pair; otherwise, it adds one pair. The same behavior is available through
+`EnsureSquareBracketed`, `EnsureParenthesized`,
+`EnsureCurlyBracketed`, `EnsureAngleBracketed`,
+`EnsureDoubleQuoted`, `EnsureSingleQuoted`,
+`EnsureBacktickQuoted`, `EnsureSlashDelimited`, and `EnsureBackslashDelimited`.
+
+```csharp
+"value".WrapWith("/*", "*/");              // "/*value*/"
+"/*/".IsWrappedWith("/*", "*/");           // false: overlapping delimiters
+"/**/".TrimWrapper("/*", "*/");            // ""
+"value".EnsureWrappedWith('(', ')');        // "(value)"
+"(value)".EnsureParenthesized();   // "(value)"
+```
+
+All methods in this family reject a null source with `ArgumentNullException`, including
+the existing specific check and trim methods, which previously threw `NullReferenceException`.
+The string overloads reject a null `open` with `ArgumentNullException` and empty delimiters
+with `ArgumentException`. The existing specific methods delegate to these general methods.

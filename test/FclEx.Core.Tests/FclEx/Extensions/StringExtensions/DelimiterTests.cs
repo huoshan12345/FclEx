@@ -60,8 +60,8 @@ public class DelimiterTests
             Assert.Same(mismatched, TrimDelimiters(kind, mismatched));
         }
 
-        Assert.Throws<NullReferenceException>(() => IsDelimited(kind, null!));
-        Assert.Throws<NullReferenceException>(() => TrimDelimiters(kind, null!));
+        Assert.Throws<ArgumentNullException>(() => IsDelimited(kind, null!));
+        Assert.Throws<ArgumentNullException>(() => TrimDelimiters(kind, null!));
     }
 
     [Theory]
@@ -94,6 +94,32 @@ public class DelimiterTests
         }
 
         var exception = Assert.Throws<ArgumentNullException>(() => WrapDelimiters(kind, null!));
+        Assert.Equal("str", exception.ParamName);
+    }
+
+    [Theory]
+    [InlineData("SquareBracketed", '[', ']')]
+    [InlineData("Parenthesized", '(', ')')]
+    [InlineData("CurlyBracketed", '{', '}')]
+    [InlineData("AngleBracketed", '<', '>')]
+    [InlineData("DoubleQuoted", '"', '"')]
+    [InlineData("SingleQuoted", '\'', '\'')]
+    [InlineData("BacktickQuoted", '`', '`')]
+    [InlineData("SlashDelimited", '/', '/')]
+    [InlineData("BackslashDelimited", '\\', '\\')]
+    public void EnsureDelimiters_AddsOnlyMissingPairs(string kind, char opening, char closing)
+    {
+        var wrapped = $"{opening} value {closing}";
+        var nested = $"{opening}{wrapped}{closing}";
+        var pair = $"{opening}{closing}";
+        Assert.Same(wrapped, EnsureDelimiters(kind, wrapped));
+        Assert.Same(nested, EnsureDelimiters(kind, nested));
+        Assert.Same(pair, EnsureDelimiters(kind, pair));
+        Assert.Equal(pair, EnsureDelimiters(kind, ""));
+        Assert.Equal($"{opening}value{closing}", EnsureDelimiters(kind, "value"));
+        Assert.Equal($"{opening}{opening}{closing}", EnsureDelimiters(kind, opening.ToString()));
+        Assert.Equal($"{opening} {wrapped} {closing}", EnsureDelimiters(kind, $" {wrapped} "));
+        var exception = Assert.Throws<ArgumentNullException>(() => EnsureDelimiters(kind, null!));
         Assert.Equal("str", exception.ParamName);
     }
 
@@ -144,6 +170,23 @@ public class DelimiterTests
             "BacktickQuoted" => str.WrapWithBackticks(),
             "SlashDelimited" => str.WrapWithSlashes(),
             "BackslashDelimited" => str.WrapWithBackslashes(),
+            _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+        };
+    }
+
+    private static string EnsureDelimiters(string kind, string str)
+    {
+        return kind switch
+        {
+            "SquareBracketed" => str.EnsureSquareBracketed(),
+            "Parenthesized" => str.EnsureParenthesized(),
+            "CurlyBracketed" => str.EnsureCurlyBracketed(),
+            "AngleBracketed" => str.EnsureAngleBracketed(),
+            "DoubleQuoted" => str.EnsureDoubleQuoted(),
+            "SingleQuoted" => str.EnsureSingleQuoted(),
+            "BacktickQuoted" => str.EnsureBacktickQuoted(),
+            "SlashDelimited" => str.EnsureSlashDelimited(),
+            "BackslashDelimited" => str.EnsureBackslashDelimited(),
             _ => throw new ArgumentOutOfRangeException(nameof(kind)),
         };
     }
