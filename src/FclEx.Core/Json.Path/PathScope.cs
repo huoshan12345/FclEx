@@ -1,4 +1,4 @@
-﻿namespace Json.Path;
+namespace Json.Path;
 
 /// <summary>
 /// Indicates the scope of a path.

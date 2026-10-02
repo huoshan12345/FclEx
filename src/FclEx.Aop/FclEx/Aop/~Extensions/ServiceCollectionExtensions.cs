@@ -1,4 +1,4 @@
-﻿namespace FclEx.Aop;
+namespace FclEx.Aop;
 
 public static class ServiceCollectionExtensions
 {

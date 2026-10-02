@@ -1,4 +1,4 @@
-﻿#pragma warning disable CS8777 // Parameter must have a non-null value when exiting.
+#pragma warning disable CS8777 // Parameter must have a non-null value when exiting.
 
 namespace FclEx.Extensions;
 

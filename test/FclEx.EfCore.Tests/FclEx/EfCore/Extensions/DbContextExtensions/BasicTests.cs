@@ -1,4 +1,4 @@
-﻿namespace FclEx.EfCore.Extensions.DbContextExtensions;
+namespace FclEx.EfCore.Extensions.DbContextExtensions;
 
 public class BasicTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {

@@ -1,4 +1,4 @@
-﻿namespace Json.Path;
+namespace Json.Path;
 
 /// <summary>
 /// The results of a JSON Path evaluation against a JSON instance.

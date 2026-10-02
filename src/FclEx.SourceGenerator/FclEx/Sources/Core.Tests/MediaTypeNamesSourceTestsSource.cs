@@ -1,4 +1,4 @@
-﻿#pragma warning disable RS1035
+#pragma warning disable RS1035
 
 using Microsoft.CodeAnalysis.Diagnostics;
 using System;

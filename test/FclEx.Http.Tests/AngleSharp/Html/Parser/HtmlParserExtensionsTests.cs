@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Html.Parser;
+namespace AngleSharp.Html.Parser;
 
 public class HtmlParserExtensionsTests
 {

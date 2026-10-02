@@ -1,4 +1,4 @@
-﻿namespace Json.Path.Expressions;
+namespace Json.Path.Expressions;
 
 internal interface IUnaryLogicalOperator : IExpressionOperator
 {
