@@ -143,7 +143,7 @@ These operations do not advance or reset provider identity, sequence, or auto-in
 
 ## Dapper Global State and Type Handlers
 
-Core CRUD operations do not scan assemblies or modify Dapper's process-wide type maps, type handlers, or settings. Generated queries alias database columns back to CLR property names, so they do not require a global Dapper type map.
+On first use, `DapperHelper` calls `InitializeTypeHandlers()` to register `Dapper.GuidTypeHandler` if no GUID handler is already registered. This removes the built-in `Guid` and `Guid?` type mappings so Dapper uses the handler for parameters. These changes affect all Dapper calls in the process. The method can also be called explicitly before using ordinary Dapper APIs, or after resetting Dapper type handlers. Core CRUD operations do not scan assemblies or change other Dapper settings. Generated queries alias database columns back to CLR property names, so they do not require a global Dapper type map.
 
 `Dapper.GuidTypeHandler` and `Dapper.AssumeUtcDateTimeTypeHandler` are optional helpers. Registering either through `SqlMapper.AddTypeHandler` changes Dapper process-wide state and remains the application's responsibility.
 

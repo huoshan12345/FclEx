@@ -81,6 +81,7 @@ public class OracleAdapter : SqlAdapterBase
     {
         value = value switch
         {
+            Guid guid => guid.ToByteArray(),
             ushort unsignedValue => (int)unsignedValue,
             uint unsignedValue => (long)unsignedValue,
             ulong unsignedValue => (decimal)unsignedValue,

@@ -5,6 +5,14 @@ namespace FclEx.Dapper;
 /// </summary>
 public static class DapperHelper
 {
+    private static readonly
+#if NET9_0_OR_GREATER
+        Lock
+#else
+        object
+#endif
+    _lock = new();
+
     private static readonly ConcurrentDictionary<Type, ISqlAdapter> RegisteredAdapters = new();
     private static readonly IReadOnlyDictionary<(string AssemblyName, string TypeName), ISqlAdapter> BuiltInAdapters =
         new Dictionary<(string AssemblyName, string TypeName), ISqlAdapter>
@@ -21,6 +29,24 @@ public static class DapperHelper
     /// Gets the default mapping source used when an operation does not specify one.
     /// </summary>
     public static IEntityMappingSource DefaultEntityMappingSource { get; } = DataAnnotationsEntityMappingSource.Instance;
+
+    static DapperHelper()
+    {
+        Initialize();
+    }
+
+    public static void Initialize()
+    {
+        lock (_lock)
+        {
+            if (SqlMapper.HasTypeHandler(typeof(Guid)))
+                return;
+
+            SqlMapper.RemoveTypeMap(typeof(Guid));
+            SqlMapper.RemoveTypeMap(typeof(Guid?));
+            SqlMapper.AddTypeHandler(new GuidTypeHandler());
+        }
+    }
 
     /// <summary>
     /// Gets an entity mapping from the supplied source or from <see cref="DefaultEntityMappingSource"/>.
