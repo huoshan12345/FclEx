@@ -2,7 +2,6 @@ using MySql.Data.MySqlClient;
 using System.Collections.Concurrent;
 using Oracle.ManagedDataAccess.Client;
 
-
 #if NET10_0_OR_GREATER
 using Microting.EntityFrameworkCore.MySql.Infrastructure.Internal;
 using Microting.EntityFrameworkCore.MySql.Storage.Internal;

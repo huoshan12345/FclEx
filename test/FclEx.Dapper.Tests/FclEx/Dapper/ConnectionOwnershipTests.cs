@@ -85,14 +85,15 @@ public class ConnectionOwnershipTests
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.ExecuteInTransactionAsync(
             (_, _) =>
             {
+                // ReSharper disable once AccessToDisposedClosure
                 cancellationSource.Cancel();
                 return Task.CompletedTask;
             },
             cancellationToken: cancellationSource.Token));
         Assert.Equal(ConnectionState.Closed, connection.State);
 
-        await connection.OpenAsync();
-        await connection.ExecuteInTransactionAsync(_ => Task.CompletedTask);
+        await connection.OpenAsync(CancellationToken.None);
+        await connection.ExecuteInTransactionAsync(_ => Task.CompletedTask, cancellationToken: CancellationToken.None);
         Assert.Equal(ConnectionState.Open, connection.State);
     }
 
