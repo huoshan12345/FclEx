@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <PackageReference Include="FluentMigrator.Runner.SQLite" />
     <PackageReference Include="Microsoft.Data.SqlClient" />
@@ -7,6 +7,8 @@
     <PackageReference Include="MySql.Data" />
     <PackageReference Include="MySqlConnector" />
     <PackageReference Include="Npgsql" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core"
+                      Condition="$(SupportOracle)" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.Dapper\FclEx.Dapper.csproj" />

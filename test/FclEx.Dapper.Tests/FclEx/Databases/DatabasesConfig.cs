@@ -6,4 +6,5 @@ public class DatabasesConfig
     public DatabaseConfig MySql { get; set; } = default!;
     public DatabaseConfig Postgres { get; set; } = default!;
     public DatabaseConfig Sqlite { get; set; } = default!;
+    public DatabaseConfig Oracle { get; set; } = default!;
 }

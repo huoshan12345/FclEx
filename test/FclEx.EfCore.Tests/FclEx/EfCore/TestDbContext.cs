@@ -58,6 +58,9 @@ public class TestDbContext(
             case DbDriver.MySqlConnector:
                 UseMySql(builder, ConnectionString, Schema);
                 break;
+            case DbDriver.Oracle:
+                builder.UseOracle(ConnectionString);
+                break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(DbProviderType), DbProviderType, null);
         }
@@ -90,8 +93,11 @@ public class TestDbContext(
 
         modelBuilder.Entity<EntityWithoutKey>().HasNoKey();
 
-        modelBuilder.Entity<EntityWithIdAndIndex>().HasIndex(e => e.Name).IsUnique();
-        modelBuilder.Entity<EntityWithIdAndIndex>().HasIndex(e => e.Value);
+        modelBuilder.Entity<EntityWithIdAndIndex>(e =>
+        {
+            e.HasIndex(m => m.Name).IsUnique();
+            e.HasIndex(m => m.Value);
+        });
 
         modelBuilder.Entity<EntityWithNavigation>()
             .HasOne(m => m.Navigation)

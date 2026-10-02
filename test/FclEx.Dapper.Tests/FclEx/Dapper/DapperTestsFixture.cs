@@ -1,4 +1,3 @@
-using System.Data.Common;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
@@ -47,6 +46,9 @@ public class DapperTestsFixture : CoreTestsFixture
                 DbDriver.MySqlConnector,
                 DbDriver.Npgsql,
                 DbDriver.SqlServer,
+#if SUPPORT_ORACLE
+                DbDriver.Oracle,
+#endif
             ];
     }
 
@@ -59,6 +61,9 @@ public class DapperTestsFixture : CoreTestsFixture
             DbDriver.Npgsql => new NpgsqlParameter(name, value),
             DbDriver.MySql => new MySqlParameter(name, value),
             DbDriver.MySqlConnector => new MySqlConnector.MySqlParameter(name, value),
+#if SUPPORT_ORACLE
+            DbDriver.Oracle => new OracleParameter(name, value),
+#endif
             _ => throw new ArgumentOutOfRangeException(nameof(dbDriver), dbDriver, null)
         };
     }
@@ -75,6 +80,7 @@ public class DapperTestsFixture : CoreTestsFixture
     {
         foreach (var (dbDriver, schema) in DbDrivers.CrossJoin(CurrentSchemas))
         {
+            // ReSharper disable once UseAwaitUsing
             using var con = CreateDbConnection(dbDriver, schema);
             await FixAutoIncrement<EntityWithAutoKey>(con, dbDriver, schema);
         }

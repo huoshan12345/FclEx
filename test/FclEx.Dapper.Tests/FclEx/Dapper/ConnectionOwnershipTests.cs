@@ -1,6 +1,3 @@
-using System.Data.Common;
-using System.Diagnostics.CodeAnalysis;
-
 namespace FclEx.Dapper;
 
 public class ConnectionOwnershipTests

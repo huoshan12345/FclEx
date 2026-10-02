@@ -7,6 +7,7 @@ public enum DbDriver
     Npgsql,
     MySql,
     MySqlConnector,
+    Oracle,
 }
 
 public static class DbDriverExtensions

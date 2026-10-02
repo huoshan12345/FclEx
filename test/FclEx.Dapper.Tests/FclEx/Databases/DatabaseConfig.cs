@@ -1,9 +1,10 @@
 namespace FclEx.Databases;
 
-public class DatabaseConfig
+public record DatabaseConfig
 {
-    public string Host { get; set; } = "";
-    public int Port { get; set; }
-    public string UserName { get; set; } = "";
-    public string Password { get; set; } = "";
+    public string Host { get; init; } = "";
+    public int Port { get; init; }
+    public string UserName { get; init; } = "";
+    public string Password { get; init; } = "";
+    public string ServiceName { get; init; } = ""; // For Oracle
 }

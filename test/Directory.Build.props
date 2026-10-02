@@ -18,11 +18,16 @@
   </PropertyGroup>
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <SupportOracle>false</SupportOracle>
     <TargetFrameworks Condition="$(IsWindows)">$(TargetFrameworks);net472</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <Prefer32Bit>false</Prefer32Bit>
     <RuntimeIdentifier Condition="$(Is64BitOS)">win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), 6.0))">
+    <SupportOracle>true</SupportOracle>
+    <DefineConstants>$(DefineConstants);SUPPORT_ORACLE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="appsettings*.json">

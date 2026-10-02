@@ -1,5 +1,3 @@
-using System.Data.Common;
-
 namespace FclEx.Dapper;
 
 public class CommandOptionsTests

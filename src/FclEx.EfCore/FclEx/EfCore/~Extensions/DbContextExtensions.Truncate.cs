@@ -170,7 +170,7 @@ public static partial class DbContextExtensions
     {
         Check.NotNull(context);
         Check.NotNull(entityType);
-        if (!ReferenceEquals(entityType.Model, context.Model))
+        if (ReferenceEquals(entityType.Model, context.Model) == false)
             throw new ArgumentException("The entity metadata must belong to this DbContext's runtime model.", nameof(entityType));
 
         var provider = context.Database.ProviderName;
@@ -187,7 +187,7 @@ public static partial class DbContextExtensions
         }
 
         var isPostgreSql = provider == "Npgsql.EntityFrameworkCore.PostgreSQL";
-        if (!isPostgreSql)
+        if (isPostgreSql == false)
         {
             if (restartIdentity == false)
                 throw new NotSupportedException($"Provider '{provider}' cannot truncate a table without resetting identity values.");

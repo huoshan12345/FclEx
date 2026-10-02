@@ -1,6 +1,4 @@
-using System.Data.Common;
-using System.Diagnostics.CodeAnalysis;
-
+// ReSharper disable UseAwaitUsing
 namespace FclEx.Dapper;
 
 public class CommandDisposalTests

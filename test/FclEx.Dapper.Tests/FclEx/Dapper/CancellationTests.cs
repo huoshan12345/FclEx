@@ -1,4 +1,4 @@
-using System.Data.Common;
+// ReSharper disable UseAwaitUsing
 
 namespace FclEx.Dapper;
 
@@ -41,7 +41,7 @@ public class CancellationTests
 
         Assert.Equal(1, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM cancellable_rows"));
         // Reusing options with the default token must not carry cancellation from the previous call.
-        var existing = await connection.GetAsync<CancellableRow>(1, commandOptions: commandOptions);
+        var existing = await connection.GetAsync<CancellableRow>(1, commandOptions: commandOptions, cancellationToken: cancellationToken);
         Assert.Equal("one", existing?.Name);
     }
 
@@ -81,9 +81,9 @@ public class CancellationTests
             _ => throw new ArgumentOutOfRangeException(nameof(operation)),
         });
 
-        var existing = await transaction.GetAsync<CancellableRow>(1, commandOptions: commandOptions);
+        var existing = await transaction.GetAsync<CancellableRow>(1, commandOptions: commandOptions, cancellationToken: cancellationToken);
         Assert.Equal("one", existing?.Name);
-        Assert.Null(await transaction.GetAsync<CancellableRow>(2, commandOptions: commandOptions));
+        Assert.Null(await transaction.GetAsync<CancellableRow>(2, commandOptions: commandOptions, cancellationToken: cancellationToken));
         Assert.Null(commandOptions.Transaction);
     }
 
@@ -105,7 +105,8 @@ public class CancellationTests
                     "INSERT INTO cancellable_rows (id, name) VALUES (1, 'one')",
                     transaction: transaction,
                     cancellationToken: cancellationToken));
-                cancellationSource.Cancel();
+                // ReSharper disable once AccessToDisposedClosure
+                await cancellationSource.CancelAsync();
             },
             cancellationToken: cancellationSource.Token));
 

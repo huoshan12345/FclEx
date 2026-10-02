@@ -13,6 +13,9 @@ public record ConnectionStrings(DatabasesConfig Config, string Database, Databas
             DbDriver.Npgsql => Config.Postgres,
             DbDriver.MySql => Config.MySql,
             DbDriver.MySqlConnector => Config.MySql,
+#if SUPPORT_ORACLE
+            DbDriver.Oracle => Config.Oracle,
+#endif
             _ => throw new NotSupportedException($"Unsupported database driver type: {dbDriver}")
         };
     }
@@ -25,10 +28,7 @@ public record ConnectionStrings(DatabasesConfig Config, string Database, Databas
             : (config.UserName, config.Password);
         var builder = new ConnectionStringBuilder(
             DbDriver: dbDriver,
-            Host: config.Host,
-            Port: config.Port,
-            UserName: username,
-            Password: password,
+            Config: config with { UserName = username, Password = password },
             Database: database ?? Database);
         return builder;
     }
