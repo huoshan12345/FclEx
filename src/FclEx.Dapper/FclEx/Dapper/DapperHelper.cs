@@ -10,6 +10,7 @@ public static class DapperHelper
         new Dictionary<(string AssemblyName, string TypeName), ISqlAdapter>
     {
         [("Npgsql", "Npgsql.NpgsqlConnection")] = new NpgsqlAdapter(),
+        [("Oracle.ManagedDataAccess", "Oracle.ManagedDataAccess.Client.OracleConnection")] = new OracleAdapter(),
         [("Microsoft.Data.SqlClient", "Microsoft.Data.SqlClient.SqlConnection")] = new SqlServerAdapter(),
         [("Microsoft.Data.Sqlite", "Microsoft.Data.Sqlite.SqliteConnection")] = new SqliteAdapter(),
         [("MySql.Data", "MySql.Data.MySqlClient.MySqlConnection")] = new MySqlAdapter(),
@@ -151,6 +152,13 @@ public static class DapperHelper
 
         throw new NotSupportedException(
             $"No SQL adapter is registered for connection type '{connectionType.AssemblyQualifiedName}'.");
+    }
+
+    internal static string GetParameterPlaceholder(ISqlAdapter adapter, string name)
+    {
+        return adapter is SqlAdapterBase sqlAdapter
+            ? sqlAdapter.GetParameterPlaceholder(name)
+            : $"@{name}";
     }
 
     private static ISqlAdapter? GetRegisteredSqlAdapter(Type connectionType)

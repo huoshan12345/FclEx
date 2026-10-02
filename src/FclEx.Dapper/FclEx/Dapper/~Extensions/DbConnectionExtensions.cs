@@ -178,7 +178,14 @@ public static partial class DbConnectionExtensions
             async Task<object?> ExecuteCommandAsync(DbCommand command)
             {
                 if (shouldReturnGeneratedKey)
-                    return await command.ExecuteScalarAsync(cancellationToken);
+                {
+                    return a is SqlAdapterBase sqlAdapter
+                        ? await sqlAdapter.ExecuteInsertReturningAsync(
+                            command,
+                            mapping.GeneratedKeys[0].Property.PropertyType,
+                            cancellationToken)
+                        : await command.ExecuteScalarAsync(cancellationToken);
+                }
 
                 await command.ExecuteNonQueryAsync(cancellationToken);
                 return null;
@@ -434,7 +441,7 @@ public static partial class DbConnectionExtensions
                 foreach (var (column, _, _, isLast) in insertProperties.IndexEx())
                 {
                     var paraName = GetParameterName(column, i);
-                    sbParameterList.Append(paraName);
+                    sbParameterList.Append(GetParameterPlaceholder(sqlAdapter, paraName.Substring(1)));
 
                     if (isLast == false)
                         sbParameterList.Append(", ");
@@ -527,7 +534,7 @@ public static partial class DbConnectionExtensions
             var keyName = sqlAdapter.GetQuotedColumnName(keyProperty.ColumnName);
             var selectColumns = string.Join(", ", mapping.Properties.Select(property =>
                 $"{sqlAdapter.GetQuotedColumnName(property.ColumnName)} AS {sqlAdapter.GetQuotedColumnName(property.Property.Name)}"));
-            return $"SELECT {selectColumns} FROM {tableName} WHERE {keyName} = @id";
+            return $"SELECT {selectColumns} FROM {tableName} WHERE {keyName} = {GetParameterPlaceholder(sqlAdapter, "id")}";
         }
     }
 
@@ -572,7 +579,7 @@ public static partial class DbConnectionExtensions
             var keyProperty = GetSingleKey(mapping);
             var tableName = GetTableNameWithSchema(sqlAdapter, schema, mapping);
             var keyName = sqlAdapter.GetQuotedColumnName(keyProperty.ColumnName);
-            return $"DELETE FROM {tableName} WHERE {keyName} = @id";
+            return $"DELETE FROM {tableName} WHERE {keyName} = {GetParameterPlaceholder(sqlAdapter, "id")}";
         }
     }
 

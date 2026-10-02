@@ -77,6 +77,11 @@ public abstract class SqlAdapterBase : ISqlAdapter
     /// <inheritdoc />
     public abstract int GetMaxInsertBatchSize(int parameterCountPerRow);
 
+    public virtual string GetParameterPlaceholder(string name)
+    {
+        return $"@{name}";
+    }
+
     /// <inheritdoc />
     /// <remarks>
     /// The base implementation emits <c>DEFAULT VALUES</c> for a default-only row and does not support returning a
@@ -103,6 +108,14 @@ public abstract class SqlAdapterBase : ISqlAdapter
     /// </summary>
     /// <returns>A reusable parameter factory.</returns>
     protected abstract DbParameterCreator BuildParameterCreator();
+
+    public virtual Task<object?> ExecuteInsertReturningAsync(
+        DbCommand command,
+        Type generatedKeyType,
+        CancellationToken cancellationToken = default)
+    {
+        return command.ExecuteScalarAsync(cancellationToken);
+    }
 
     /// <summary>
     /// Calculates a provider batch limit from its maximum command parameter count.
