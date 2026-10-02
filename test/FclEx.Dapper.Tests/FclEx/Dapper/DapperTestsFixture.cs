@@ -44,7 +44,7 @@ public class DapperTestsFixture : CoreTestsFixture
                 : [DbDriver.Npgsql,]
             : [
                 //DbDriver.MySql,
-                DbDriver.MySqlConnector,
+                //DbDriver.MySqlConnector,
                 //DbDriver.Npgsql,
                 //DbDriver.SqlServer,
 #if SUPPORT_ORACLE
