@@ -1,5 +1,7 @@
 // ReSharper disable AccessToDisposedClosure
 // ReSharper disable UseAwaitUsing
+using static Dapper.SqlMapper;
+
 namespace FclEx.Dapper;
 
 public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : DapperTests(fixture)
@@ -27,7 +29,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task InsertWithExplicitGeneratedKeysAsync_EntityWithAutoKey_Test(DbDriver dbDriver, string? schema)
     {
-        Assert.SkipIfInGithubAction(); 
+        Assert.SkipIfInGithubAction();
 
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
         await FixAutoIncrement<EntityWithAutoKey>(con, dbDriver, schema);
@@ -91,8 +93,10 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
         };
         await con.InsertAsync<EntityWithoutKey, object>(entity, schema);
 
+        var adapter = DapperHelper.GetSqlAdapter(con);
+        var parameterName = DapperHelper.GetParameterPlaceholder(adapter, nameof(EntityWithAutoKey.Name));
         var tableName = DapperHelper.GetTableNameWithSchema(con, schema, typeof(EntityWithoutKey));
-        var sql = $"select * from {tableName} where {DapperHelper.GetQuotedColumnName<EntityWithoutKey>(con, m => m.Name)} = @Name";
+        var sql = $"select * from {tableName} where {DapperHelper.GetQuotedColumnName<EntityWithoutKey>(con, m => m.Name)} = {parameterName}";
         var e = await con.QueryFirstAsync<EntityWithoutKey>(sql, new { entity.Name });
         Assert.Equal(entity.Value, e.Value);
     }
@@ -112,8 +116,10 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
         var rows = await con.BulkInsertAsync(entities, schema);
         Assert.Equal(count, rows);
 
+        var adapter = DapperHelper.GetSqlAdapter(con);
+        var parameterName = DapperHelper.GetParameterPlaceholder(adapter, nameof(EntityWithAutoKey.Name));
         var tableName = DapperHelper.GetTableNameWithSchema(con, schema, typeof(EntityWithAutoKey));
-        var sql = $"select * from {tableName} where {DapperHelper.GetQuotedColumnName<EntityWithAutoKey>(con, m => m.Name)} = @Name";
+        var sql = $"select * from {tableName} where {DapperHelper.GetQuotedColumnName<EntityWithAutoKey>(con, m => m.Name)} = {parameterName}";
         foreach (var entity in entities)
         {
             var e = await con.QueryFirstAsync<EntityWithAutoKey>(sql, new { entity.Name });
