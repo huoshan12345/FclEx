@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace FclEx.EfCore.Extensions;
 

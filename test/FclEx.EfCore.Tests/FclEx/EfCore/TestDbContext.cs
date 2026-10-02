@@ -1,5 +1,6 @@
 using MySql.Data.MySqlClient;
 using System.Collections.Concurrent;
+using Oracle.ManagedDataAccess.Client;
 
 
 #if NET10_0_OR_GREATER
@@ -23,8 +24,10 @@ public class TestDbContext(
     : SchemaDbContext(schema)
 {
 
-    public DbDriver DbProviderType { get; } = dbDriver;
-    public string ConnectionString { get; } = connectionString;
+    public DbDriver DbDriver { get; } = dbDriver;
+
+    private string _connectionString = connectionString;
+    public string ConnectionString => _connectionString;
 
     public DbSet<EntityWithAutoKey> EntityWithAutoKey { get; set; }
     public DbSet<EntityWithGuidKey> EntityWithGuidKey { get; set; }
@@ -41,7 +44,7 @@ public class TestDbContext(
     {
         base.OnConfiguring(builder);
 
-        switch (DbProviderType)
+        switch (DbDriver)
         {
             case DbDriver.SqlServer:
                 builder.UseSqlServer(ConnectionString);
@@ -53,16 +56,16 @@ public class TestDbContext(
                 builder.UseNpgsql(ConnectionString);
                 break;
             case DbDriver.MySql:
-                UseMySQL(builder, ConnectionString, Schema);
+                UseMySQL(builder, ref _connectionString, Schema);
                 break;
             case DbDriver.MySqlConnector:
-                UseMySql(builder, ConnectionString, Schema);
+                UseMySql(builder, ref _connectionString, Schema);
                 break;
             case DbDriver.Oracle:
-                builder.UseOracle(ConnectionString);
+                UseOracle(builder, ref _connectionString, Schema);
                 break;
             default:
-                throw new ArgumentOutOfRangeException(nameof(DbProviderType), DbProviderType, null);
+                throw new ArgumentOutOfRangeException(nameof(DbDriver), DbDriver, null);
         }
     }
 
@@ -71,22 +74,22 @@ public class TestDbContext(
         base.OnModelCreating(modelBuilder);
 
 
-        if (DbProviderType == DbDriver.Sqlite)
+        if (DbDriver == DbDriver.Sqlite)
         {
             var e = modelBuilder.Entity<EntityWithSqliteBlob>();
         }
 
-        if (DbProviderType == DbDriver.SqlServer)
+        if (DbDriver == DbDriver.SqlServer)
         {
             var e = modelBuilder.Entity<EntityWithSqlServerXml>();
         }
 
-        if (DbProviderType == DbDriver.Npgsql)
+        if (DbDriver == DbDriver.Npgsql)
         {
             var e = modelBuilder.Entity<EntityWithPostgresqlJsonb>();
         }
 
-        if (DbProviderType is DbDriver.MySqlConnector or DbDriver.MySql)
+        if (DbDriver is DbDriver.MySqlConnector or DbDriver.MySql)
         {
             var e = modelBuilder.Entity<EntityWithMySqlBlob>();
         }
@@ -119,16 +122,18 @@ public class TestDbContext(
 
     private static readonly ConcurrentDictionary<string, ServerVersion> MySqlServerVersions = new();
 
-    private static void UseMySql(DbContextOptionsBuilder builder, string connectionString, string? schema)
+    private static void UseMySql(DbContextOptionsBuilder builder, ref string connectionString, string? schema)
     {
         var sb = new MySqlConnectionStringBuilder(connectionString);
         if (schema.IsNotEmpty())
         {
             sb.Database = schema;
         }
-        var ver = MySqlServerVersions.GetOrAdd(sb.ConnectionString, m => ServerVersion.AutoDetect(m));
-        builder.UseMySql(sb.ConnectionString, ver, o => o.SchemaBehavior(MySqlSchemaBehavior.Translate, (_, table) => table));
+        var str = sb.ConnectionString;
+        var ver = MySqlServerVersions.GetOrAdd(str, m => ServerVersion.AutoDetect(m));
+        builder.UseMySql(str, ver, o => o.SchemaBehavior(MySqlSchemaBehavior.Translate, (_, table) => table));
         builder.ReplaceService<ISqlGenerationHelper, CustomMySqlSqlGenerationHelper>();
+        connectionString = str;
     }
 
     public class CustomMySqlSqlGenerationHelper(
@@ -139,13 +144,29 @@ public class TestDbContext(
         public override string GetSchemaName(string name, string schema) => schema;
     }
 
-    private static void UseMySQL(DbContextOptionsBuilder builder, string connectionString, string? schema)
+    private static void UseMySQL(DbContextOptionsBuilder builder, ref string connectionString, string? schema)
     {
         var sb = new MySqlConnectionStringBuilder(connectionString);
         if (schema.IsNotEmpty())
         {
             sb.Database = schema;
         }
-        builder.UseMySQL(sb.ConnectionString);
+        var str = sb.ConnectionString;
+        builder.UseMySQL(str);
+        connectionString = str;
+    }
+
+    private static void UseOracle(DbContextOptionsBuilder builder, ref string connectionString, string? schema)
+    {
+        var sb = new OracleConnectionStringBuilder(connectionString);
+        if (schema.IsNotEmpty())
+        {
+            sb.UserID = schema;
+        }
+
+        sb.UserID = $"\"{sb.UserID}\""; // to keep the case, we need to quote it. Otherwise, Oracle will convert it to uppercase.
+        var str = sb.ConnectionString;
+        builder.UseOracle(str);
+        connectionString = str;
     }
 }

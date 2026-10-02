@@ -49,7 +49,7 @@ public record ConnectionStringBuilder(
             DbDriver.Oracle => new OracleConnectionStringBuilder
             {
                 DataSource = $"{Config.Host}:{Config.Port}/{Config.ServiceName}",
-                UserID = Config.UserName,
+                UserID = Database,
                 Password = Config.Password,
             }.ConnectionString,
 #endif
