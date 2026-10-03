@@ -441,7 +441,7 @@ public static partial class DbConnectionExtensions
                 foreach (var (column, _, _, isLast) in insertProperties.IndexEx())
                 {
                     var paraName = GetParameterName(column, i);
-                    sbParameterList.Append(GetParameterPlaceholder(sqlAdapter, paraName.Substring(1)));
+                    sbParameterList.Append(sqlAdapter.GetParameterPlaceholder(paraName[1..]));
 
                     if (isLast == false)
                         sbParameterList.Append(", ");
@@ -534,7 +534,7 @@ public static partial class DbConnectionExtensions
             var keyName = sqlAdapter.GetQuotedColumnName(keyProperty.ColumnName);
             var selectColumns = string.Join(", ", mapping.Properties.Select(property =>
                 $"{sqlAdapter.GetQuotedColumnName(property.ColumnName)} AS {sqlAdapter.GetQuotedColumnName(property.Property.Name)}"));
-            return $"SELECT {selectColumns} FROM {tableName} WHERE {keyName} = {GetParameterPlaceholder(sqlAdapter, "id")}";
+            return $"SELECT {selectColumns} FROM {tableName} WHERE {keyName} = {sqlAdapter.GetParameterPlaceholder("id")}";
         }
     }
 
@@ -579,7 +579,7 @@ public static partial class DbConnectionExtensions
             var keyProperty = GetSingleKey(mapping);
             var tableName = GetTableNameWithSchema(sqlAdapter, schema, mapping);
             var keyName = sqlAdapter.GetQuotedColumnName(keyProperty.ColumnName);
-            return $"DELETE FROM {tableName} WHERE {keyName} = {GetParameterPlaceholder(sqlAdapter, "id")}";
+            return $"DELETE FROM {tableName} WHERE {keyName} = {sqlAdapter.GetParameterPlaceholder("id")}";
         }
     }
 

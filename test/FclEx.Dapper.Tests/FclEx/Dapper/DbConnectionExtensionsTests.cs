@@ -92,8 +92,8 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
         await con.InsertAsync<EntityWithoutKey, object>(entity, schema);
 
         var adapter = DapperHelper.GetSqlAdapter(con);
-        var parameterName = DapperHelper.GetParameterPlaceholder(adapter, nameof(EntityWithAutoKey.Name));
-        var tableName = DapperHelper.GetTableNameWithSchema(adapter, schema, typeof(EntityWithoutKey));
+        var parameterName = adapter.GetParameterPlaceholder(nameof(EntityWithAutoKey.Name));
+        var tableName = adapter.GetTableNameWithSchema(schema, typeof(EntityWithoutKey));
         var sql = $"select * from {tableName} where {DapperHelper.GetQuotedColumnName<EntityWithoutKey>(con, m => m.Name)} = {parameterName}";
         var e = await con.QueryFirstAsync<EntityWithoutKey>(sql, new { entity.Name });
         Assert.Equal(entity.Value, e.Value);
@@ -115,9 +115,10 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
         Assert.Equal(count, rows);
 
         var adapter = DapperHelper.GetSqlAdapter(con);
-        var parameterName = DapperHelper.GetParameterPlaceholder(adapter, nameof(EntityWithAutoKey.Name));
-        var tableName = DapperHelper.GetTableNameWithSchema(adapter, schema, typeof(EntityWithAutoKey));
-        var sql = $"select * from {tableName} where {DapperHelper.GetQuotedColumnName<EntityWithAutoKey>(con, m => m.Name)} = {parameterName}";
+        var parameterName = adapter.GetParameterPlaceholder(nameof(EntityWithAutoKey.Name));
+        var tableName = adapter.GetTableNameWithSchema(schema, typeof(EntityWithAutoKey));
+        var columnName = adapter.GetQuotedColumnName<EntityWithAutoKey>(m => m.Name);
+        var sql = $"select * from {tableName} where {columnName} = {parameterName}";
         foreach (var entity in entities)
         {
             var e = await con.QueryFirstAsync<EntityWithAutoKey>(sql, new { entity.Name });
@@ -135,8 +136,8 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
         await FixAutoIncrement<EntityWithAutoKey>(con, dbDriver, schema);
 
         var adapter = DapperHelper.GetSqlAdapter(con);
-        var parameterName = DapperHelper.GetParameterPlaceholder(adapter, nameof(EntityWithAutoKey.Name));
-        var tableName = DapperHelper.GetTableNameWithSchema(adapter, schema, typeof(EntityWithAutoKey));
+        var parameterName = adapter.GetParameterPlaceholder(nameof(EntityWithAutoKey.Name));
+        var tableName = adapter.GetTableNameWithSchema(schema, typeof(EntityWithAutoKey));
 
         var maxId = await GetMaxId<EntityWithAutoKey>(con, schema) + 1;
 
@@ -294,8 +295,8 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
     private static Task<int> GetMaxId<T>(IDbConnection con, string? schema)
     {
         var adapter = DapperHelper.GetSqlAdapter(con);
-        var tableName = DapperHelper.GetTableNameWithSchema(adapter, schema, typeof(T));
-        var columnName = DapperHelper.GetQuotedColumnName(adapter, typeof(T), "Id");
+        var tableName = adapter.GetTableNameWithSchema(schema, typeof(T));
+        var columnName = adapter.GetQuotedColumnName(typeof(T), "Id");
         return con.ExecuteScalarAsync<int>($"select max({columnName}) from {tableName}");
     }
 }

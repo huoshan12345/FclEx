@@ -87,4 +87,6 @@ public interface ISqlAdapter
         string quotedTableName,
         DbCommand command,
         CancellationToken cancellationToken = default);
+
+    string GetParameterPlaceholder(string name);
 }

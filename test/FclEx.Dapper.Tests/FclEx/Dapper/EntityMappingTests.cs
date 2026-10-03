@@ -32,13 +32,11 @@ public class EntityMappingTests
         Assert.Equal(DatabaseValueGeneration.OnInsertOrUpdate,
             mapping.FindProperty(nameof(AnnotatedEntity.Computed))?.ValueGeneration);
         Assert.Equal(nameof(AnnotatedEntity.Name), mapping.FindProperty("DISPLAY_NAME")?.Property.Name);
-        Assert.Equal("\"audit\".\"annotated_rows\"", DapperHelper.GetTableNameWithSchema(
-            adapter,
+        Assert.Equal("\"audit\".\"annotated_rows\"", adapter.GetTableNameWithSchema(
             null,
             typeof(AnnotatedEntity),
             source));
-        Assert.Equal("\"override\".\"annotated_rows\"", DapperHelper.GetTableNameWithSchema(
-            adapter,
+        Assert.Equal("\"override\".\"annotated_rows\"", adapter.GetTableNameWithSchema(
             "override",
             typeof(AnnotatedEntity),
             source));
