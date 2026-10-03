@@ -105,6 +105,9 @@ public class OracleAdapter : SqlAdapterBase
             _ => typeName,
         };
 
+        if (value is string && string.IsNullOrEmpty(typeName))
+            typeName = "NVarchar2";
+
         return base.CreateParameter(name.TrimStart('@', ':'), value, typeName);
     }
 

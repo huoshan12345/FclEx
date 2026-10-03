@@ -88,5 +88,14 @@ public interface ISqlAdapter
         DbCommand command,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Formats an unprefixed parameter name as a placeholder for generated SQL.
+    /// </summary>
+    /// <param name="name">The parameter name without a dialect prefix, such as <c>id</c> or <c>p0_0</c>.</param>
+    /// <returns>The SQL placeholder, such as <c>@id</c> or <c>:id</c>, that refers to the named parameter.</returns>
+    /// <remarks>
+    /// This method formats command text; it does not create a parameter or rewrite user-supplied SQL.
+    /// Supply names from trusted application code that are valid for the provider.
+    /// </remarks>
     string GetParameterPlaceholder(string name);
 }

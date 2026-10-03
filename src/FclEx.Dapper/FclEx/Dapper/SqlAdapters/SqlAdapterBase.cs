@@ -77,6 +77,8 @@ public abstract class SqlAdapterBase : ISqlAdapter
     /// <inheritdoc />
     public abstract int GetMaxInsertBatchSize(int parameterCountPerRow);
 
+    /// <inheritdoc />
+    /// <remarks>The base implementation prepends <c>@</c> to the supplied name.</remarks>
     public virtual string GetParameterPlaceholder(string name)
     {
         return $"@{name}";
