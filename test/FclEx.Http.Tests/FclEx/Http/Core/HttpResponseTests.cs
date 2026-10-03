@@ -313,12 +313,11 @@ public class HttpResponseTests : HttpServerTests
             BufferSize = 8192,
             ReadHeadersTimeout = TimeSpan.FromSeconds(3),
             ReadBufferTimeout = TimeSpan.FromSeconds(4),
-            CancellationToken = cts.Token,
             FileBaseName = "specified",
             FileExtension = ".dat",
         };
 
-        var result = await service.DownloadAsync(options);
+        var result = await service.DownloadAsync(options, cts.Token);
 
         Assert.True(result.IsSuccess, result.Exception?.ToString());
         Assert.Equal("specified", result.Value.FileNameWithoutExtension);

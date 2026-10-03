@@ -10,13 +10,19 @@ public static class HttpServiceExtensions
     /// The optional charset is used as the preferred response decoding charset.
     /// <paramref name="readHeadersTimeout"/> limits waiting for response headers, while <paramref name="totalTimeout"/> limits the whole request workflow.
     /// </summary>
-    public static Task<HttpResponse> GetAsync(this IHttpService http, string url, string? charSet = null, TimeSpan? readHeadersTimeout = null, TimeSpan? totalTimeout = null)
+    public static Task<HttpResponse> GetAsync(
+        this IHttpService http,
+        string url,
+        string? charSet = null,
+        TimeSpan? readHeadersTimeout = null,
+        TimeSpan? totalTimeout = null,
+        CancellationToken cancellationToken = default)
     {
         return HttpRequest.Get(url)
             .ReadHeadersTimeout(readHeadersTimeout)
             .TotalTimeout(totalTimeout)
             .CharSet(charSet)
-            .SendAsync(http);
+            .SendAsync(http, cancellationToken);
     }
 
     /// <summary>
@@ -122,7 +128,7 @@ public static class HttpServiceExtensions
     /// <summary>
     /// Adds multiple cookies to the service cookie container, optionally scoped by the supplied URL.
     /// </summary>
-    public static void AddCookies(this IHttpService http, IEnumerable<Cookie> cookies, string? url = null)
+    public static void AddCookies(this IHttpService http, IEnumerable<Cookie> cookies, string? url)
     {
         var uri = url == null ? null : new Uri(url);
         http.AddCookies(cookies, uri);
@@ -183,7 +189,10 @@ public static class HttpServiceExtensions
     /// Downloads a file using a full option object and returns parsed file metadata plus response bytes.
     /// The helper reads the response body into memory, accepts compressed responses, and disposes <see cref="DownloadOptions.Content"/> after the request completes.
     /// </summary>
-    public static async Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, DownloadOptions options)
+    public static async Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(
+        this IHttpService http,
+        DownloadOptions options,
+        CancellationToken cancellationToken = default)
     {
         var request = new HttpRequest(options.Uri, options.Method)
             .ReadAsBytes()
@@ -200,7 +209,7 @@ public static class HttpServiceExtensions
 
         try
         {
-            var response = await request.SendAsync(http, options.CancellationToken);
+            var response = await request.SendAsync(http, cancellationToken);
             return response.IsError
                 ? Operation.ObjectError(response, response.Exception, response.Elapsed)
                     .Cast<HttpFileDownloadInfo>()
@@ -216,8 +225,13 @@ public static class HttpServiceExtensions
     /// Downloads a URI into memory and returns file metadata plus response bytes.
     /// The request accepts compressed responses, reads the body as bytes, and keeps header and total timeouts separate.
     /// </summary>
-    public static Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, Uri uri,
-        HttpMethod? method = null, TimeSpan? readHeadersTimeout = null, TimeSpan? totalTimeout = null)
+    public static Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(
+        this IHttpService http,
+        Uri uri,
+        HttpMethod? method = null,
+        TimeSpan? readHeadersTimeout = null,
+        TimeSpan? totalTimeout = null,
+        CancellationToken cancellationToken = default)
     {
         return http.DownloadAsync(new DownloadOptions
         {
@@ -225,41 +239,53 @@ public static class HttpServiceExtensions
             Method = method ?? HttpMethod.Get,
             ReadHeadersTimeout = readHeadersTimeout,
             TotalTimeout = totalTimeout,
-        });
+        }, cancellationToken);
     }
 
     /// <summary>
     /// Downloads a URL string into memory and returns file metadata plus response bytes.
     /// </summary>
-    public static Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, string url,
-        HttpMethod? method = null, TimeSpan? readHeadersTimeout = null, TimeSpan? totalTimeout = null)
+    public static Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(
+        this IHttpService http,
+        string url,
+        HttpMethod? method = null,
+        TimeSpan? readHeadersTimeout = null,
+        TimeSpan? totalTimeout = null,
+        CancellationToken cancellationToken = default)
     {
-        return http.DownloadAsync(new Uri(url), method, readHeadersTimeout, totalTimeout);
+        return http.DownloadAsync(new Uri(url), method, readHeadersTimeout, totalTimeout, cancellationToken);
     }
 
     /// <summary>
     /// Downloads multiple URL strings using the same batch options.
     /// Relative URL strings are resolved by <see cref="BatchDownloadOptions.BaseAddress"/> when one is provided.
     /// </summary>
-    public static Task<OperationResult<HttpFileDownloadInfo>[]> BatchDownloadAsync(this IHttpService httpService, IEnumerable<string> uris, BatchDownloadOptions? options = null)
+    public static Task<OperationResult<HttpFileDownloadInfo>[]> BatchDownloadAsync(
+        this IHttpService httpService, 
+        IEnumerable<string> uris, 
+        BatchDownloadOptions? options = null,
+        CancellationToken cancellationToken = default)
     {
-        return httpService.BatchDownloadAsync(uris.Select(m => new Uri(m, UriKind.RelativeOrAbsolute)), options);
+        return httpService.BatchDownloadAsync(uris.Select(m => new Uri(m, UriKind.RelativeOrAbsolute)), options, cancellationToken);
     }
 
     /// <summary>
     /// Downloads multiple URIs with optional shared method, content, timeouts, concurrency, and cancellation settings.
     /// When content is supplied, it is buffered once and cloned for each request so redirects or parallel sends do not reuse a consumed <see cref="HttpContent"/>.
     /// </summary>
-    public static async Task<OperationResult<HttpFileDownloadInfo>[]> BatchDownloadAsync(this IHttpService httpService, IEnumerable<Uri> uris, BatchDownloadOptions? options = null)
+    public static async Task<OperationResult<HttpFileDownloadInfo>[]> BatchDownloadAsync(
+        this IHttpService httpService,
+        IEnumerable<Uri> uris,
+        BatchDownloadOptions? options = null,
+        CancellationToken cancellationToken = default)
     {
-        var token = options?.CancellationToken ?? default;
         var maxDegreeOfParallelism = options?.MaxDegreeOfParallelism ?? BatchDownloadOptions.DefaultMaxDegreeOfParallelism;
         Check.Positive(maxDegreeOfParallelism);
         var readBufferTimeout = options?.ReadBufferTimeout ?? null;
         var bufferSize = options?.BufferSize ?? null;
 
         var sourceContent = options?.Content;
-        var content = await sourceContent.ToBufferedContentAsync(readBufferTimeout, bufferSize, token);
+        var content = await sourceContent.ToBufferedContentAsync(readBufferTimeout, bufferSize, cancellationToken);
 
         try
         {
@@ -278,13 +304,12 @@ public static class HttpServiceExtensions
                         BufferSize = bufferSize,
                         ReadBufferTimeout = options?.ReadBufferTimeout,
                         TotalTimeout = options?.TotalTimeout,
-                        CancellationToken = operationToken,
                         FileBaseName = null,
                         FileExtension = null,
-                    });
+                    }, operationToken);
                 },
                 maxDegreeOfParallelism,
-                token);
+                cancellationToken);
         }
         finally
         {

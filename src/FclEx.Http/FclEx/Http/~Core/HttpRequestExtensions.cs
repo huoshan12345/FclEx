@@ -11,9 +11,9 @@ public static partial class HttpRequestExtensions
     public static Task<HttpResponse> SendAsync(
         this HttpRequest request,
         IHttpService? service = null,
-        CancellationToken token = default)
+        CancellationToken cancellationToken = default)
     {
-        return (service ?? HttpClientService.Default).SendAsync(request, token);
+        return (service ?? HttpClientService.Default).SendAsync(request, cancellationToken);
     }
 
     /// <summary>
@@ -24,9 +24,9 @@ public static partial class HttpRequestExtensions
         this HttpRequest request,
         Func<HttpClient> httpClientProvider,
         bool disposeHttpClient = true,
-        CancellationToken token = default)
+        CancellationToken cancellationToken = default)
     {
-        return HttpClientService.Create(httpClientProvider, disposeHttpClient).SendAsync(request, token);
+        return HttpClientService.Create(httpClientProvider, disposeHttpClient).SendAsync(request, cancellationToken);
     }
 
     /// <summary>
@@ -37,9 +37,9 @@ public static partial class HttpRequestExtensions
         this HttpRequest request,
         IHttpService service,
         IAsyncPolicy policy,
-        CancellationToken token = default)
+        CancellationToken cancellationToken = default)
     {
-        return policy.ExecuteAsync(t => request.SendAsync(service, t), token);
+        return policy.ExecuteAsync(t => request.SendAsync(service, t), cancellationToken);
     }
 
     /// <summary>

@@ -15,7 +15,6 @@ public class DownloadOptionsTests
         Assert.Null(options.BufferSize);
         Assert.Null(options.ReadHeadersTimeout);
         Assert.Null(options.ReadBufferTimeout);
-        Assert.False(options.CancellationToken.IsCancellationRequested);
         Assert.Null(options.FileBaseName);
         Assert.Null(options.FileExtension);
     }
@@ -32,6 +31,5 @@ public class DownloadOptionsTests
         Assert.Null(options.BufferSize);
         Assert.Null(options.ReadBufferTimeout);
         Assert.Equal(BatchDownloadOptions.DefaultMaxDegreeOfParallelism, options.MaxDegreeOfParallelism);
-        Assert.False(options.CancellationToken.IsCancellationRequested);
     }
 }

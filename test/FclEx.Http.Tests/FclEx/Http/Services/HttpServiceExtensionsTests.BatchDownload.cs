@@ -100,9 +100,8 @@ public class HttpServiceExtensionsBatchDownloadTests
                 BufferSize = 1234,
                 ReadHeadersTimeout = readHeadersTimeout,
                 ReadBufferTimeout = readBufferTimeout,
-                CancellationToken = cts.Token,
                 MaxDegreeOfParallelism = 1,
-            });
+            }, cts.Token);
 
         Assert.All(results, result => Assert.True(result.IsSuccess, result.Exception?.ToString()));
         Assert.All(service.Requests, request =>

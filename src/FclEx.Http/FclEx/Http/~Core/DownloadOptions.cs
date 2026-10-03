@@ -41,11 +41,6 @@ public class DownloadOptions
     public TimeSpan? TotalTimeout { get; set; }
 
     /// <summary>
-    /// Cancellation token passed to the send and content-reading operations.
-    /// </summary>
-    public CancellationToken CancellationToken { get; set; } = default;
-
-    /// <summary>
     /// Optional file base name to use in the returned <see cref="HttpFileDownloadInfo"/>.
     /// </summary>
     /// <remarks>When non-null, this value overrides the name derived from response headers or URI.</remarks>

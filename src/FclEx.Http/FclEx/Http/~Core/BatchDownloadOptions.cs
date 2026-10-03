@@ -51,9 +51,4 @@ public class BatchDownloadOptions
     /// </summary>
     /// <remarks>Set this to 1 for sequential execution.</remarks>
     public int MaxDegreeOfParallelism { get; set; } = DefaultMaxDegreeOfParallelism;
-
-    /// <summary>
-    /// Cancellation token passed to each download request.
-    /// </summary>
-    public CancellationToken CancellationToken { get; set; }
 }
