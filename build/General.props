@@ -16,6 +16,6 @@
   </PropertyGroup>
   <PropertyGroup>
     <IsGithubAction Condition="'$(GITHUB_ACTION)' != 'false'">true</IsGithubAction>
-    <IncludeNet90 Condition="$(IsWindows) AND !$(IsGithubAction)">false</IncludeNet90>
+    <IncludeNet90 Condition="$(IsWindows) AND $(IsGithubAction)">false</IncludeNet90>
   </PropertyGroup>
 </Project>
