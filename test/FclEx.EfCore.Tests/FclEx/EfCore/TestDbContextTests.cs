@@ -1,5 +1,3 @@
-using static Org.BouncyCastle.Math.EC.ECCurve;
-
 namespace FclEx.EfCore;
 
 public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
@@ -21,7 +19,7 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     /// Run this only when test entities are changed.
     /// </summary>
     [LocalOnlyTheory(
-        //Skip = "Run this only when necessary",
+        Skip = "Run this only when necessary",
         DisableParallelization = true)]
     [MemberData(nameof(SetupDatabaseCases))]
     public async Task SetupDatabase(DbDriver dbDriver, string assemblyName, int dotNetVersion, string os)
@@ -85,11 +83,11 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
                        """;
 
             await using var con = builder.CreateDbConnection();
-            await con.ExecuteAsync(sql);
+            await con.ExecuteAsync(sql, cancellationToken: CancellationToken);
         }
         else
         {
-            await context.Database.EnsureDeletedAsync();
+            await context.Database.EnsureDeletedAsync(cancellationToken: CancellationToken);
         }
     }
 
@@ -105,7 +103,7 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         }
 
         var str = context.Database.GetConnectionString();
-        await context.Database.EnsureCreatedAsync();
+        await context.Database.EnsureCreatedAsync(cancellationToken: CancellationToken);
     }
 
     private static Task CreateUser(TestDbContext context, DatabaseUser databaseUser)
@@ -159,7 +157,7 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 
         foreach (var sql in sqls)
         {
-            await connection.ExecuteAsync(sql);
+            await connection.ExecuteAsync(sql, cancellationToken: CancellationToken);
         }
     }
 

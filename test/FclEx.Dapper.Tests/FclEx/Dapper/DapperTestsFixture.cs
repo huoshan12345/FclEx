@@ -2,7 +2,6 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using Npgsql;
-using static Google.Protobuf.Compiler.CodeGeneratorResponse.Types;
 
 namespace FclEx.Dapper;
 
@@ -40,8 +39,8 @@ public class DapperTestsFixture : CoreTestsFixture
     {
         return TestHelper.IsGithubAction
             ? TestHelper.IsWindows
-                ? [DbDriver.MySqlConnector,]
-                : [DbDriver.Npgsql,]
+                ? [DbDriver.Npgsql,]
+                : [DbDriver.MySqlConnector,]
             : [
                 //DbDriver.MySql,
                 //DbDriver.MySqlConnector,

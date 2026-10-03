@@ -4,7 +4,7 @@
     <!--Empty RootNamespace does not work in Directory.Build.props, so put it in this file as a workaround-->
     <RootNamespace></RootNamespace>
   </PropertyGroup>
-  <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 8.0))">
+  <ItemGroup>
     <PackageReference Include="PolySharp" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>

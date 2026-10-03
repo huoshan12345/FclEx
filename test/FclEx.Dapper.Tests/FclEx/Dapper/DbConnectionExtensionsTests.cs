@@ -6,7 +6,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
 {
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task InsertAsync_EntityWithAutoKey_Test(DbDriver dbDriver, string? schema)
+    public async Task InsertAsync_GeneratedKey_ReturnsKeyAndPersistsEntity(DbDriver dbDriver, string? schema)
     {
         var entity = new EntityWithAutoKey
         {
@@ -25,14 +25,14 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
 
     [Theory(DisableParallelization = true)]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task InsertWithExplicitGeneratedKeysAsync_EntityWithAutoKey_Test(DbDriver dbDriver, string? schema)
+    public async Task InsertWithExplicitGeneratedKeysAsync_PreservesProvidedKey(DbDriver dbDriver, string? schema)
     {
         Assert.SkipIfInGithubAction();
 
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
         await FixAutoIncrement<EntityWithAutoKey>(con, dbDriver, schema);
 
-        var maxId = await GetMaxId<EntityWithAutoKey>(con, schema) + 1;
+        var maxId = await GetMaxIdAsync<EntityWithAutoKey>(con, schema) + 1;
 
         var entity = new EntityWithAutoKey
         {
@@ -59,7 +59,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task InsertAsync_EntityWithGuidKey_Test(DbDriver dbDriver, string? schema)
+    public async Task InsertAsync_GuidKey_PersistsEntityWithoutReturningGeneratedKey(DbDriver dbDriver, string? schema)
     {
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
 
@@ -80,7 +80,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task InsertAsync_EntityWithoutKey_Test(DbDriver dbDriver, string? schema)
+    public async Task InsertAsync_EntityWithoutKey_PersistsEntity(DbDriver dbDriver, string? schema)
     {
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
 
@@ -101,7 +101,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
 
     [Theory]
     [MemberData(nameof(BulkInsertTestCases))]
-    public async Task BulkInsertAsync_EntityWithAutoKey_Test(DbDriver dbDriver, string? schema, int count)
+    public async Task BulkInsertAsync_GeneratedKeys_PersistsEntitiesAndReturnsAffectedRowCount(DbDriver dbDriver, string? schema, int count)
     {
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
 
@@ -128,7 +128,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
 
     [Theory(DisableParallelization = true)]
     [MemberData(nameof(BulkInsertTestCases))]
-    public async Task BulkInsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DbDriver dbDriver, string? schema, int count)
+    public async Task BulkInsertAsync_IncludeGeneratedKeys_PreservesProvidedKeysAndReturnsAffectedRowCount(DbDriver dbDriver, string? schema, int count)
     {
         Assert.SkipIfInGithubAction();
 
@@ -139,7 +139,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
         var parameterName = adapter.GetParameterPlaceholder(nameof(EntityWithAutoKey.Name));
         var tableName = adapter.GetTableNameWithSchema(schema, typeof(EntityWithAutoKey));
 
-        var maxId = await GetMaxId<EntityWithAutoKey>(con, schema) + 1;
+        var maxId = await GetMaxIdAsync<EntityWithAutoKey>(con, schema) + 1;
 
         var seed = (dbDriver.ToInt() + count) * 10;
         var entities = Enumerable.Range(1, count).Select(m => new EntityWithAutoKey
@@ -176,7 +176,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task GetAsync_EntityWithGuidKey_Test(DbDriver dbDriver, string? schema)
+    public async Task GetAsync_GuidKey_ReturnsMatchingEntity(DbDriver dbDriver, string? schema)
     {
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
 
@@ -195,7 +195,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task GetAsync_EntityWithoutKey_RaiseException(DbDriver dbDriver, string? schema)
+    public async Task GetAsync_EntityWithoutKey_ThrowsDataException(DbDriver dbDriver, string? schema)
     {
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
         var ex = await Assert.ThrowsAsync<DataException>(() => con.GetAsync<EntityWithoutKey>(0, schema));
@@ -204,7 +204,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task DeleteAsync_EntityWithGuidKey_Test(DbDriver dbDriver, string? schema)
+    public async Task DeleteAsync_GuidKey_ReturnsOneAffectedRow(DbDriver dbDriver, string? schema)
     {
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
 
@@ -222,7 +222,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task DeleteAsync_EntityWithoutKey_RaiseException(DbDriver dbDriver, string? schema)
+    public async Task DeleteAsync_EntityWithoutKey_ThrowsDataException(DbDriver dbDriver, string? schema)
     {
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
         var ex = await Assert.ThrowsAsync<DataException>(() => con.DeleteAsync<EntityWithoutKey>(0, schema));
@@ -231,7 +231,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task ExecuteInTransactionAsync_Test(DbDriver dbDriver, string? schema)
+    public async Task ExecuteInTransactionAsync_Success_CommitsAllInserts(DbDriver dbDriver, string? schema)
     {
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
 
@@ -264,11 +264,11 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task ExecuteInTransactionAsync_Rollback_Test(DbDriver dbDriver, string? schema)
+    public async Task ExecuteInTransactionAsync_OperationThrows_RollsBackInsert(DbDriver dbDriver, string? schema)
     {
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
 
-        var count = await GetCount<EntityWithGuidKey>(con, schema);
+        var count = await CountEntitiesAsync<EntityWithGuidKey>(con, schema);
 
         var id = Guid.NewGuid();
         await Assert.ThrowsAsync<InvalidOperationException>(() => con.ExecuteInTransactionAsync(async tran =>
@@ -285,14 +285,14 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
         Assert.Null(e);
     }
 
-    private static Task<int> GetCount<T>(IDbConnection con, string? schema)
+    private static Task<int> CountEntitiesAsync<T>(IDbConnection con, string? schema)
     {
         var tableName = DapperHelper.GetTableNameWithSchema(con, schema, typeof(T));
         var sql = $"select count(1) from {tableName}";
         return con.ExecuteScalarAsync<int>(sql);
     }
 
-    private static Task<int> GetMaxId<T>(IDbConnection con, string? schema)
+    private static Task<int> GetMaxIdAsync<T>(IDbConnection con, string? schema)
     {
         var adapter = DapperHelper.GetSqlAdapter(con);
         var tableName = adapter.GetTableNameWithSchema(schema, typeof(T));

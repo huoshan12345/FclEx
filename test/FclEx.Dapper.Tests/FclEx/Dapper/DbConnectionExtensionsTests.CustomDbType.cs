@@ -5,7 +5,7 @@ partial class DbConnectionExtensionsTests
 {
     [Theory]
     [MemberData(nameof(SchemaCases))]
-    public async Task InsertAsync_EntityWithPostgresqlJsonb_Test(string? schema)
+    public async Task InsertAsync_PostgreSqlJsonb_RoundTripsPayload(string? schema)
     {
         Assert.SkipUnlessIncluded(DbDriver.Npgsql);
 
@@ -34,7 +34,7 @@ partial class DbConnectionExtensionsTests
 
     [Theory]
     [MemberData(nameof(SchemaCases))]
-    public async Task InsertAsync_EntityWithSqlServerXml_Test(string? schema)
+    public async Task InsertAsync_SqlServerXml_RoundTripsPayload(string? schema)
     {
         Assert.SkipUnlessIncluded(DbDriver.SqlServer);
 
@@ -62,7 +62,7 @@ partial class DbConnectionExtensionsTests
     }
 
     [Fact]
-    public async Task InsertAsync_EntityWithSqliteBlob_Test()
+    public async Task InsertAsync_SqliteBlob_RoundTripsPayload()
     {
         using var database = await SqliteMigrationTestDatabase.CreateAsync();
         using var con = database.CreateConnection();
@@ -90,7 +90,7 @@ partial class DbConnectionExtensionsTests
 
     [Theory]
     [MemberData(nameof(MySqlSchemaCases))]
-    public async Task InsertAsync_EntityWithMySqlBlob_Test(DbDriver dbDriver, string? schema)
+    public async Task InsertAsync_MySqlBlob_RoundTripsPayload(DbDriver dbDriver, string? schema)
     {
         Assert.SkipUnlessIncluded(dbDriver, [DbDriver.MySql, DbDriver.MySqlConnector]);
 

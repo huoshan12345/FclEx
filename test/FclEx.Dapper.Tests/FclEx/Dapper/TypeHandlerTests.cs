@@ -1,5 +1,3 @@
-using Dapper;
-
 namespace FclEx.Dapper;
 
 public class TypeHandlerTests

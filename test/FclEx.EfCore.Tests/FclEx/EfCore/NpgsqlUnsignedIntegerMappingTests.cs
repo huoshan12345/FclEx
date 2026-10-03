@@ -32,6 +32,7 @@ public class NpgsqlUnsignedIntegerMappingTests
         }
     }
 
+    [SuppressMessage("ReSharper", "PropertyCanBeMadeInitOnly.Local")]
     private sealed class UnsignedEntity
     {
         public int Id { get; set; }
