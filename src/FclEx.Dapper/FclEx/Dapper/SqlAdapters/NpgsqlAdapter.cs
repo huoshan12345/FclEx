@@ -19,10 +19,24 @@ public class NpgsqlAdapter : SqlAdapterBase
     /// PostgreSQL integer, bigint, and numeric parameters. Byte values remain unchanged.
     /// Explicit oid, xid, xid8, cid, regtype, and regconfig parameters retain their original
     /// values because these PostgreSQL types use unsigned representations. Null becomes <see cref="DBNull.Value"/>.
+    /// DateTimeOffset values are normalized to UTC when no store type is supplied or when the explicit type is
+    /// TimestampTz, timestamptz, or timestamp with time zone. This preserves the instant, not the original offset.
+    /// Timestamp and timestamp without time zone leave values unchanged; the adapter does not choose a wall-clock
+    /// interpretation for them. This decision uses parameter mapping, not database column metadata.
     /// An explicit store type still determines the provider parameter type and may reject an incompatible value.
     /// </remarks>
     public override DbParameter CreateParameter(string name, object? value, string? storeTypeName = null)
     {
+        storeTypeName = storeTypeName?.Trim().ToLowerInvariant() switch
+        {
+            "timestamptz" or "timestamp with time zone" => "TimestampTz",
+            "timestamp" or "timestamp without time zone" => "Timestamp",
+            _ => storeTypeName,
+        };
+
+        if (value is DateTimeOffset timestamp && (storeTypeName is null || storeTypeName == "TimestampTz"))
+            value = timestamp.ToUniversalTime();
+
         if (storeTypeName?.Trim().ToLowerInvariant() is not
             ("oid" or "xid" or "xid8" or "cid" or "regtype" or "regconfig"))
         {

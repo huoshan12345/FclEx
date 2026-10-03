@@ -5,6 +5,71 @@ namespace FclEx.Dapper;
 
 public class NpgsqlAdapterTests
 {
+    public static TheoryData<string?, int> TimestampWithTimeZoneCases
+    {
+        get
+        {
+            var cases = new TheoryData<string?, int>();
+            foreach (var storeType in new[] { null, "TimestampTz", "timestamptz", "timestamp with time zone", " TIMESTAMPTZ " })
+            foreach (var offset in new[] { 0, 8, -5 })
+                cases.Add(storeType, offset);
+            return cases;
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(TimestampWithTimeZoneCases))]
+    public void CreateParameter_DateTimeOffsetWithTimeZone_PreservesInstantAndNormalizesOffset(
+        string? storeType, int offsetHours)
+    {
+        var value = new DateTimeOffset(2026, 10, 3, 12, 34, 56, TimeSpan.FromHours(offsetHours)).AddTicks(1234);
+        var parameter = Assert.IsType<NpgsqlParameter>(new NpgsqlAdapter().CreateParameter("value", value, storeType));
+        var actual = Assert.IsType<DateTimeOffset>(parameter.Value);
+
+        Assert.Equal(value.UtcDateTime.Ticks, actual.UtcDateTime.Ticks);
+        Assert.Equal(TimeSpan.Zero, actual.Offset);
+        if (storeType is not null)
+            Assert.Equal(NpgsqlDbType.TimestampTz, parameter.NpgsqlDbType);
+    }
+
+    [Theory]
+    [InlineData("Timestamp", NpgsqlDbType.Timestamp)]
+    [InlineData("timestamp without time zone", NpgsqlDbType.Timestamp)]
+    [InlineData(" TIMESTAMP ", NpgsqlDbType.Timestamp)]
+    [InlineData("Text", NpgsqlDbType.Text)]
+    public void CreateParameter_DateTimeOffsetWithOtherType_PreservesOffset(
+        string storeType, NpgsqlDbType expectedType)
+    {
+        object value = new DateTimeOffset(2026, 10, 3, 12, 34, 56, TimeSpan.FromHours(8));
+        var parameter = Assert.IsType<NpgsqlParameter>(new NpgsqlAdapter().CreateParameter("value", value, storeType));
+
+        Assert.Same(value, parameter.Value);
+        Assert.Equal(expectedType, parameter.NpgsqlDbType);
+    }
+
+    [Theory]
+    [InlineData("timestamp with time zone", NpgsqlDbType.TimestampTz)]
+    [InlineData("timestamp without time zone", NpgsqlDbType.Timestamp)]
+    public void CreateParameter_NullWithTimestampType_PreservesRequestedType(
+        string storeType, NpgsqlDbType expectedType)
+    {
+        var parameter = Assert.IsType<NpgsqlParameter>(new NpgsqlAdapter().CreateParameter("value", null, storeType));
+
+        Assert.Same(DBNull.Value, parameter.Value);
+        Assert.Equal(expectedType, parameter.NpgsqlDbType);
+    }
+
+    [Theory]
+    [InlineData(DateTimeKind.Utc)]
+    [InlineData(DateTimeKind.Local)]
+    [InlineData(DateTimeKind.Unspecified)]
+    public void CreateParameter_DateTime_RemainsUnchanged(DateTimeKind kind)
+    {
+        object value = new DateTime(2026, 10, 3, 12, 34, 56, kind);
+
+        Assert.Same(value, new NpgsqlAdapter().CreateParameter("value", value).Value);
+    }
+
     public static TheoryData<object, object, NpgsqlDbType> UnsignedParameterCases => new()
     {
         { (ushort)0, 0, NpgsqlDbType.Integer },
