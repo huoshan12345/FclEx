@@ -67,9 +67,12 @@ to allow `%` (zero or more characters) and `_` (one character) in keywords:
 query.ContainsAny(x => x.Name, ["foo%bar", "item_"], escapeWildcards: false);
 ```
 
-Each keyword is still surrounded by `%` for substring matching. Backslashes and
-opening brackets remain literal in both modes; a backslash cannot escape an
-individual wildcard in this input format. Use `QueryableHelper.BuildLike` for a
+Each keyword is still surrounded by `%` for substring matching. Backslashes remain
+literal in both modes; a backslash cannot escape an individual wildcard in this input format.
+Opening square brackets are escaped by default for SQL Server. For Oracle, pass
+`escapeBrackets: false`: brackets are already literal, and `LIKE ... ESCAPE` rejects
+a backslash followed by a bracket. This option is independent of `escapeWildcards`.
+Use `QueryableHelper.BuildLike` for a
 provider-ready pattern with explicit control over the entire LIKE expression.
 
 ### Re-registering a context

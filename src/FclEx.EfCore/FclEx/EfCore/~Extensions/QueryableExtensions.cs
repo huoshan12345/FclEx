@@ -187,8 +187,13 @@ public static class QueryableExtensions
     /// </param>
     /// <param name="escapeWildcards">
     /// Whether to treat <c>%</c> and <c>_</c> in keywords literally. Defaults to <see langword="true"/>.
-    /// When <see langword="false"/>, they remain LIKE wildcards. Backslashes and opening brackets are always
-    /// treated literally; a backslash in a keyword cannot escape an individual wildcard.
+    /// When <see langword="false"/>, they remain LIKE wildcards. Backslashes remain literal;
+    /// a backslash in a keyword cannot escape an individual wildcard.
+    /// </param>
+    /// <param name="escapeBrackets">
+    /// Whether to escape opening square brackets for SQL Server LIKE patterns. Defaults to <see langword="true"/>.
+    /// Set this to <see langword="false"/> for Oracle, where brackets are literal and escaping them is invalid.
+    /// This option is independent of <paramref name="escapeWildcards"/>.
     /// </param>
     public static IQueryable<T> ContainsAny<T>(
         this IQueryable<T> queryable,
@@ -196,9 +201,10 @@ public static class QueryableExtensions
         IEnumerable<string> keywords,
         bool suppressValueConverter = false,
         bool escapeEscapeCharacter = false,
-        bool escapeWildcards = true)
+        bool escapeWildcards = true,
+        bool escapeBrackets = true)
     {
-        var where = QueryableHelper.BuildContainsAny(selector, keywords, suppressValueConverter, escapeEscapeCharacter, escapeWildcards);
+        var where = QueryableHelper.BuildContainsAny(selector, keywords, suppressValueConverter, escapeEscapeCharacter, escapeWildcards, escapeBrackets);
         return where == null
             ? queryable.Where(m => false)
             : queryable.Where(where);

@@ -14,16 +14,17 @@ public static class QueryableHelper
     internal static string GetContainsPattern(
         string value,
         bool escapeEscapeCharacter = false,
-        bool escapeWildcards = true)
+        bool escapeWildcards = true,
+        bool escapeBrackets = true)
     {
-        return $"%{EscapeLikePattern(value, escapeEscapeCharacter, escapeWildcards)}%";
+        return $"%{EscapeLikePattern(value, escapeEscapeCharacter, escapeWildcards, escapeBrackets)}%";
     }
 
-    private static string EscapeLikePattern(string value, bool escapeEscapeCharacter, bool escapeWildcards)
+    private static string EscapeLikePattern(string value, bool escapeEscapeCharacter, bool escapeWildcards, bool escapeBrackets)
     {
-        var pattern = value
-            .Replace(@"\", escapeEscapeCharacter ? @"\\\\" : @"\\")
-            .Replace("[", @"\[");
+        var pattern = value.Replace(@"\", escapeEscapeCharacter ? @"\\\\" : @"\\");
+        if (escapeBrackets)
+            pattern = pattern.Replace("[", @"\[");
 
         return escapeWildcards
             ? pattern.Replace("%", @"\%").Replace("_", @"\_")
@@ -85,8 +86,13 @@ public static class QueryableHelper
     /// <param name="escapeEscapeCharacter">Whether the provider requires the SQL escape character itself to be escaped.</param>
     /// <param name="escapeWildcards">
     /// Whether to treat <c>%</c> and <c>_</c> in keywords literally. Defaults to <see langword="true"/>.
-    /// When <see langword="false"/>, they remain LIKE wildcards. Backslashes and opening brackets are always
-    /// treated literally; a backslash in a keyword cannot escape an individual wildcard.
+    /// When <see langword="false"/>, they remain LIKE wildcards. Backslashes remain literal;
+    /// a backslash in a keyword cannot escape an individual wildcard.
+    /// </param>
+    /// <param name="escapeBrackets">
+    /// Whether to escape opening square brackets for SQL Server LIKE patterns. Defaults to <see langword="true"/>.
+    /// Set this to <see langword="false"/> for Oracle, where brackets are literal and escaping them is invalid.
+    /// This option is independent of <paramref name="escapeWildcards"/>.
     /// </param>
     /// <returns>The combined predicate, or <see langword="null"/> when <paramref name="keywords"/> is empty.</returns>
     public static Expression<Func<T, bool>>? BuildContainsAny<T>(
@@ -94,13 +100,14 @@ public static class QueryableHelper
         IEnumerable<string> keywords,
         bool suppressValueConverter = false,
         bool escapeEscapeCharacter = false,
-        bool escapeWildcards = true)
+        bool escapeWildcards = true,
+        bool escapeBrackets = true)
     {
         Expression<Func<T, bool>>? where = null;
         // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var keyword in keywords)
         {
-            var pattern = GetContainsPattern(keyword, escapeEscapeCharacter, escapeWildcards);
+            var pattern = GetContainsPattern(keyword, escapeEscapeCharacter, escapeWildcards, escapeBrackets);
             var expression = BuildLike(selector, pattern, suppressValueConverter, escapeEscapeCharacter);
             where = where.Or(expression);
         }

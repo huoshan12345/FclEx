@@ -107,7 +107,8 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
             .Where(entity => entity.Name!.StartsWith(prefix))
             .ContainsAny(entity => entity.Name, [keyword],
                 escapeEscapeCharacter: dbDriver is DbDriver.MySql,
-                escapeWildcards: escapeWildcards)
+                escapeWildcards: escapeWildcards,
+                escapeBrackets: dbDriver == DbDriver.SqlServer)
             .ToListAsync();
 
         var usesWildcard = keyword.Contains('%') || keyword.Contains('_');
