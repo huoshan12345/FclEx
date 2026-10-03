@@ -1,4 +1,4 @@
-﻿using FclEx.Caching;
+using FclEx.Caching;
 
 namespace FclEx.Aop;
 

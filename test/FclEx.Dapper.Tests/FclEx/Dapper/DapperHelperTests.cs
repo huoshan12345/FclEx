@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace FclEx.Dapper;
 
 public class DapperHelperTests

@@ -17,7 +17,7 @@ public class LoggingTests
         NString name = "test12345";
         logger.LogInformation("UserName: {UserName}", name);
 
-        Assert.Single(provider.Entries);
-        Assert.Equal($"UserName: {name.Value}", provider.Entries[0].Message);
+        var entry = Assert.Single(provider.Entries);
+        Assert.Equal($"UserName: {name.Value}", entry.Message);
     }
 }

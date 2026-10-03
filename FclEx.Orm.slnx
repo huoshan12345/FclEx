@@ -16,17 +16,18 @@
   <Folder Name="/build/msbuild/">
     <File Path="build/BlockedCompilePackages.targets" />
     <File Path="build/EmitGeneratedFiles.props" />
+    <File Path="build/General.props" />
     <File Path="build/Package.props" />
   </Folder>
   <Folder Name="/config/">
     <File Path=".editorconfig" />
+    <File Path="Directory.Packages.props" />
     <File Path="NuGet.Config" />
     <File Path="README.md" />
   </Folder>
   <Folder Name="/src/">
     <File Path="src/Directory.Build.props" />
     <File Path="src/Directory.Build.targets" />
-    <File Path="src/Directory.Packages.props" />
     <Project Path="src/FclEx.Core/FclEx.Core.csproj" />
     <Project Path="src/FclEx.Dapper/FclEx.Dapper.csproj" />
     <Project Path="src/FclEx.EfCore/FclEx.EfCore.csproj" />
@@ -35,7 +36,6 @@
     <File Path="test/.editorconfig" />
     <File Path="test/Directory.Build.props" />
     <File Path="test/Directory.Build.targets" />
-    <File Path="test/Directory.Packages.props" />
     <Project Path="test/FclEx.Core.Tests/FclEx.Core.Tests.csproj" />
     <Project Path="test/FclEx.Dapper.Tests/FclEx.Dapper.Tests.csproj" />
     <Project Path="test/FclEx.EfCore.Tests/FclEx.EfCore.Tests.csproj" />

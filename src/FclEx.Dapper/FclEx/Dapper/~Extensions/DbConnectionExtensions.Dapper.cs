@@ -154,4 +154,28 @@ partial class DbConnectionExtensions
 
         return connection.OpenAsync(cancellationToken);
     }
+
+    /// <summary>Execute a command asynchronously using Task.</summary>
+    /// <param name="cnn">The connection to query on.</param>
+    /// <param name="sql">The SQL to execute for this query.</param>
+    /// <param name="param">The parameters to use for this query.</param>
+    /// <param name="transaction">The transaction to use for this query.</param>
+    /// <param name="commandTimeout">Number of seconds before command execution timeout.</param>
+    /// <param name="commandType">Is it a stored proc or a batch?</param>
+    /// <param name="flags">The command flags to use for this query.</param>
+    /// <param name="cancellationToken">The token used to cancel the command execution.</param>
+    /// <returns>The number of rows affected.</returns>
+    [OverloadResolutionPriority(-1)]
+    public static Task<int> ExecuteAsync(
+      this IDbConnection cnn,
+      string sql,
+      object? param = null,
+      IDbTransaction? transaction = null,
+      int? commandTimeout = null,
+      CommandType? commandType = null,
+      CommandFlags flags = CommandFlags.Buffered,
+      CancellationToken cancellationToken = default)
+    {
+        return cnn.ExecuteAsync(new CommandDefinition(sql, param, transaction, commandTimeout, commandType, flags, cancellationToken));
+    }
 }

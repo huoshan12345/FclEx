@@ -1,4 +1,3 @@
-using System.Data.Common;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
@@ -15,14 +14,15 @@ public class DapperTestsFixture : CoreTestsFixture
     public readonly ConnectionStrings ConnectionStrings;
 
     public const string DbName = "test";
-    public const string UserName = "user";
-    public const string UserPassword = "123456";
+    public const string DefaultUserName = "user";
+    public const string DefaultUserPassword = "123456";
+    public const string SqlServerUserPassword = "0Im1lI9BRZur"; // sql server requires password to be complex
     public const string UserSchema = "schema";
 
     public DapperTestsFixture()
     {
-        DefaultUser = new(WithAssemblyInfo(UserName), UserPassword, WithAssemblyInfo(UserSchema));
-        ConnectionStrings = new(Databases, WithAssemblyInfo(DbName), DefaultUser);
+        DefaultUser = new(WithAssemblyInfo(DefaultUserName), DefaultUserPassword, WithAssemblyInfo(UserSchema));
+        ConnectionStrings = new(Databases, DefaultUser);
     }
 
     public static readonly string?[] SchemaNames =
@@ -40,13 +40,22 @@ public class DapperTestsFixture : CoreTestsFixture
     {
         return TestHelper.IsGithubAction
             ? TestHelper.IsWindows
-                ? [DbDriver.MySqlConnector,]
-                : [DbDriver.Npgsql,]
+                ? [
+                    DbDriver.Npgsql,
+                ]
+                : [
+                    DbDriver.SqlServer,
+                    DbDriver.MySqlConnector,
+                    DbDriver.Oracle,
+                ]
             : [
-                DbDriver.MySql,
-                DbDriver.MySqlConnector,
-                DbDriver.Npgsql,
+                //DbDriver.MySql,
+                //DbDriver.MySqlConnector,
+                //DbDriver.Npgsql,
                 DbDriver.SqlServer,
+#if SUPPORT_ORACLE
+                //DbDriver.Oracle,
+#endif
             ];
     }
 
@@ -59,13 +68,20 @@ public class DapperTestsFixture : CoreTestsFixture
             DbDriver.Npgsql => new NpgsqlParameter(name, value),
             DbDriver.MySql => new MySqlParameter(name, value),
             DbDriver.MySqlConnector => new MySqlConnector.MySqlParameter(name, value),
+#if SUPPORT_ORACLE
+            DbDriver.Oracle => new OracleParameter(name, value is Guid guid ? guid.ToByteArray() : value),
+#endif
             _ => throw new ArgumentOutOfRangeException(nameof(dbDriver), dbDriver, null)
         };
     }
 
     public DbConnection CreateDbConnection(DbDriver dbDriver, string? schema, bool isUser = false)
     {
-        var database = dbDriver.IsMySql() ? schema : null;
+        var database = WithAssemblyInfo(DbName);
+
+        if (dbDriver.IsMySql() || dbDriver is DbDriver.Oracle)
+            database = schema ?? database;
+
         return ConnectionStrings.Get(dbDriver, database, isUser).CreateDbConnection();
     }
 
@@ -75,6 +91,7 @@ public class DapperTestsFixture : CoreTestsFixture
     {
         foreach (var (dbDriver, schema) in DbDrivers.CrossJoin(CurrentSchemas))
         {
+            // ReSharper disable once UseAwaitUsing
             using var con = CreateDbConnection(dbDriver, schema);
             await FixAutoIncrement<EntityWithAutoKey>(con, dbDriver, schema);
         }
@@ -94,5 +111,11 @@ public class DapperTestsFixture : CoreTestsFixture
                   );
                   """;
         return con.ExecuteScalarAsync<int>(sql);
+    }
+
+    public ConnectionStringBuilder GetConnectionStringBuilder(DbDriver dbDriver, bool isUser)
+    {
+        var database = WithAssemblyInfo(DbName);
+        return ConnectionStrings.Get(dbDriver, database, isUser);
     }
 }

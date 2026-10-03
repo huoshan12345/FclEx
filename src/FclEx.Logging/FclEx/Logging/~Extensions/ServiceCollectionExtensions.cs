@@ -6,7 +6,7 @@ public static class ServiceCollectionExtensions
     {
         services.RemoveAll<ILoggerFactory>();
         services.RemoveAll<ILoggerProvider>();
-        services.RemoveAll<Microsoft.Extensions.Logging.ILogger>();
+        services.RemoveAll<ILogger>();
         return services;
     }
 }

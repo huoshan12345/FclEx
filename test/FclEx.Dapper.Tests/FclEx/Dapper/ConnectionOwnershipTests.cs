@@ -1,6 +1,3 @@
-using System.Data.Common;
-using System.Diagnostics.CodeAnalysis;
-
 namespace FclEx.Dapper;
 
 public class ConnectionOwnershipTests
@@ -64,10 +61,10 @@ public class ConnectionOwnershipTests
             connection.InsertAsync<MissingTableEntity, object>(new MissingTableEntity { Value = 1 }));
         Assert.Equal(ConnectionState.Closed, connection.State);
 
-        var commandOptions = new CommandOptions { CancellationToken = new(true) };
+        var cancellationToken = new CancellationToken(true);
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.InsertAsync<SqliteMigrationTestEntity, long>(
             new SqliteMigrationTestEntity { Name = "cancelled", Value = 2 },
-            commandOptions: commandOptions));
+            cancellationToken: cancellationToken));
         Assert.Equal(ConnectionState.Closed, connection.State);
     }
 
@@ -88,14 +85,15 @@ public class ConnectionOwnershipTests
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.ExecuteInTransactionAsync(
             (_, _) =>
             {
+                // ReSharper disable once AccessToDisposedClosure
                 cancellationSource.Cancel();
                 return Task.CompletedTask;
             },
             cancellationToken: cancellationSource.Token));
         Assert.Equal(ConnectionState.Closed, connection.State);
 
-        await connection.OpenAsync();
-        await connection.ExecuteInTransactionAsync(_ => Task.CompletedTask);
+        await connection.OpenAsync(CancellationToken.None);
+        await connection.ExecuteInTransactionAsync(_ => Task.CompletedTask, cancellationToken: CancellationToken.None);
         Assert.Equal(ConnectionState.Open, connection.State);
     }
 

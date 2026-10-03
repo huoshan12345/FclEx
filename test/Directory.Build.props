@@ -1,23 +1,17 @@
 <Project>
+  <Import Project="..\build\General.props" />
   <PropertyGroup>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
-    <LangVersion>latest</LangVersion>
     <NoWarn>$(NoWarn);xUnit2013;xUnit1041;NU1901;NU1902;NU1903;NU1904;xUnit1051;AD0001;CS8500;NU1900</NoWarn>
-    <Nullable>enable</Nullable>
     <OutputType>Exe</OutputType>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
   <PropertyGroup>
-    <Is64BitOS>$([System.Environment]::Is64BitOperatingSystem)</Is64BitOS>
-    <IsWindows>$([MSBuild]::IsOSPlatform('Windows'))</IsWindows>
-    <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
-  </PropertyGroup>
-  <PropertyGroup>
-    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <TargetFrameworks Condition="$(IncludeNet90)">$(TargetFrameworks);net9.0</TargetFrameworks>
     <TargetFrameworks Condition="$(IsWindows)">$(TargetFrameworks);net472</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">

@@ -1,4 +1,4 @@
-﻿namespace FclEx.Http.Extensions;
+namespace FclEx.Http.Extensions;
 
 public class CookieExtensionsTests
 {

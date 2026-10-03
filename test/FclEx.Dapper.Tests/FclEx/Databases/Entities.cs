@@ -86,7 +86,7 @@ public class EntityWithIdAndIndex : IHasId<int>
 public class EntityHasStates : SoftDeletableEntity<long>
 {
     [Required]
-    public string Name { get; set; } = "";
+    public string Name { get; set; } = nameof(Name); // oracle does not support empty string when the column is not nullable
 
     public override string ToString()
     {

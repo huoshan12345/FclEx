@@ -1,0 +1,40 @@
+<Solution>
+  <Folder Name="/.github/">
+    <File Path=".github/workflows/build.yml" />
+    <File Path=".github/workflows/send-event.yml" />
+  </Folder>
+  <Folder Name="/build/">
+    <File Path="build/.sops.yaml" />
+    <File Path="build/bump-version.ps1" />
+    <File Path="build/clean.ps1" />
+    <File Path="build/decrypt.ps1" />
+    <File Path="build/encrypt.ps1" />
+    <File Path="build/pack.ps1" />
+    <File Path="build/pkg.version" />
+    <File Path="global.json" />
+  </Folder>
+  <Folder Name="/build/msbuild/">
+    <File Path="build/BlockedCompilePackages.targets" />
+    <File Path="build/EmitGeneratedFiles.props" />
+    <File Path="build/Package.props" />
+  </Folder>
+  <Folder Name="/config/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Packages.props" />
+    <File Path="NuGet.Config" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <File Path="src/Directory.Build.props" />
+    <File Path="src/Directory.Build.targets" />
+    <Project Path="src/FclEx.Core/FclEx.Core.csproj" />
+    <Project Path="src/FclEx.SourceGenerator/FclEx.SourceGenerator.csproj" />
+    <Project Path="src/FclEx.Xunit.v3.SourceGenerator/FclEx.Xunit.v3.SourceGenerator.csproj" />	
+  </Folder>
+  <Folder Name="/test/">
+    <File Path="test/.editorconfig" />
+    <File Path="test/Directory.Build.props" />
+    <File Path="test/Directory.Build.targets" />
+    <Project Path="test/FclEx.Core.Tests/FclEx.Core.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -5,21 +5,48 @@ namespace FclEx.Dapper;
 /// </summary>
 public static class DapperHelper
 {
+    private static readonly
+#if NET9_0_OR_GREATER
+        Lock
+#else
+        object
+#endif
+    _lock = new();
+
     private static readonly ConcurrentDictionary<Type, ISqlAdapter> RegisteredAdapters = new();
     private static readonly IReadOnlyDictionary<(string AssemblyName, string TypeName), ISqlAdapter> BuiltInAdapters =
         new Dictionary<(string AssemblyName, string TypeName), ISqlAdapter>
-    {
-        [("Npgsql", "Npgsql.NpgsqlConnection")] = new NpgsqlAdapter(),
-        [("Microsoft.Data.SqlClient", "Microsoft.Data.SqlClient.SqlConnection")] = new SqlServerAdapter(),
-        [("Microsoft.Data.Sqlite", "Microsoft.Data.Sqlite.SqliteConnection")] = new SqliteAdapter(),
-        [("MySql.Data", "MySql.Data.MySqlClient.MySqlConnection")] = new MySqlAdapter(),
-        [("MySqlConnector", "MySqlConnector.MySqlConnection")] = new MySqlConnectorAdapter(),
-    };
+        {
+            [("Npgsql", "Npgsql.NpgsqlConnection")] = new NpgsqlAdapter(),
+            [("Oracle.ManagedDataAccess", "Oracle.ManagedDataAccess.Client.OracleConnection")] = new OracleAdapter(),
+            [("Microsoft.Data.SqlClient", "Microsoft.Data.SqlClient.SqlConnection")] = new SqlServerAdapter(),
+            [("Microsoft.Data.Sqlite", "Microsoft.Data.Sqlite.SqliteConnection")] = new SqliteAdapter(),
+            [("MySql.Data", "MySql.Data.MySqlClient.MySqlConnection")] = new MySqlAdapter(),
+            [("MySqlConnector", "MySqlConnector.MySqlConnection")] = new MySqlConnectorAdapter(),
+        };
 
     /// <summary>
     /// Gets the default mapping source used when an operation does not specify one.
     /// </summary>
     public static IEntityMappingSource DefaultEntityMappingSource { get; } = DataAnnotationsEntityMappingSource.Instance;
+
+    static DapperHelper()
+    {
+        Initialize();
+    }
+
+    public static void Initialize()
+    {
+        lock (_lock)
+        {
+            if (SqlMapper.HasTypeHandler(typeof(Guid)))
+                return;
+
+            SqlMapper.RemoveTypeMap(typeof(Guid));
+            SqlMapper.RemoveTypeMap(typeof(Guid?));
+            SqlMapper.AddTypeHandler(new GuidTypeHandler());
+        }
+    }
 
     /// <summary>
     /// Gets an entity mapping from the supplied source or from <see cref="DefaultEntityMappingSource"/>.
@@ -211,23 +238,6 @@ public static class DapperHelper
         }
     }
 
-    /// <summary>
-    /// Gets the quoted table name, including an effective schema when supported by the adapter.
-    /// </summary>
-    /// <param name="sqlAdapter">The SQL dialect adapter.</param>
-    /// <param name="schema">An optional schema overriding the mapping schema when non-null.</param>
-    /// <param name="entityType">The mapped CLR entity type.</param>
-    /// <param name="mappingSource">An optional entity mapping source.</param>
-    /// <returns>The quoted table identifier.</returns>
-    public static string GetTableNameWithSchema(
-        ISqlAdapter sqlAdapter,
-        string? schema,
-        Type entityType,
-        IEntityMappingSource? mappingSource = null)
-    {
-        return GetTableNameWithSchema(sqlAdapter, schema, GetEntityMapping(entityType, mappingSource));
-    }
-
     internal static string GetTableNameWithSchema(ISqlAdapter sqlAdapter, string? schema, EntityMapping mapping)
     {
         var effectiveSchema = sqlAdapter.SupportsSchemas ? schema ?? mapping.Schema : null;
@@ -253,31 +263,8 @@ public static class DapperHelper
         Type entityType,
         IEntityMappingSource? mappingSource = null)
     {
-        return GetTableNameWithSchema(GetSqlAdapter(connection), schema, entityType, mappingSource);
-    }
-
-    /// <summary>
-    /// Gets a quoted column name from either its CLR property name or database column name.
-    /// </summary>
-    /// <param name="sqlAdapter">The SQL dialect adapter.</param>
-    /// <param name="entityType">The mapped CLR entity type.</param>
-    /// <param name="propertyOrColumnName">A CLR property name or database column name.</param>
-    /// <param name="mappingSource">An optional entity mapping source.</param>
-    /// <returns>The quoted database column name.</returns>
-    /// <exception cref="ArgumentException">No mapped property or column has the supplied name.</exception>
-    public static string GetQuotedColumnName(
-        ISqlAdapter sqlAdapter,
-        Type entityType,
-        string propertyOrColumnName,
-        IEntityMappingSource? mappingSource = null)
-    {
-        var mapping = GetEntityMapping(entityType, mappingSource);
-        var property = mapping.FindProperty(propertyOrColumnName);
-        return property is null
-            ? throw new ArgumentException(
-                $"Property or column '{propertyOrColumnName}' was not found in the mapping for '{entityType.FullName}'.",
-                nameof(propertyOrColumnName))
-            : sqlAdapter.GetQuotedColumnName(property.ColumnName);
+        var adapter = GetSqlAdapter(connection);
+        return adapter.GetTableNameWithSchema(schema, entityType, mappingSource);
     }
 
     /// <summary>
@@ -294,7 +281,8 @@ public static class DapperHelper
         string propertyOrColumnName,
         IEntityMappingSource? mappingSource = null)
     {
-        return GetQuotedColumnName(GetSqlAdapter(connection), entityType, propertyOrColumnName, mappingSource);
+        var adapter = GetSqlAdapter(connection);
+        return adapter.GetQuotedColumnName(entityType, propertyOrColumnName, mappingSource);
     }
 
     /// <summary>
@@ -310,8 +298,8 @@ public static class DapperHelper
         Expression<Func<T, object?>> selector,
         IEntityMappingSource? mappingSource = null)
     {
-        var member = Expression.GetMember(selector);
-        return GetQuotedColumnName(GetSqlAdapter(connection), typeof(T), member.Name, mappingSource);
+        var adapter = GetSqlAdapter(connection);
+        return adapter.GetQuotedColumnName(selector, mappingSource);
     }
 
     /// <summary>

@@ -26,11 +26,6 @@ public readonly record struct CommandOptions
     public IEntityMappingSource? EntityMappingSource { get; init; }
 
     /// <summary>
-    /// Gets the token used to cancel connection opening and command execution.
-    /// </summary>
-    public CancellationToken CancellationToken { get; init; }
-
-    /// <summary>
     /// Returns a copy of these options bound to a local transaction.
     /// </summary>
     /// <param name="transaction">The transaction to assign to the returned options.</param>

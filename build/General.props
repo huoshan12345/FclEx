@@ -1,0 +1,21 @@
+<Project>
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+    <SupportOracle>false</SupportOracle>
+    <IncludeNet90>true</IncludeNet90>
+    <IsGithubAction>false</IsGithubAction>
+    <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
+    <IsWindows>$([MSBuild]::IsOSPlatform('Windows'))</IsWindows>
+    <Is64BitOS>$([System.Environment]::Is64BitOperatingSystem)</Is64BitOS>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), 6.0))">
+    <SupportOracle>true</SupportOracle>
+    <DefineConstants>$(DefineConstants);SUPPORT_ORACLE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup>
+    <IsGithubAction Condition="'$(GITHUB_ACTION)' != ''">true</IsGithubAction>
+    <IncludeNet90 Condition="$(IsWindows) AND $(IsGithubAction)">false</IncludeNet90>
+  </PropertyGroup>
+</Project>

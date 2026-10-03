@@ -92,8 +92,7 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
 
     [Theory]
     [MemberData(nameof(WildcardCases))]
-    public async Task ContainsAny_ShouldRespectWildcardOption(
-        DbDriver dbDriver, bool escapeWildcards, string keyword, string literalValue, string alternativeValue)
+    public async Task ContainsAny_ShouldRespectWildcardOption(DbDriver dbDriver, bool escapeWildcards, string keyword, string literalValue, string alternativeValue)
     {
         await using var context = Fixture.CreateDbContext(dbDriver);
         // Keep the isolation prefix free of letters that could match the keyword wildcards.
@@ -108,7 +107,8 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
             .Where(entity => entity.Name!.StartsWith(prefix))
             .ContainsAny(entity => entity.Name, [keyword],
                 escapeEscapeCharacter: dbDriver is DbDriver.MySql,
-                escapeWildcards: escapeWildcards)
+                escapeWildcards: escapeWildcards,
+                escapeBrackets: dbDriver == DbDriver.SqlServer)
             .ToListAsync();
 
         var usesWildcard = keyword.Contains('%') || keyword.Contains('_');
@@ -225,7 +225,8 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
         }
         else
         {
-            Assert.Matches(@"LIKE\s+@\w+", sql);
+            var parameterPrefix = dbDriver == DbDriver.Oracle ? ":" : "@";
+            Assert.Matches($@"LIKE\s+{parameterPrefix}\w+", sql);
             Assert.DoesNotContain($"LIKE '%{keyword}%'", sql);
             Assert.DoesNotContain($"LIKE N'%{keyword}%'", sql);
         }

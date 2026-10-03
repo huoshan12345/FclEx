@@ -41,7 +41,6 @@ public class SchemaDbContext : DbContext, IHasSchema
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(modelBuilder);
         modelBuilder.HasDefaultSchema(Schema);
     }
 }

@@ -17,10 +17,13 @@ public static class DatabaseFacadeExtensions
     /// <param name="parameters">Optional parameters to add to the command.</param>
     /// <param name="cancellationToken">A token to observe while waiting for the operation to complete.</param>
     /// <returns>
-    /// The first column of the first row in the result set cast to <typeparamref name="T"/>.
+    /// The first column of the first row converted to <typeparamref name="T"/>, including nullable value types.
     /// Returns <c>default</c> if the result is <see langword="null"/> or <see cref="DBNull"/>.
     /// </returns>
     /// <remarks>
+    /// GUID results are accepted directly, parsed from strings, or constructed from 16-byte arrays using the
+    /// <see cref="Guid.ToByteArray()"/> byte layout, including when the requested type is nullable.
+    /// Enum results are parsed from strings or converted from numeric values through the enum's underlying integer type.
     /// The command participates in the context's current transaction, uses the configured command timeout, and is executed
     /// through the provider's execution strategy. A connection opened by this method is closed before the task completes.
     /// </remarks>
@@ -69,12 +72,17 @@ public static class DatabaseFacadeExtensions
                     var type = typeof(T).UnwrapNullable();
 
                     if (type == typeof(Guid))
-                        return (T)(object)Guid.Parse(result.ToString()!);
+                    {
+                        var guid = result is byte[] bytes
+                            ? new Guid(bytes)
+                            : Guid.Parse(result.ToString()!);
+                        return (T)(object)guid;
+                    }
 
                     var converted = type.IsEnum
                         ? result is string name
                             ? Enum.Parse(type, name)
-                            : Enum.ToObject(type, result)
+                            : Enum.ToObject(type, Convert.ChangeType(result, Enum.GetUnderlyingType(type)))
                         : Convert.ChangeType(result, type);
 
                     return (T)converted;

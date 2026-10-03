@@ -90,7 +90,7 @@ internal static class XunitSerializableAttributeSource
         builder.WriteLine($"partial {typeDef} {typeName} : IXunitSerializable");
         builder.WriteOpeningBracket();
 
-        builder.WriteLine($"private static readonly IReadOnlyList<FieldInfo> _fields = FclEx.Extensions.TypeExtensions.GetAllInstanceFields(typeof({typeName}));");
+        builder.WriteLine($"private static readonly IReadOnlyList<FieldInfo> _fields = global::FclEx.Extensions.TypeExtensions.GetAllInstanceFields(typeof({typeName}));");
         builder.WriteLine();
 
         var declaration = typeSymbol.IsValueType

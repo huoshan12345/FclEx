@@ -36,26 +36,30 @@ public class QueryableHelperTests
         Assert.Equal(@"%a\\\\b%", QueryableHelper.GetContainsPattern(@"a\b", escapeEscapeCharacter: true));
     }
 
-    public static TheoryData<string, bool, bool, string> ContainsPatternCases { get; } = CreateContainsPatternCases();
+    public static TheoryData<string, bool, bool, bool, string> ContainsPatternCases { get; } = CreateContainsPatternCases();
 
-    private static TheoryData<string, bool, bool, string> CreateContainsPatternCases()
+    private static TheoryData<string, bool, bool, bool, string> CreateContainsPatternCases()
     {
-        var cases = new TheoryData<string, bool, bool, string>();
+        var cases = new TheoryData<string, bool, bool, bool, string>();
         foreach (var escapeEscapeCharacter in new[] { false, true })
         {
             var backslash = escapeEscapeCharacter ? @"\\\\" : @"\\";
             foreach (var escapeWildcards in new[] { false, true })
             {
-                cases.Add("", escapeEscapeCharacter, escapeWildcards, "%%");
-                cases.Add("plain", escapeEscapeCharacter, escapeWildcards, "%plain%");
-                cases.Add("a%b", escapeEscapeCharacter, escapeWildcards, escapeWildcards ? @"%a\%b%" : "%a%b%");
-                cases.Add("a_b", escapeEscapeCharacter, escapeWildcards, escapeWildcards ? @"%a\_b%" : "%a_b%");
-                cases.Add("%_", escapeEscapeCharacter, escapeWildcards, escapeWildcards ? @"%\%\_%" : "%%_%");
-                cases.Add(@"a\b", escapeEscapeCharacter, escapeWildcards, "%a" + backslash + "b%");
-                cases.Add(@"a\", escapeEscapeCharacter, escapeWildcards, "%a" + backslash + "%");
-                cases.Add("a[bc]d", escapeEscapeCharacter, escapeWildcards, @"%a\[bc]d%");
-                cases.Add(@"\%_[", escapeEscapeCharacter, escapeWildcards,
-                    "%" + backslash + (escapeWildcards ? @"\%\_\[" : @"%_\[") + "%");
+                foreach (var escapeBrackets in new[] { false, true })
+                {
+                    var bracket = escapeBrackets ? @"\[" : "[";
+                    cases.Add("", escapeEscapeCharacter, escapeWildcards, escapeBrackets, "%%");
+                    cases.Add("plain", escapeEscapeCharacter, escapeWildcards, escapeBrackets, "%plain%");
+                    cases.Add("a%b", escapeEscapeCharacter, escapeWildcards, escapeBrackets, escapeWildcards ? @"%a\%b%" : "%a%b%");
+                    cases.Add("a_b", escapeEscapeCharacter, escapeWildcards, escapeBrackets, escapeWildcards ? @"%a\_b%" : "%a_b%");
+                    cases.Add("%_", escapeEscapeCharacter, escapeWildcards, escapeBrackets, escapeWildcards ? @"%\%\_%" : "%%_%");
+                    cases.Add(@"a\b", escapeEscapeCharacter, escapeWildcards, escapeBrackets, "%a" + backslash + "b%");
+                    cases.Add(@"a\", escapeEscapeCharacter, escapeWildcards, escapeBrackets, "%a" + backslash + "%");
+                    cases.Add("a[bc]d", escapeEscapeCharacter, escapeWildcards, escapeBrackets, "%a" + bracket + "bc]d%");
+                    cases.Add(@"\%_[", escapeEscapeCharacter, escapeWildcards, escapeBrackets,
+                        "%" + backslash + (escapeWildcards ? @"\%\_" : "%_") + bracket + "%");
+                }
             }
         }
         return cases;
@@ -64,20 +68,21 @@ public class QueryableHelperTests
     [Theory]
     [MemberData(nameof(ContainsPatternCases))]
     public void GetContainsPattern_ShouldRespectWildcardAndEscapeOptions(
-        string value, bool escapeEscapeCharacter, bool escapeWildcards, string expected)
+        string value, bool escapeEscapeCharacter, bool escapeWildcards, bool escapeBrackets, string expected)
     {
-        Assert.Equal(expected, QueryableHelper.GetContainsPattern(value, escapeEscapeCharacter, escapeWildcards));
+        Assert.Equal(expected, QueryableHelper.GetContainsPattern(value, escapeEscapeCharacter, escapeWildcards, escapeBrackets));
     }
 
     [Theory]
     [MemberData(nameof(ContainsPatternCases))]
     public void BuildContainsAny_ShouldPassConfiguredPatternToLike(
-        string value, bool escapeEscapeCharacter, bool escapeWildcards, string expected)
+        string value, bool escapeEscapeCharacter, bool escapeWildcards, bool escapeBrackets, string expected)
     {
         var filter = QueryableHelper.BuildContainsAny<TestEntity>(
             entity => entity.Name, [value],
             escapeEscapeCharacter: escapeEscapeCharacter,
-            escapeWildcards: escapeWildcards);
+            escapeWildcards: escapeWildcards,
+            escapeBrackets: escapeBrackets);
 
         Assert.NotNull(filter);
         var call = Assert.IsAssignableFrom<MethodCallExpression>(filter.Body);

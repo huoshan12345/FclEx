@@ -1,8 +1,6 @@
-using System.Collections.Concurrent;
-
 namespace FclEx.Databases;
 
-public record ConnectionStrings(DatabasesConfig Config, string Database, DatabaseUser User)
+public record ConnectionStrings(DatabasesConfig Config, DatabaseUser User)
 {
     private DatabaseConfig Get(DbDriver dbDriver)
     {
@@ -13,37 +11,43 @@ public record ConnectionStrings(DatabasesConfig Config, string Database, Databas
             DbDriver.Npgsql => Config.Postgres,
             DbDriver.MySql => Config.MySql,
             DbDriver.MySqlConnector => Config.MySql,
+#if SUPPORT_ORACLE
+            DbDriver.Oracle => Config.Oracle,
+#endif
             _ => throw new NotSupportedException($"Unsupported database driver type: {dbDriver}")
         };
     }
 
-    private ConnectionStringBuilder Create(DbDriver dbDriver, bool isUser, string? database)
+    private ConnectionStringBuilder Create(DbDriver dbDriver, bool isUser, string database)
     {
         var config = Get(dbDriver);
-        var (username, password) = isUser
+        var (userName, password) = isUser
             ? (User.UserName, User.Password)
             : (config.UserName, config.Password);
+
+        if (dbDriver is DbDriver.SqlServer && isUser)
+        {
+            password = SqlServerUserPassword;
+        }
+
+        if (dbDriver is DbDriver.Oracle && isUser)
+        {
+            database = userName;
+        }
+
         var builder = new ConnectionStringBuilder(
             DbDriver: dbDriver,
-            Host: config.Host,
-            Port: config.Port,
-            UserName: username,
-            Password: password,
-            Database: database ?? Database);
+            Config: config with { UserName = userName, Password = password },
+            Database: database);
         return builder;
     }
 
-    private static readonly ConcurrentDictionary<(DbDriver, bool, string?), ConnectionStringBuilder> _cache = new();
+    private static readonly ConcurrentDictionary<(DbDriver, bool, string), ConnectionStringBuilder> _cache = new();
 
-    public ConnectionStringBuilder Get(DbDriver dbDriver, bool isUser, string? database = null)
+    public ConnectionStringBuilder Get(DbDriver dbDriver, string database, bool isUser = false)
     {
         var key = (dbDriver, isUser, database);
         var builder = _cache.GetOrAdd(key, k => Create(k.Item1, k.Item2, k.Item3));
         return builder;
-    }
-
-    public ConnectionStringBuilder Get(DbDriver dbDriver, string? database, bool isUser = false)
-    {
-        return Get(dbDriver, isUser, database);
     }
 }

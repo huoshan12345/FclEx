@@ -1,22 +1,17 @@
-using System.Data.Common;
 using Microsoft.Data.SqlClient;
 using MySql.Data.MySqlClient;
 using Npgsql;
-using SQLitePCL;
 
 namespace FclEx.Databases;
 
 public record ConnectionStringBuilder(
     DbDriver DbDriver,
-    string Host,
-    int Port,
-    string UserName,
-    string Password,
+    DatabaseConfig Config,
     string Database)
 {
     public ConnectionStringBuilder WithUser(DatabaseUser user)
     {
-        return this with { UserName = user.UserName, Password = user.Password };
+        return this with { Config = Config with { UserName = user.UserName, Password = user.Password } };
     }
 
     public string Build()
@@ -25,31 +20,43 @@ public record ConnectionStringBuilder(
         {
             DbDriver.SqlServer => new SqlConnectionStringBuilder
             {
-                DataSource = Host,
+                DataSource = Config.Host,
                 InitialCatalog = Database,
-                UserID = UserName,
-                Password = Password,
+                UserID = Config.UserName,
+                Password = Config.Password,
+                ConnectTimeout = 3,
+                ConnectRetryInterval = 1,
+                ConnectRetryCount = 1,
+                TrustServerCertificate = true,
             }.ConnectionString,
             DbDriver.Sqlite => new SqliteConnectionStringBuilder { DataSource = $"./{Database}.sqlite" }.ConnectionString,
             DbDriver.Npgsql => new NpgsqlConnectionStringBuilder
             {
-                Host = Host,
+                Host = Config.Host,
                 Database = Database,
-                Port = Port,
-                Username = UserName,
-                Password = Password,
+                Port = Config.Port,
+                Username = Config.UserName,
+                Password = Config.Password,
             }.ConnectionString,
             DbDriver.MySql or DbDriver.MySqlConnector => new MySqlConnectionStringBuilder
             {
-                Server = Host,
+                Server = Config.Host,
                 Database = Database,
-                Port = (uint)Port,
-                UserID = UserName,
-                Password = Password,
+                Port = (uint)Config.Port,
+                UserID = Config.UserName,
+                Password = Config.Password,
                 SslMode = MySqlSslMode.Required,
                 MaximumPoolSize = 16,
                 ConnectionTimeout = 30,
             }.ConnectionString,
+#if SUPPORT_ORACLE
+            DbDriver.Oracle => new OracleConnectionStringBuilder
+            {
+                DataSource = $"{Config.Host}:{Config.Port}/{Config.ServiceName}",
+                UserID = Database.EnsureDoubleQuoted(), // oracle requires the username to be double-quoted to preserve case sensitivity
+                Password = Config.Password,
+            }.ConnectionString,
+#endif
             _ => throw new ArgumentOutOfRangeException(nameof(DbDriver), DbDriver, null),
         };
     }
@@ -63,6 +70,9 @@ public record ConnectionStringBuilder(
             DbDriver.Npgsql => new NpgsqlConnection(connectionString),
             DbDriver.MySql => new MySqlConnection(connectionString),
             DbDriver.MySqlConnector => new MySqlConnector.MySqlConnection(connectionString),
+#if SUPPORT_ORACLE
+            DbDriver.Oracle => new OracleConnection(connectionString),
+#endif
             _ => throw new ArgumentOutOfRangeException(nameof(dbDriver), dbDriver, null)
         };
     }

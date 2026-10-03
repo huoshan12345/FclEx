@@ -1,4 +1,4 @@
-﻿namespace FclEx.Aop;
+namespace FclEx.Aop;
 
 [CollectionDefinition(nameof(AopTestsCollection))]
 public class AopTestsCollection : ICollectionFixture<AopTestsFixture>;

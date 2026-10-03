@@ -24,7 +24,7 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         ConnectionInfo? ssh,
         EventHandler<HostKeyEventArgs>? hostKeyReceived = null)
     {
-        var connectionString = Fixture.ConnectionStrings.Get(DbDriver.Npgsql, false).Build();
+        var connectionString = Fixture.GetConnectionStringBuilder(DbDriver.Npgsql, false).Build();
         return SshDbContext.CreateSshDbContext(
             connectionString,
             m => new TestDbContext(DbDriver.Npgsql, m),
@@ -66,7 +66,7 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 
         await using var ctx = CreateNpgsqlContext(null, (_, _) =>
             Assert.Fail("The host-key handler must not run when SSH is disabled."));
-        Assert.Equal(Fixture.ConnectionStrings.Get(DbDriver.Npgsql, false).Build(), ctx.Context.ConnectionString);
+        Assert.Equal(Fixture.GetConnectionStringBuilder(DbDriver.Npgsql, false).Build(), ctx.Context.ConnectionString);
         await ctx.Context.Database.OpenConnectionAsync();
         await ctx.Context.Database.CloseConnectionAsync();
     }
@@ -86,7 +86,7 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
             args.CanTrust = true;
         }))
         {
-            var original = new NpgsqlConnectionStringBuilder(Fixture.ConnectionStrings.Get(DbDriver.Npgsql, false).Build());
+            var original = new NpgsqlConnectionStringBuilder(Fixture.GetConnectionStringBuilder(DbDriver.Npgsql, false).Build());
             var forwarded = new NpgsqlConnectionStringBuilder(ctx.Context.ConnectionString);
             Assert.True(hostKeyReceived);
             Assert.Equal(IPAddress.Loopback.ToString(), forwarded.Host);
@@ -107,7 +107,7 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 
         SshClient? callbackFailureClient = null;
         Assert.Throws<InvalidOperationException>(() => SshDbContext.CreateSshDbContext(
-            Fixture.ConnectionStrings.Get(DbDriver.Npgsql, false).Build(),
+            Fixture.GetConnectionStringBuilder(DbDriver.Npgsql, false).Build(),
             m => new TestDbContext(DbDriver.Npgsql, m),
             info,
             value =>
@@ -126,7 +126,7 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 
         SshClient? contextFailureClient = null;
         DnsEndPoint? localEndpoint = null;
-        var connectionString = Fixture.ConnectionStrings.Get(DbDriver.Npgsql, false).Build();
+        var connectionString = Fixture.GetConnectionStringBuilder(DbDriver.Npgsql, false).Build();
         Assert.Throws<InvalidOperationException>(() => SshDbContext.CreateSshDbContext<TestDbContext>(
             connectionString,
             _ => throw new InvalidOperationException("Context factory failed."),

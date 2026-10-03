@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace FclEx.Dapper;
 
 public class DbCommandExtensionsTests
@@ -9,6 +7,7 @@ public class DbCommandExtensionsTests
     {
         using var command = new BlockingCommand();
         var invocation = Task.Factory.StartNew(
+            // ReSharper disable once AccessToDisposedClosure
             () => command.ExecuteNonQueryAsync(),
             CancellationToken.None,
             TaskCreationOptions.DenyChildAttach,
@@ -41,7 +40,7 @@ public class DbCommandExtensionsTests
         {
             Assert.True(command.Started.Wait(TimeSpan.FromSeconds(5)));
             cancellationSource.Cancel();
-            await Task.Delay(50);
+            await Task.Delay(50, CancellationToken.None);
             Assert.False(execution.IsCompleted);
 
             command.Release.Set();

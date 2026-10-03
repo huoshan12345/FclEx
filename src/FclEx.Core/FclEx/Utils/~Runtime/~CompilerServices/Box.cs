@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils;
+namespace FclEx.Utils;
 
 /// <summary>
 /// A lightweight, immutable reference-type wrapper around a nullable reference type <typeparamref name="T"/>.

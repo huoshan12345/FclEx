@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore.Infrastructure;
-
 namespace FclEx.EfCore;
 
 public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
@@ -15,30 +13,45 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
          select (db, assembly, ver, os))
         .ToTheoryData();
 
+#if NET10_0
     /// <summary>
     /// Set up databases for all test cases.
     /// Run this only when test entities are changed.
     /// </summary>
-    [Theory(Skip = "Run this only when necessary")]
+    [LocalOnlyTheory(
+        Skip = "Run this only when necessary",
+        DisableParallelization = true)]
     [MemberData(nameof(SetupDatabaseCases))]
     public async Task SetupDatabase(DbDriver dbDriver, string assemblyName, int dotNetVersion, string os)
     {
-        var defaultUser = new DatabaseUser(WithAssemblyInfo(UserName), UserPassword, WithAssemblyInfo(UserSchema));
-        var connectionStrings = new ConnectionStrings(DapperTestsFixture.Databases, WithAssemblyInfo(DbName), defaultUser);
-        var connectionString = connectionStrings.Get(dbDriver, false).Build();
+        var defaultPassword = dbDriver is DbDriver.SqlServer
+            ? SqlServerUserPassword
+            : DefaultUserPassword;
+        var defaultUser = new DatabaseUser(WithAssemblyInfo(DefaultUserName), defaultPassword, WithAssemblyInfo(UserSchema));
+        var database = WithAssemblyInfo(DbName);
+        var connectionString = Fixture.ConnectionStrings.Get(dbDriver, database).Build();
 
         foreach (var (_, schema, isFirst, _) in SchemaNames.IndexEx())
         {
             await using var context = new TestDbContext(dbDriver, connectionString, WithAssemblyInfo(schema));
 
-            if (isFirst || dbDriver.IsMySql())
+            if (isFirst || dbDriver.IsMySql() || dbDriver is DbDriver.Oracle)
             {
-                await DropDatabase(context, dbDriver);
-                await context.Database.EnsureCreatedAsync();
+                await DropDatabase(context, database);
+                await CreateDatabase(context, database);
 
                 if (isFirst)
                 {
-                    await CreateUser(context, defaultUser);
+                    if (dbDriver is DbDriver.Oracle)
+                    {
+                        var str = Fixture.ConnectionStrings.Get(dbDriver, defaultUser.UserName).WithUser(defaultUser).Build();
+                        await using var ctx = new TestDbContext(dbDriver, str);
+                        await CreateDatabase(ctx, defaultUser.UserName, defaultUser.Password);
+                    }
+                    else
+                    {
+                        await CreateUser(context, defaultUser);
+                    }
                 }
             }
 
@@ -48,7 +61,7 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 
             // NOTE: when database is created, the tables with the first schema are created as well, so we skip the first schema here.
             // MySQL does not support multiple schemas in the same database.
-            if (isFirst || dbDriver.IsMySql())
+            if (isFirst || dbDriver.IsMySql() || dbDriver is DbDriver.Oracle)
                 continue;
 
             // create tables for the current schema.
@@ -63,32 +76,59 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         }
     }
 
-    private static async Task DropDatabase(TestDbContext context, DbDriver dbDriver)
+    private static async Task DropDatabase(TestDbContext context, string database)
     {
-        if (dbDriver.IsMySql())
+        if (context.DbDriver.IsMySql())
         {
-            var databaseName = context.Database.GetDbConnection().Database;
+            var config = DapperTestsFixture.Databases.MySql;
+            var builder = new ConnectionStringBuilder(DbDriver.MySql, config, "");
+
+            var databaseName = context.Schema ?? database;
             var sql = $"""
                        SET unique_checks = 0;
                        SET foreign_key_checks = 0;
                        SET GLOBAL innodb_stats_on_metadata = 0;
-                       DROP DATABASE {databaseName};
+                       DROP DATABASE IF EXISTS {databaseName};
                        SET GLOBAL innodb_stats_on_metadata = 1;
                        SET foreign_key_checks = 1;
                        SET unique_checks = 1;
                        """;
-            await context.Database.ExecuteSqlRawAsync(sql);
+
+            await using var con = builder.CreateDbConnection();
+            await con.ExecuteAsync(sql, cancellationToken: CancellationToken);
         }
         else
         {
-            await context.Database.EnsureDeletedAsync();
+            var str = context.Database.GetConnectionString();
+            await context.Database.EnsureDeletedAsync(cancellationToken: CancellationToken);
         }
     }
 
-    private static async Task CreateUser(TestDbContext context, DatabaseUser databaseUser)
+    private static async Task CreateDatabase(TestDbContext context, string database, string? password = null)
+    {
+        if (context.DbDriver is DbDriver.Oracle)
+        {
+            var config = DapperTestsFixture.Databases.Oracle;
+            var builder = new ConnectionStringBuilder(DbDriver.Oracle, config, config.UserName);
+            var userName = context.Schema ?? database;
+            var pwd = password ?? config.Password;
+            await using var con = builder.CreateDbConnection();
+            await CreateUser(context.DbDriver, con, new(userName, pwd, userName));
+        }
+
+        var str = context.Database.GetConnectionString();
+        await context.Database.EnsureCreatedAsync(cancellationToken: CancellationToken);
+    }
+
+    private static Task CreateUser(TestDbContext context, DatabaseUser databaseUser)
+    {
+        return CreateUser(context.DbDriver, context.Database.GetDbConnection(), databaseUser);
+    }
+
+    private static async Task CreateUser(DbDriver dbDriver, IDbConnection connection, DatabaseUser databaseUser)
     {
         var (user, password, schema) = databaseUser;
-        string[] sqls = context.DbProviderType switch
+        string[] sqls = dbDriver switch
         {
             DbDriver.SqlServer => [
                 $"""
@@ -122,12 +162,18 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
                 $"CREATE USER '{user}'@'%' IDENTIFIED BY '{password}'",
                 $"GRANT ALL PRIVILEGES ON *.* TO '{user}'@'%' WITH GRANT OPTION",
             ],
-            _ => throw new ArgumentOutOfRangeException(nameof(context.DbProviderType), context.DbProviderType, null),
+            DbDriver.Oracle => [
+                $"CREATE USER IF NOT EXISTS \"{user}\" IDENTIFIED BY \"{password}\" QUOTA UNLIMITED ON users;",
+                $"GRANT CONNECT, RESOURCE TO \"{user}\";"
+            ],
+            _ => throw new ArgumentOutOfRangeException(nameof(dbDriver), dbDriver, null),
         };
 
         foreach (var sql in sqls)
         {
-            await context.Database.ExecuteSqlRawAsync(sql);
+            await connection.ExecuteAsync(sql, cancellationToken: CancellationToken);
         }
     }
+
+#endif
 }

@@ -1,4 +1,4 @@
-﻿using Json.More;
+using Json.More;
 
 namespace Json.Path.Expressions;
 

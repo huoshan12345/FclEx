@@ -55,9 +55,11 @@ public class DatabaseFacadeExtensionsTests(EfCoreFixture fixture) : EfCoreTests(
     [MemberData(nameof(DbDriverCases))]
     public async Task ExecuteScalarRawAsync_SupportsParameters(DbDriver dbDriver)
     {
-        var parameter = CreateParameter(dbDriver, "@p0", 5);
+        var parameter = CreateParameter(dbDriver, "p0", 5);
         await using var context = Fixture.CreateDbContext(dbDriver);
-        var result = await context.Database.ExecuteScalarRawAsync<int>("SELECT @p0 + 1", [parameter]);
+        var adapter = DapperHelper.GetSqlAdapter(context.Database.GetDbConnection());
+        var placeholder = adapter.GetParameterPlaceholder(parameter.ParameterName);
+        var result = await context.Database.ExecuteScalarRawAsync<int>($"SELECT {placeholder} + 1", [parameter]);
         Assert.Equal(6, result);
     }
 
@@ -128,10 +130,12 @@ public class DatabaseFacadeExtensionsTests(EfCoreFixture fixture) : EfCoreTests(
     public async Task ExecuteScalarRawAsync_Guid(DbDriver dbDriver)
     {
         var expected = Guid.NewGuid();
-        var parameter = CreateParameter(dbDriver, "@p0", expected);
+        var parameter = CreateParameter(dbDriver, "p0", expected);
 
         await using var context = Fixture.CreateDbContext(dbDriver);
-        var result = await context.Database.ExecuteScalarRawAsync<Guid>("SELECT @p0", [parameter]);
+        var adapter = DapperHelper.GetSqlAdapter(context.Database.GetDbConnection());
+        var placeholder = adapter.GetParameterPlaceholder(parameter.ParameterName);
+        var result = await context.Database.ExecuteScalarRawAsync<Guid>($"SELECT {placeholder}", [parameter]);
 
         Assert.Equal(expected, result);
     }

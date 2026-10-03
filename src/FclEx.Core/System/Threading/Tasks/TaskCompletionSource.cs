@@ -1,4 +1,4 @@
-﻿#if !NET5_0_OR_GREATER
+#if !NET5_0_OR_GREATER
 namespace System.Threading.Tasks;
 
 public class TaskCompletionSource
@@ -17,7 +17,6 @@ public class TaskCompletionSource
     public TaskCompletionSource(object? state, TaskCreationOptions creationOptions)
         => _inner = new TaskCompletionSource<bool>(state, creationOptions);
 
-    /// <summary>与此 TaskCompletionSource 关联的 Task。</summary>
     public Task Task => _inner.Task;
 
     [MethodImpl(AggressiveInlining)]
