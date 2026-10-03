@@ -2,15 +2,13 @@ namespace FclEx.Logging;
 
 public static class LoggerFactoryExtensions
 {
-    private static readonly FieldInfo FilterOptions = typeof(LoggerFactory).GetRequiredField("_filterOptions");
-
     public static void SetMinimumLevel(this ILoggerFactory factory, LogLevel minLevel)
     {
         Check.NotNull(factory);
 
         if (factory is LoggerFactory loggerFactory)
         {
-            var options = FilterOptions.GetRequiredValue<LoggerFilterOptions>(loggerFactory);
+            var options = FieldInfos.LoggerFactory_FilterOptions.GetRequiredValue<LoggerFilterOptions>(loggerFactory);
             options.MinLevel = minLevel;
         }
         else
