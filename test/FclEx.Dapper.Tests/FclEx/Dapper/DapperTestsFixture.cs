@@ -62,7 +62,7 @@ public class DapperTestsFixture : CoreTestsFixture
             DbDriver.MySql => new MySqlParameter(name, value),
             DbDriver.MySqlConnector => new MySqlConnector.MySqlParameter(name, value),
 #if SUPPORT_ORACLE
-            DbDriver.Oracle => new OracleParameter(name, value),
+            DbDriver.Oracle => new OracleParameter(name, value is Guid guid ? guid.ToByteArray() : value),
 #endif
             _ => throw new ArgumentOutOfRangeException(nameof(dbDriver), dbDriver, null)
         };

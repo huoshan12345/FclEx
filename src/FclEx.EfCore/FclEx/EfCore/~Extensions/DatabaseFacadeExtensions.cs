@@ -21,6 +21,8 @@ public static class DatabaseFacadeExtensions
     /// Returns <c>default</c> if the result is <see langword="null"/> or <see cref="DBNull"/>.
     /// </returns>
     /// <remarks>
+    /// GUID results are accepted directly, parsed from strings, or constructed from 16-byte arrays using the
+    /// <see cref="Guid.ToByteArray()"/> byte layout, including when the requested type is nullable.
     /// Enum results are parsed from strings or converted from numeric values through the enum's underlying integer type.
     /// The command participates in the context's current transaction, uses the configured command timeout, and is executed
     /// through the provider's execution strategy. A connection opened by this method is closed before the task completes.
@@ -70,7 +72,12 @@ public static class DatabaseFacadeExtensions
                     var type = typeof(T).UnwrapNullable();
 
                     if (type == typeof(Guid))
-                        return (T)(object)Guid.Parse(result.ToString()!);
+                    {
+                        var guid = result is byte[] bytes
+                            ? new Guid(bytes)
+                            : Guid.Parse(result.ToString()!);
+                        return (T)(object)guid;
+                    }
 
                     var converted = type.IsEnum
                         ? result is string name
