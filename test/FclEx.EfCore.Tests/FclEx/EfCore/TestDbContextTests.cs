@@ -19,7 +19,7 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     /// Run this only when test entities are changed.
     /// </summary>
     [LocalOnlyTheory(
-        Skip = "Run this only when necessary",
+        //Skip = "Run this only when necessary",
         DisableParallelization = true)]
     [MemberData(nameof(SetupDatabaseCases))]
     public async Task SetupDatabase(DbDriver dbDriver, string assemblyName, int dotNetVersion, string os)
@@ -37,9 +37,18 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
                 await DropDatabase(context, database);
                 await CreateDatabase(context, database);
 
-                if (isFirst && dbDriver is not DbDriver.Oracle)
+                if (isFirst)
                 {
-                    await CreateUser(context, defaultUser);
+                    if (dbDriver is DbDriver.Oracle)
+                    {
+                        var str = Fixture.ConnectionStrings.Get(dbDriver, defaultUser.UserName).WithUser(defaultUser).Build();
+                        await using var ctx = new TestDbContext(dbDriver, str);
+                        await CreateDatabase(ctx, defaultUser.UserName, defaultUser.Password);
+                    }
+                    else
+                    {
+                        await CreateUser(context, defaultUser);
+                    }
                 }
             }
 
@@ -91,15 +100,16 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         }
     }
 
-    private static async Task CreateDatabase(TestDbContext context, string database)
+    private static async Task CreateDatabase(TestDbContext context, string database, string? password = null)
     {
         if (context.DbDriver is DbDriver.Oracle)
         {
             var config = DapperTestsFixture.Databases.Oracle;
             var builder = new ConnectionStringBuilder(DbDriver.Oracle, config, config.UserName);
             var userName = context.Schema ?? database;
+            var pwd = password ?? config.Password;
             await using var con = builder.CreateDbConnection();
-            await CreateUser(context.DbDriver, con, new(userName, config.Password, userName));
+            await CreateUser(context.DbDriver, con, new(userName, pwd, userName));
         }
 
         var str = context.Database.GetConnectionString();

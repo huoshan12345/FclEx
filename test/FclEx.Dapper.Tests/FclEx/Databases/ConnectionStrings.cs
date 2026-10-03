@@ -26,6 +26,12 @@ public record ConnectionStrings(DatabasesConfig Config, DatabaseUser User)
         var (username, password) = isUser
             ? (User.UserName, User.Password)
             : (config.UserName, config.Password);
+
+        if (dbDriver is DbDriver.Oracle && isUser)
+        {
+            database = username;
+        }
+
         var builder = new ConnectionStringBuilder(
             DbDriver: dbDriver,
             Config: config with { UserName = username, Password = password },

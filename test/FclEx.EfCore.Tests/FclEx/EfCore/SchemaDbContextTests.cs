@@ -44,7 +44,7 @@ public class SchemaDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
             }
             case DbDriver.Oracle:
             {
-                await using var con = Fixture.GetConnectionStringBuilder(DbDriver.Oracle, false).CreateDbConnection();
+                await using var con = Fixture.GetConnectionStringBuilder(DbDriver.Oracle, true).CreateDbConnection();
                 return await con.ExecuteScalarAsync<string>("SELECT USER FROM dual;");
             }
             case DbDriver.Sqlite:
@@ -63,6 +63,12 @@ public class SchemaDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
             Assert.Null(defaultSchema);
         }
         else if (dbDriver.IsMySql())
+        {
+            Assert.NotNull(defaultSchema);
+            var conStr = Fixture.GetConnectionStringBuilder(dbDriver, true);
+            Assert.Equal(conStr.Database, defaultSchema);
+        }
+        else if (dbDriver is DbDriver.Oracle)
         {
             Assert.NotNull(defaultSchema);
             var conStr = Fixture.GetConnectionStringBuilder(dbDriver, true);
