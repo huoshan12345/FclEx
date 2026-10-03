@@ -1,5 +1,3 @@
-using System.Collections.Concurrent;
-
 namespace FclEx.Databases;
 
 public record ConnectionStrings(DatabasesConfig Config, DatabaseUser User)
@@ -23,18 +21,23 @@ public record ConnectionStrings(DatabasesConfig Config, DatabaseUser User)
     private ConnectionStringBuilder Create(DbDriver dbDriver, bool isUser, string database)
     {
         var config = Get(dbDriver);
-        var (username, password) = isUser
+        var (userName, password) = isUser
             ? (User.UserName, User.Password)
             : (config.UserName, config.Password);
 
+        if (dbDriver is DbDriver.SqlServer && isUser && userName == DefaultUserName)
+        {
+            password = SqlServerUserPassword;
+        }
+
         if (dbDriver is DbDriver.Oracle && isUser)
         {
-            database = username;
+            database = userName;
         }
 
         var builder = new ConnectionStringBuilder(
             DbDriver: dbDriver,
-            Config: config with { UserName = username, Password = password },
+            Config: config with { UserName = userName, Password = password },
             Database: database);
         return builder;
     }

@@ -22,8 +22,12 @@ public record ConnectionStringBuilder(
             {
                 DataSource = Config.Host,
                 InitialCatalog = Database,
-                UserID = UserName,
+                UserID = Config.UserName,
                 Password = Config.Password,
+                ConnectTimeout = 3,
+                ConnectRetryInterval = 1,
+                ConnectRetryCount = 1,
+                TrustServerCertificate = true,
             }.ConnectionString,
             DbDriver.Sqlite => new SqliteConnectionStringBuilder { DataSource = $"./{Database}.sqlite" }.ConnectionString,
             DbDriver.Npgsql => new NpgsqlConnectionStringBuilder

@@ -24,7 +24,10 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [MemberData(nameof(SetupDatabaseCases))]
     public async Task SetupDatabase(DbDriver dbDriver, string assemblyName, int dotNetVersion, string os)
     {
-        var defaultUser = new DatabaseUser(WithAssemblyInfo(UserName), UserPassword, WithAssemblyInfo(UserSchema));
+        var defaultPassword = dbDriver is DbDriver.SqlServer
+            ? SqlServerUserPassword
+            : DefaultUserPassword;
+        var defaultUser = new DatabaseUser(WithAssemblyInfo(DefaultUserName), defaultPassword, WithAssemblyInfo(UserSchema));
         var database = WithAssemblyInfo(DbName);
         var connectionString = Fixture.ConnectionStrings.Get(dbDriver, database).Build();
 
@@ -96,6 +99,7 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         }
         else
         {
+            var str = context.Database.GetConnectionString();
             await context.Database.EnsureDeletedAsync(cancellationToken: CancellationToken);
         }
     }

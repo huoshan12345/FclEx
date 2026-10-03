@@ -1,5 +1,6 @@
 // Global using directives
 
+global using System.Collections.Concurrent;
 global using System.ComponentModel.DataAnnotations;
 global using System.ComponentModel.DataAnnotations.Schema;
 global using System.Data;

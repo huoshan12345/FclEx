@@ -14,13 +14,14 @@ public class DapperTestsFixture : CoreTestsFixture
     public readonly ConnectionStrings ConnectionStrings;
 
     public const string DbName = "test";
-    public const string UserName = "user";
-    public const string UserPassword = "123456";
+    public const string DefaultUserName = "user";
+    public const string DefaultUserPassword = "123456";
+    public const string SqlServerUserPassword = "0Im1lI9BRZur"; // sql server requires password to be complex
     public const string UserSchema = "schema";
 
     public DapperTestsFixture()
     {
-        DefaultUser = new(WithAssemblyInfo(UserName), UserPassword, WithAssemblyInfo(UserSchema));
+        DefaultUser = new(WithAssemblyInfo(DefaultUserName), DefaultUserPassword, WithAssemblyInfo(UserSchema));
         ConnectionStrings = new(Databases, DefaultUser);
     }
 
@@ -50,9 +51,9 @@ public class DapperTestsFixture : CoreTestsFixture
                 //DbDriver.MySql,
                 //DbDriver.MySqlConnector,
                 //DbDriver.Npgsql,
-                //DbDriver.SqlServer,
+                DbDriver.SqlServer,
 #if SUPPORT_ORACLE
-                DbDriver.Oracle,
+                //DbDriver.Oracle,
 #endif
             ];
     }
