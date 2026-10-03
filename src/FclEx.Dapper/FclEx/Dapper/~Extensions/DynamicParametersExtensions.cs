@@ -55,9 +55,10 @@ public static class DynamicParametersExtensions
     /// Enumerates the parameter names reported by Dapper with an <c>@</c> prefix.
     /// </summary>
     /// <param name="parameters">The parameter collection to inspect.</param>
+    /// <param name="sqlAdapter">The SQL adapter to use for generating parameter placeholders.</param>
     /// <returns>A deferred sequence containing each reported name prefixed with <c>@</c>.</returns>
-    public static IEnumerable<string> PrefixedNames(this DynamicParameters parameters)
+    public static IEnumerable<string> GetParameterPlaceholders(this DynamicParameters parameters, ISqlAdapter sqlAdapter)
     {
-        return parameters.ParameterNames.Select(m => $"@{m}");
+        return parameters.ParameterNames.Select(sqlAdapter.GetParameterPlaceholder);
     }
 }

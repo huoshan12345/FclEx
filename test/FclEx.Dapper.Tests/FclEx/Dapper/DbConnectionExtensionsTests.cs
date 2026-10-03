@@ -159,7 +159,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
         await using var _ = AsyncDisposable.Create(async () =>
         {
             var parameters = entities.ToDynamicParameters((m, i) => i.ToString(), (m, i) => m.Id);
-            var names = parameters.PrefixedNames().JoinWith(", ");
+            var names = parameters.GetParameterPlaceholders(adapter).JoinWith(", ");
             var sql = $"delete from {tableName} where {DapperHelper.GetQuotedColumnName<EntityWithAutoKey>(con, m => m.Id)} in ({names})";
             await con.ExecuteAsync(sql, parameters);
             await FixAutoIncrement<EntityWithAutoKey>(con, dbDriver, schema);
