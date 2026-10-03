@@ -19,7 +19,7 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     /// Run this only when test entities are changed.
     /// </summary>
     [LocalOnlyTheory(
-        //Skip = "Run this only when necessary",
+        Skip = "Run this only when necessary",
         DisableParallelization = true)]
     [MemberData(nameof(SetupDatabaseCases))]
     public async Task SetupDatabase(DbDriver dbDriver, string assemblyName, int dotNetVersion, string os)
