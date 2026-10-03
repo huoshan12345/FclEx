@@ -25,7 +25,7 @@ public record ConnectionStrings(DatabasesConfig Config, DatabaseUser User)
             ? (User.UserName, User.Password)
             : (config.UserName, config.Password);
 
-        if (dbDriver is DbDriver.SqlServer && isUser && userName == DefaultUserName)
+        if (dbDriver is DbDriver.SqlServer && isUser)
         {
             password = SqlServerUserPassword;
         }
