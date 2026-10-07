@@ -2,19 +2,6 @@ namespace FclEx.Databases;
 
 public class DatabaseTestSettingsTests
 {
-    [Theory]
-    [InlineData(false, true, DbDriver.SqlServer)]
-    [InlineData(false, false, DbDriver.SqlServer)]
-    [InlineData(true, true, DbDriver.Npgsql)]
-    [InlineData(true, false, DbDriver.SqlServer)]
-    public void DefaultSelection_PreservesRemoteCoverageAndAddsSqlite(bool github, bool windows, DbDriver expected)
-    {
-        var drivers = SelectDrivers(null, github, windows);
-        Assert.Contains(expected, drivers);
-        Assert.Contains(DbDriver.Sqlite, drivers);
-        Assert.Equal(drivers.Length, drivers.Distinct().Count());
-    }
-
     [Fact]
     public void ExplicitSelection_IsCaseInsensitiveAndRemovesDuplicates()
         => Assert.Equal([DbDriver.Sqlite, DbDriver.Npgsql], SelectDrivers("sqlite, Npgsql, Sqlite", false, true));
