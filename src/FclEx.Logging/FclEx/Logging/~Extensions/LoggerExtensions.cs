@@ -105,9 +105,9 @@ public static class Extensions
         return new LoggerProperties(logger);
     }
 
-    public static LoggerProperties Properties(this ILogger logger, string name, object? value, bool destructureObjects = false)
+    public static LoggerProperties Properties(this ILogger logger, string name, object? value)
     {
-        return logger.Properties().Push(name, value, destructureObjects);
+        return new LoggerProperties(logger, name, value);
     }
 
     public static void LogOperation(this ILogger logger, string operationName, TimeSpan duration, LogLevel logLevel = LogLevel.Information)

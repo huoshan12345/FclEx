@@ -7,6 +7,7 @@ public static class ApplicationBuilderExtensions
     private const string Template = $$"""Request {{{nameof(HttpRequest.Protocol)}}} {{{nameof(HttpRequest.Method)}}} {{{nameof(HttpRequest.Path)}}} - {{{nameof(HttpResponse.StatusCode)}}} finished in {Time:f3}""";
     private const string SecondsTemplate = Template + " seconds.";
     private const string MillisecondsTemplate = Template + " ms.";
+    private const string JwtInfoName = $"@{nameof(JwtInfo)}";
 
     public static IApplicationBuilder UseHttpRequestLogging(this IApplicationBuilder app, bool withJwtInfo)
     {
@@ -25,7 +26,7 @@ public static class ApplicationBuilderExtensions
             if (withJwtInfo)
             {
                 var tokenInfo = request.GetJwtInfo();
-                logs.Push(nameof(JwtInfo), tokenInfo, true);
+                logs.Push(JwtInfoName, tokenInfo);
             }
 
             await next().NoCapture();

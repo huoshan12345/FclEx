@@ -1,5 +1,4 @@
 using FclEx.DependencyInjection;
-using FclEx.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace FclEx.Serilog;

@@ -12,5 +12,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FclEx.Http\FclEx.Http.csproj" />
+    <ProjectReference Include="..\FclEx.Logging\FclEx.Logging.csproj" />
   </ItemGroup>
 </Project>

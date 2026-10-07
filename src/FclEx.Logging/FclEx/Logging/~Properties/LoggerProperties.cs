@@ -4,34 +4,24 @@ public class LoggerProperties : IDisposable
 {
     private readonly List<IDisposable> _list = [];
     private readonly ILogger _logger;
-    private static readonly ConcurrentDictionary<string, string> _names = new();
 
     public LoggerProperties(ILogger logger)
     {
         _logger = Check.NotNull(logger);
     }
 
-    public LoggerProperties(ILogger logger, string name, object? value, bool destructureObjects = false)
+    public LoggerProperties(ILogger logger, string name, object? value)
         : this(logger)
     {
-        Push(name, value, destructureObjects);
+        Push(name, value);
     }
 
-    private static string GetName(string name, bool destructureObjects)
-    {
-        if (destructureObjects == false)
-            return name;
 
-        return name is [var ch, ..] && ch != '@'
-            ? _names.GetOrAdd(name, m => '@' + m)
-            : name;
-    }
-
-    public LoggerProperties Push(string name, object? value, bool destructureObjects = false)
+    public LoggerProperties Push(string name, object? value)
     {
         Check.NotEmpty(name);
 
-        _list.Add(_logger.PushProperty(GetName(name, destructureObjects), value));
+        _list.Add(_logger.PushProperty(name, value));
         return this;
     }
 
