@@ -90,10 +90,10 @@ public sealed class TestDatabaseEnvironment(
 
     public void Dispose()
     {
-        if (_sqliteDirectory is not null)
-        {
-            Directory.Delete(_sqliteDirectory, recursive: true);
-            _sqliteDirectory = null;
-        }
+        if (_sqliteDirectory is null) 
+            return;
+
+        Directory.Delete(_sqliteDirectory, recursive: true);
+        _sqliteDirectory = null;
     }
 }
