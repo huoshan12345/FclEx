@@ -44,11 +44,11 @@ public static class DatabaseTestSettings
                     ? [
                         DbDriver.Npgsql,
                         DbDriver.Sqlite,
-                        DbDriver.SqlServer,
                     ]
                     : [
                         DbDriver.Oracle,
                         DbDriver.MySqlConnector,
+                        DbDriver.SqlServer,
                     ]
                 : [
                     DbDriver.MySqlConnector,
