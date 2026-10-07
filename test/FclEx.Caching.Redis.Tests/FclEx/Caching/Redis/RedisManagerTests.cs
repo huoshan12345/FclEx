@@ -7,7 +7,7 @@ public class RedisManagerTests(RedisTestsFixture fixture) : RedisTests(fixture)
     [RetryFact]
     public async Task GetList_Test()
     {
-        var key = nameof(GetList_Test).ToLower();
+        var key = Fixture.GetCacheFullName(nameof(GetList_Test));
         var col = RedisManager.GetList<string>(key);
 
         var colKey = col.Key;
@@ -26,7 +26,7 @@ public class RedisManagerTests(RedisTestsFixture fixture) : RedisTests(fixture)
     [RetryFact]
     public async Task GetHash_Test()
     {
-        var key = nameof(GetHash_Test).ToLower();
+        var key = Fixture.GetCacheFullName(nameof(GetHash_Test));
         var col = RedisManager.GetHash<string>(key);
 
         var colKey = col.Key;
@@ -46,7 +46,7 @@ public class RedisManagerTests(RedisTestsFixture fixture) : RedisTests(fixture)
     [RetryFact]
     public async Task GetSet_Test()
     {
-        var key = nameof(GetSet_Test).ToLower();
+        var key = Fixture.GetCacheFullName(nameof(GetSet_Test));
         var col = RedisManager.GetSet<string>(key);
 
         var colKey = col.Key;
@@ -66,7 +66,7 @@ public class RedisManagerTests(RedisTestsFixture fixture) : RedisTests(fixture)
     [RetryFact]
     public async Task GetSortedSet_Test()
     {
-        var key = nameof(GetSortedSet_Test).ToLower();
+        var key = Fixture.GetCacheFullName(nameof(GetSortedSet_Test));
         var database = EasyCachingProvider.Database.CastTo<IDatabase>();
 
         var col = RedisManager.GetSortedSet<string>(key);

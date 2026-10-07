@@ -16,3 +16,6 @@ Serilog helpers for FclEx.
 - This package bridges FclEx HTTP/logging helpers with Serilog.
 - Slack-specific Serilog sinks live in `FclEx.Serilog.Slack`.
 - Use the formatter options to keep exception output consistent across sinks.
+- The Microsoft logger property helpers return `LoggerPropertyScope`. Serilog's
+  `destructureObjects` overloads prefix scope property names with `@` to request object
+  destructuring; this convention is specific to the Serilog provider.

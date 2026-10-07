@@ -12,7 +12,14 @@ public static class LoggerExtensions
         return logger.ForContext(Constants.SourceContext, name);
     }
 
-    public static LoggerProperties Properties(this Microsoft.Extensions.Logging.ILogger logger, string name, object? value, bool destructureObjects = false)
+    /// <summary>Begins a property scope with Serilog's optional object destructuring convention.</summary>
+    /// <param name="logger">The Microsoft logger connected to a Serilog provider.</param>
+    /// <param name="name">The nonempty structured property name.</param>
+    /// <param name="value">The value to attach to the scope.</param>
+    /// <param name="destructureObjects">Whether to prefix the name with @ so Serilog captures the object's structure.</param>
+    /// <returns>A scope group that releases all pushed properties when disposed.</returns>
+    /// <remarks>Other providers may treat the prefixed name as a literal property name.</remarks>
+    public static LoggerPropertyScope Properties(this Microsoft.Extensions.Logging.ILogger logger, string name, object? value, bool destructureObjects = false)
     {
         return logger.Properties().Push(name, value, destructureObjects);
     }

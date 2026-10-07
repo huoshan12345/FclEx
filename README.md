@@ -48,7 +48,7 @@ This repository is a multi-package library collection. Each package is intention
 |[FclEx.DependencyInjection](src/FclEx.DependencyInjection)|Convenience extensions for service registration, replacement, removal, decoration, scopes, and provider lookup.|
 |[FclEx.EfCore](src/FclEx.EfCore)|Entity Framework Core query, update, soft-delete, schema, table truncation, service-registration, SSH tunnel, and test-model helpers.|
 |[FclEx.Http](src/FclEx.Http)|HTTP service helpers, request actions, response parsing, downloads/uploads, cookies, authentication, AngleSharp HTML helpers, and user-client abstractions.|
-|[FclEx.Logging](src/FclEx.Logging)|Microsoft logging helpers for in-memory log collection, scoped properties, logger creation, operation timing, null fallbacks, and logging cleanup.|
+|[FclEx.Logging](src/FclEx.Logging)|Microsoft logging helpers for in-memory log collection, property scopes and wrappers, logger creation, operation duration logging, null fallbacks, and logging cleanup.|
 |[FclEx.Messaging](src/FclEx.Messaging)|Kafka and RabbitMQ helpers for consumers, publishers, routers, message conversion, retry metadata, and messaging logs.|
 |[FclEx.NewRelic](src/FclEx.NewRelic)|New Relic agent helpers and NerdGraph NRQL client support.|
 |[FclEx.NewtonsoftJson](src/FclEx.NewtonsoftJson)|Newtonsoft.Json converters and helpers for flexible JSON parsing, serialization, JToken, and XML conversion.|

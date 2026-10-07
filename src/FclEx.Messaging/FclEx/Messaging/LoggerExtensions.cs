@@ -26,7 +26,7 @@ public static class LoggerExtensions
     {
         logLevel ??= error.GetLogLevel();
 
-        using var log = new LoggerProperties(logger)
+        using var log = new LoggerPropertyScope(logger)
             .Push(LogPropertyNames.KafkaTopic, topic)
             .Push(nameof(KafkaErrorType), KafkaErrorType.FromErrorHandler)
             .Push(nameof(error.Code), error.Code.ToString())
@@ -40,7 +40,7 @@ public static class LoggerExtensions
 
     public static void KafkaError(this ILogger logger, string? topic, Exception ex, KafkaErrorType type)
     {
-        using var log = new LoggerProperties(logger)
+        using var log = new LoggerPropertyScope(logger)
             .Push(LogPropertyNames.KafkaTopic, topic)
             .Push(nameof(KafkaErrorType), type);
         logger.LogError(ex, $"[Kafka Consumer]{ex.Message}");
@@ -56,7 +56,7 @@ public static class LoggerExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(result.Status), result.Status, ""),
         };
 
-        using var log = new LoggerProperties(logger, LogPropertyNames.KafkaTopic, result.Topic);
+        using var log = new LoggerPropertyScope(logger, LogPropertyNames.KafkaTopic, result.Topic);
         logger.Log(level, msg);
     }
 
