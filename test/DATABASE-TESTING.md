@@ -268,7 +268,7 @@ Native foreign-key rejection cases have been removed at the repository owner's r
 
 This design requires a recent Oracle version supporting `CREATE TABLE IF NOT EXISTS`. It does not introduce structural checks or migrations for previously created tables. Exact duplicate runs of one remote matrix entry still require external coordination.
 
-### Validation on Windows
+### Validation on Windows before test consolidation
 
 Filtered real-database runs exercised SQL Server, PostgreSQL, MySqlConnector, Oracle, and SQLite. MySql.Data truncate cases remain explicitly skipped.
 
@@ -278,3 +278,21 @@ Filtered real-database runs exercised SQL Server, PostgreSQL, MySqlConnector, Or
 4. Separate SQLite-only runs passed the temporary identity and main-table isolation regressions. Restricted theories return explicit skipped rows when their drivers are unselected, avoiding xUnit 4.0.1's failed summary for a deferred zero-row theory.
 
 These are focused class/method selections, not complete project or solution runs. Linux execution was not performed locally.
+
+## 10. Truncate Test Consolidation
+
+The shared infrastructure now owns one `TruncateTestCases` matrix and one derived SQLite connection type. Session-isolation tests remain in Dapper.Tests only. Dapper and EF have independent production implementations, so their public contracts are verified separately using the same capability expectations.
+
+Supported option combinations keep their real-database result and identity checks. Unsupported combinations are checked once per selected driver before opening a connection, rather than repeatedly creating and seeding tables for each schema and overload. The successful closed-connection Dapper test covers four overloads with representative supported options, plus explicit schema precedence; the full supported option matrix remains separate.
+
+EF default and explicit-option tests each reuse one session across the generic, CLR-type, metadata, and DbSet entry points. All four retain identity verification, and EF tracking is also checked. Eight cancellation overloads share one seeded session. Duplicate metadata/DbSet result, option, and cancellation theories have been folded into these tests. Named shared-type CLR rejection runs once without database commands. Schema, shared-model, named-table selection, and derived-connection cases avoid repeating unrelated identity checks. Final cleanup belongs to the test instead of repeating after each verification and again before the next seed.
+
+Dapper no longer asserts that a local entity that was never passed to truncation retains its values. Its cancellation and malformed-name data guards now invoke truncation on the same connection as the seeded temporary table, while retaining separate closed-connection checks. Cascade, rollback, no-identity/keyless, and SQLite temporary/main sequence isolation regressions remain.
+
+### Focused validation on Windows
+
+1. Dapper: net8, net9, and net10 each passed 107 cases and skipped 19 MySql.Data cases, including session-isolation tests. net472 passed 85 and skipped 19, with Oracle excluded for that target.
+2. EF Core: net8, net9, and net10 each passed 134 cases and skipped 22 MySql.Data cases, selecting TruncateTests and DbSetExtensionsTests.
+3. The final default-overload identity assertions were separately rerun across the same frameworks. Builds completed with zero warnings and errors.
+
+The class selections took approximately 20-24 seconds for modern Dapper targets, 25-28 seconds for EF targets, and 11 seconds for net472 Dapper. Several framework runs overlapped, and the final default-overload assertion change was validated separately; these timings are observations rather than a controlled performance comparison or a prediction of CI duration. No complete project/solution run or Linux run was performed.

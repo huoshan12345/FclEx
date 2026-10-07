@@ -2,19 +2,8 @@ namespace FclEx.EfCore.Extensions.DbContextExtensions;
 
 public partial class TruncateTests
 {
-    public static TheoryData<DbDriver> SqliteDriverCases
-    {
-        get
-        {
-            var cases = SelectedDrivers.Where(driver => driver == DbDriver.Sqlite).ToTheoryData();
-            if (cases.Count == 0)
-                cases.Add(new TheoryDataRow<DbDriver>(DbDriver.Sqlite) { Skip = "SQLite is not selected." });
-            return cases;
-        }
-    }
-
     [Theory(SkipTestWithoutData = true)]
-    [MemberData(nameof(SqliteDriverCases))]
+    [MemberData(nameof(TruncateTestCases.SqliteDriverCases), MemberType = typeof(TruncateTestCases))]
     public async Task TruncateAsync_AcceptsDerivedConnectionType(DbDriver driver)
     {
         Assert.SkipMySql(driver);
@@ -22,10 +11,9 @@ public partial class TruncateTests
         using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, null, [typeof(EntityWithAutoKey)],
             new DerivedSqliteConnection(Fixture.ResolveTarget(driver).BuildConnectionString()), CancellationToken);
         await using var context = session.CreateDbContext(Fixture, null);
-        await VerifyTruncationAsync(context, token => context.TruncateAsync<EntityWithAutoKey>(token));
+        await using var cleanup = CleanupRows(context);
+        await VerifyRowsRemovedAsync(context, token => context.TruncateAsync<EntityWithAutoKey>(token));
     }
-
-    private sealed class DerivedSqliteConnection(string connectionString) : SqliteConnection(connectionString);
 
     [Theory]
     [InlineData(false)]
@@ -56,27 +44,7 @@ public partial class TruncateTests
         }
     }
 
-    public static TheoryData<DbDriver, string?, bool> TransactionCases
-    {
-        get
-        {
-            var cases = new TheoryData<DbDriver, string?, bool>();
-            foreach (var (driver, schema) in GetDriverSchemaCases(Schemas))
-            {
-                if (driver is not (DbDriver.Sqlite or DbDriver.SqlServer or DbDriver.Npgsql))
-                    continue;
-                foreach (var restart in new[] { false, true })
-                    if (SupportsOptions(driver, restart, false))
-                        cases.Add(driver, schema, restart);
-            }
-            if (cases.Count == 0)
-                cases.Add(new TheoryDataRow<DbDriver, string?, bool>(SelectedDrivers.FirstOrDefault(), null, true)
-                {
-                    Skip = "No selected driver supports rolling back TRUNCATE.",
-                });
-            return cases;
-        }
-    }
+    public static TheoryData<DbDriver, string?, bool> TransactionCases => TruncateTestCases.GetTransactionCases(Schemas);
 
     [Theory(SkipTestWithoutData = true)]
     [MemberData(nameof(TransactionCases))]

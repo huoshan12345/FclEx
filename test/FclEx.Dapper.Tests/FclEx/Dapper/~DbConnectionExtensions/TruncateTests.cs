@@ -7,28 +7,15 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
         => Fixture.TruncateTables.CreateSessionAsync(driver, schema,
             entityTypes.Length == 0 ? [typeof(EntityWithAutoKey)] : entityTypes, cancellationToken: CancellationToken);
 
-    public static TheoryData<DbDriver, string?, bool, bool> OptionCases =>
-        (from pair in GetDriverSchemaCases(Schemas)
-         from restart in new[] { false, true }
-         from cascade in new[] { false, true }
-         select (pair.Driver, pair.Schema, restart, cascade)).ToTheoryData();
-
-
-    private static bool SupportsOptions(DbDriver driver, bool restartIdentity, bool cascade) => driver switch
-    {
-        DbDriver.Npgsql => true,
-        DbDriver.Oracle => !restartIdentity,
-        DbDriver.Sqlite => !cascade,
-        _ => restartIdentity && !cascade,
-    };
+    public static TheoryData<DbDriver, string?, bool, bool> OptionCases => TruncateTestCases.GetOptionCases(Schemas);
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task TruncateAsync_RemovesAllRowsAndPreservesEntityValuesAndConnectionState(DbDriver driver, string? schema)
+    public async Task TruncateAsync_RemovesAllRowsAndPreservesConnectionState(DbDriver driver, string? schema)
     {
         Assert.SkipMySql(driver);
-
         using var session = await CreateSessionAsync(driver, schema);
+        await using var cleanup = CleanupRows(session);
         var connection = session.Connection;
         schema = session.Schema;
         await VerifyTruncationAsync(session,
@@ -42,38 +29,38 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
     public async Task TruncateAsync_PreservesClosedConnectionState(DbDriver driver, string? schema)
     {
         Assert.SkipMySql(driver);
-
         using var session = Fixture.TruncateTables.CreateClosedConnectionSession(driver, schema);
-        var connection = session.Connection;
-        await VerifyTruncationAsync(session,
-            token => connection.TruncateAsync<EntityWithAutoKey>(schema, session.CommandOptions, token));
-        await VerifyTruncationAsync(session,
-            token => connection.TruncateAsync(session.GetTableName(typeof(EntityWithAutoKey)), schema, session.CommandOptions, token));
-
-        foreach (var restart in new[] { false, true })
-        {
-            foreach (var cascade in new[] { false, true })
+        await session.Connection.OpenAsync(CancellationToken);
+        await using var cleanup = CleanupRows(session);
+        using var closed = Fixture.CreateDbConnection(driver, schema);
+        var restart = driver != DbDriver.Oracle;
+        var table = session.GetTableName(typeof(EntityWithAutoKey));
+        var options = session.CommandOptions;
+        Func<CancellationToken, Task>[] truncations =
+        [
+            token => closed.TruncateAsync<EntityWithAutoKey>(schema, options, token),
+            token => closed.TruncateAsync(table, schema, options, token),
+            token => closed.TruncateAsync<EntityWithAutoKey>(restart, false, schema, options, token),
+            token => closed.TruncateAsync(table, restart, false, schema, options, token),
+        ];
+        foreach (var truncate in truncations)
+            await VerifyRowsRemovedAsync(session, async token =>
             {
-                await VerifyTruncationAsync(session,
-                    token => connection.TruncateAsync<EntityWithAutoKey>(restart, cascade, schema, session.CommandOptions, token), restart, cascade);
+                Assert.Equal(ConnectionState.Closed, closed.State);
+                await truncate(token);
+                Assert.Equal(ConnectionState.Closed, closed.State);
+            });
 
-                await VerifyTruncationAsync(session,
-                    token => connection.TruncateAsync(session.GetTableName(typeof(EntityWithAutoKey)), restart, cascade, schema, session.CommandOptions, token), restart, cascade);
-            }
-        }
-
+        // Verify explicit schema precedence against an ordinary table, including SQL Server.
         if (schema is not null)
         {
-            var options = session.CommandOptions with
+            var wrongSchema = options with { EntityMappingSource = new MappingSource(table, "missing_schema") };
+            await VerifyRowsRemovedAsync(session, async token =>
             {
-                EntityMappingSource = new MappingSource(session.GetTableName(typeof(EntityWithAutoKey)), "missing_schema"),
-            };
-
-            await VerifyTruncationAsync(session,
-                token => connection.TruncateAsync<MappedRow>(schema, options, token));
+                await closed.TruncateAsync<MappedRow>(schema, wrongSchema, token);
+                Assert.Equal(ConnectionState.Closed, closed.State);
+            });
         }
-
-        Assert.Equal(ConnectionState.Closed, connection.State);
     }
 
     [Theory]
@@ -82,16 +69,28 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
         DbDriver driver, string? schema, bool restartIdentity, bool cascade)
     {
         Assert.SkipMySql(driver);
-
         using var session = await CreateSessionAsync(driver, schema);
+        await using var cleanup = CleanupRows(session);
         var connection = session.Connection;
         schema = session.Schema;
         await VerifyTruncationAsync(session,
             token => connection.TruncateAsync<EntityWithAutoKey>(restartIdentity, cascade, schema, commandOptions: session.CommandOptions, cancellationToken: token),
-            restartIdentity, cascade);
+            restartIdentity);
         await VerifyTruncationAsync(session,
             token => connection.TruncateAsync(session.GetTableName(typeof(EntityWithAutoKey)), restartIdentity, cascade, schema, commandOptions: session.CommandOptions, cancellationToken: token),
-            restartIdentity, cascade);
+            restartIdentity);
+    }
+
+    [Theory]
+    [MemberData(nameof(TruncateTestCases.UnsupportedOptionCases), MemberType = typeof(TruncateTestCases))]
+    public async Task TruncateAsync_UnsupportedOptionsThrowBeforeOpeningConnection(
+        DbDriver driver, bool restartIdentity, bool cascade)
+    {
+        Assert.SkipMySql(driver);
+        using var connection = Fixture.CreateDbConnection(driver, null);
+        await Assert.ThrowsAsync<NotSupportedException>(() => connection.TruncateAsync<EntityWithAutoKey>(restartIdentity, cascade));
+        await Assert.ThrowsAsync<NotSupportedException>(() => connection.TruncateAsync(nameof(EntityWithAutoKey), restartIdentity, cascade));
+        Assert.Equal(ConnectionState.Closed, connection.State);
     }
 
     private static Task<int> DeleteAllAsync<T>(TruncateTestSession session)
@@ -101,57 +100,49 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
         => session.Connection.QuerySingleAsync<int>(new CommandDefinition($"SELECT COUNT(*) FROM {session.GetQualifiedTableName(typeof(T))}",
             transaction: transaction, cancellationToken: CancellationToken));
 
+    // Cleanup belongs to the test. SeedAsync clears between calls; no second DELETE is needed after each verification.
+    private static IAsyncDisposable CleanupRows(TruncateTestSession session)
+        => AsyncDisposable.Create(async () =>
+        {
+            await DeleteAllAsync<EntityWithAutoKey>(session);
+        });
+
     private static async Task<EntityWithAutoKey> SeedAsync(TruncateTestSession session)
     {
-        var connection = session.Connection;
-        var schema = session.Schema;
         await DeleteAllAsync<EntityWithAutoKey>(session);
         var first = new EntityWithAutoKey { Name = Guid.NewGuid().ToString(), Value = 1 };
         var second = new EntityWithAutoKey { Name = Guid.NewGuid().ToString(), Value = -1 };
-        first.Id = await connection.InsertAsync<EntityWithAutoKey, int>(first, schema, commandOptions: session.CommandOptions, cancellationToken: CancellationToken);
-        second.Id = await connection.InsertAsync<EntityWithAutoKey, int>(second, schema, commandOptions: session.CommandOptions, cancellationToken: CancellationToken);
+        first.Id = await session.Connection.InsertAsync<EntityWithAutoKey, int>(first, session.Schema,
+            commandOptions: session.CommandOptions, cancellationToken: CancellationToken);
+        second.Id = await session.Connection.InsertAsync<EntityWithAutoKey, int>(second, session.Schema,
+            commandOptions: session.CommandOptions, cancellationToken: CancellationToken);
         Assert.True(second.Id > first.Id);
         Assert.Equal(2, await CountAsync<EntityWithAutoKey>(session));
         return second;
     }
 
-    private static async Task VerifyTruncationAsync(
-        TruncateTestSession session, Func<CancellationToken, Task> truncate,
-        bool? restartIdentity = null, bool cascade = false)
+    private static async Task<EntityWithAutoKey> VerifyRowsRemovedAsync(
+        TruncateTestSession session, Func<CancellationToken, Task> truncate)
     {
-        var connection = session.Connection;
-        var driver = session.Driver;
-        var schema = session.Schema;
-        try
-        {
-            var entity = await SeedAsync(session);
-            var previousId = entity.Id;
-            var initialState = connection.State;
-            if (restartIdentity is { } restart && !SupportsOptions(driver, restart, cascade))
-            {
-                await Assert.ThrowsAsync<NotSupportedException>(() => truncate(CancellationToken));
-                Assert.Equal(initialState, connection.State);
-                Assert.Equal(2, await CountAsync<EntityWithAutoKey>(session));
-                Assert.Equal(previousId, entity.Id);
-                return;
-            }
+        var entity = await SeedAsync(session);
+        var initialState = session.Connection.State;
+        await truncate(CancellationToken);
+        Assert.Equal(initialState, session.Connection.State);
+        Assert.Equal(0, await CountAsync<EntityWithAutoKey>(session));
+        return entity;
+    }
 
-            await truncate(CancellationToken);
-            Assert.Equal(initialState, connection.State);
-            Assert.Equal(0, await CountAsync<EntityWithAutoKey>(session));
-            Assert.Equal(previousId, entity.Id);
-            Assert.Equal(-1, entity.Value);
-            var nextId = await connection.InsertAsync<EntityWithAutoKey, int>(
-                new() { Name = Guid.NewGuid().ToString(), Value = 1 }, schema, commandOptions: session.CommandOptions, cancellationToken: CancellationToken);
-            if (restartIdentity ?? driver is not (DbDriver.Npgsql or DbDriver.Oracle))
-                Assert.Equal(1, nextId);
-            else
-                Assert.True(nextId > previousId, $"Expected identity to continue after {previousId}, got {nextId}.");
-        }
-        finally
-        {
-            await DeleteAllAsync<EntityWithAutoKey>(session);
-        }
+    private static async Task VerifyTruncationAsync(
+        TruncateTestSession session, Func<CancellationToken, Task> truncate, bool? restartIdentity = null)
+    {
+        var entity = await VerifyRowsRemovedAsync(session, truncate);
+        var nextId = await session.Connection.InsertAsync<EntityWithAutoKey, int>(
+            new() { Name = Guid.NewGuid().ToString(), Value = 1 }, session.Schema,
+            commandOptions: session.CommandOptions, cancellationToken: CancellationToken);
+        if (restartIdentity ?? session.Driver is not (DbDriver.Npgsql or DbDriver.Oracle))
+            Assert.Equal(1, nextId);
+        else
+            Assert.True(nextId > entity.Id, $"Expected identity to continue after {entity.Id}, got {nextId}.");
     }
 
     [Theory]
@@ -199,6 +190,13 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
             using var closed = Fixture.CreateDbConnection(driver, schema == "pg_temp" ? null : schema);
             var token = new CancellationToken(true);
             var restart = driver != DbDriver.Oracle;
+            // Temporary tables belong to this connection; verify cancellation where the seeded rows exist.
+            var connection = session.Connection;
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.TruncateAsync<EntityWithAutoKey>(schema, commandOptions: session.CommandOptions, cancellationToken: token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.TruncateAsync<EntityWithAutoKey>(restart, false, schema, commandOptions: session.CommandOptions, cancellationToken: token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.TruncateAsync(session.GetTableName(typeof(EntityWithAutoKey)), schema, commandOptions: session.CommandOptions, cancellationToken: token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.TruncateAsync(session.GetTableName(typeof(EntityWithAutoKey)), restart, false, schema, commandOptions: session.CommandOptions, cancellationToken: token));
+            Assert.Equal(ConnectionState.Open, connection.State);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => closed.TruncateAsync<EntityWithAutoKey>(schema, commandOptions: session.CommandOptions, cancellationToken: token));
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => closed.TruncateAsync<EntityWithAutoKey>(restart, false, schema, commandOptions: session.CommandOptions, cancellationToken: token));
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => closed.TruncateAsync(session.GetTableName(typeof(EntityWithAutoKey)), schema, commandOptions: session.CommandOptions, cancellationToken: token));
@@ -212,23 +210,7 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
         }
     }
 
-    public static TheoryData<DbDriver, string?> CascadeCases
-    {
-        get
-        {
-            var cases = GetDriverSchemaCases(Schemas)
-                .Where(pair => pair.Driver is DbDriver.Npgsql or DbDriver.Oracle)
-                .Select(pair => (pair.Driver, pair.Schema)).ToTheoryData();
-            // xUnit 4's deferred zero-row theory reports a failed summary even with SkipTestWithoutData.
-            // An explicitly skipped row preserves filtered runs when no cascade driver is selected.
-            if (cases.Count == 0)
-                cases.Add(new TheoryDataRow<DbDriver, string?>(SelectedDrivers.FirstOrDefault(), null)
-                {
-                    Skip = "No selected driver supports TRUNCATE CASCADE.",
-                });
-            return cases;
-        }
-    }
+    public static TheoryData<DbDriver, string?> CascadeCases => TruncateTestCases.GetCascadeCases(Schemas);
 
     [Theory]
     [MemberData(nameof(CascadeCases))]
@@ -261,5 +243,4 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
             await DeleteAllAsync<EntityHasStates>(session);
         }
     }
-
 }

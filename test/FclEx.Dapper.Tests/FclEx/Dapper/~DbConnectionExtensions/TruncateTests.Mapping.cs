@@ -5,35 +5,30 @@ public partial class TruncateTests
 {
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task TruncateAsync_UsesMappedTableSchemaAndAdapterOverrides(DbDriver driver, string? schema)
+    public async Task TruncateAsync_UsesMappedTableAndSchemaOverrides(DbDriver driver, string? schema)
     {
         Assert.SkipMySql(driver);
 
-        var targetSchema = schema;
         using var session = await CreateSessionAsync(driver, schema, typeof(EntityWithAutoKey), typeof(HasTableAttributeEntity));
+        await using var cleanup = CleanupRows(session);
         var connection = session.Connection;
         schema = session.Schema;
         var options = new CommandOptions
         {
             EntityMappingSource = new MappingSource(session.GetTableName(typeof(EntityWithAutoKey)), schema),
-            SqlAdapter = DapperHelper.GetSqlAdapter(connection),
             TimeoutSeconds = 10,
         };
-        await VerifyTruncationAsync(session,
+        await VerifyRowsRemovedAsync(session,
             token => connection.TruncateAsync<MappedRow>(commandOptions: options, cancellationToken: token));
         var restart = driver != DbDriver.Oracle;
         var cascade = driver is DbDriver.Npgsql or DbDriver.Oracle;
-        await VerifyTruncationAsync(session,
-            token => connection.TruncateAsync<MappedRow>(restart, cascade, commandOptions: options, cancellationToken: token),
-            restart, cascade);
+        await VerifyRowsRemovedAsync(session,
+            token => connection.TruncateAsync<MappedRow>(restart, cascade, commandOptions: options, cancellationToken: token));
         var wrongSchema = options with { EntityMappingSource = new MappingSource(session.GetTableName(typeof(EntityWithAutoKey)), "missing_" + Guid.NewGuid().ToString("N")) };
         // Null retains the mapped schema, so only explicit-schema cases can override it.
         if (schema is not null)
-            await VerifyTruncationAsync(session,
+            await VerifyRowsRemovedAsync(session,
                 token => connection.TruncateAsync<MappedRow>(schema, wrongSchema, token));
-        // TableExists intentionally excludes SQL Server temporary tables; keep its catalog check
-        // against the ordinary attribute-mapped table, and truncate the isolated copy below.
-        Assert.True(await connection.TableExistsAsync<HasTableAttributeEntity>(targetSchema, cancellationToken: CancellationToken));
         try
         {
             await DeleteAllAsync<HasTableAttributeEntity>(session);
@@ -59,6 +54,8 @@ public partial class TruncateTests
         try
         {
             await SeedAsync(session);
+            await Assert.ThrowsAnyAsync<DbException>(() => session.Connection.TruncateAsync("missing.'\";--", schema,
+                cancellationToken: CancellationToken));
             using var closed = Fixture.CreateDbConnection(driver, schema == "pg_temp" ? null : schema);
             await Assert.ThrowsAnyAsync<DbException>(() => closed.TruncateAsync("missing.'\";--", schema,
                 cancellationToken: CancellationToken));

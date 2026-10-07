@@ -3,23 +3,7 @@ namespace FclEx.Dapper;
 
 public partial class TruncateTests
 {
-    public static TheoryData<DbDriver, string?, bool> TransactionCases
-    {
-        get
-        {
-            var cases = (from pair in GetDriverSchemaCases(Schemas)
-                         where pair.Driver is DbDriver.Sqlite or DbDriver.SqlServer or DbDriver.Npgsql
-                         from restart in new[] { false, true }
-                         where SupportsOptions(pair.Driver, restart, false)
-                         select (pair.Driver, pair.Schema, restart)).ToTheoryData();
-            if (cases.Count == 0)
-                cases.Add(new TheoryDataRow<DbDriver, string?, bool>(SelectedDrivers.FirstOrDefault(), null, true)
-                {
-                    Skip = "No selected driver supports rolling back TRUNCATE.",
-                });
-            return cases;
-        }
-    }
+    public static TheoryData<DbDriver, string?, bool> TransactionCases => TruncateTestCases.GetTransactionCases(Schemas);
 
     [Theory(SkipTestWithoutData = true)]
     [MemberData(nameof(TransactionCases))]
@@ -53,29 +37,17 @@ public partial class TruncateTests
         }
     }
 
-    public static TheoryData<DbDriver> SqliteDriverCases
-    {
-        get
-        {
-            var cases = SelectedDrivers.Where(driver => driver == DbDriver.Sqlite).ToTheoryData();
-            if (cases.Count == 0)
-                cases.Add(new TheoryDataRow<DbDriver>(DbDriver.Sqlite) { Skip = "SQLite is not selected." });
-            return cases;
-        }
-    }
-
     [Theory(SkipTestWithoutData = true)]
-    [MemberData(nameof(SqliteDriverCases))]
+    [MemberData(nameof(TruncateTestCases.SqliteDriverCases), MemberType = typeof(TruncateTestCases))]
     public async Task TruncateAsync_AcceptsDerivedConnectionType(DbDriver driver)
     {
         Assert.SkipMySql(driver);
 
         using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, null, [typeof(EntityWithAutoKey)],
             new DerivedSqliteConnection(Fixture.DatabaseEnvironment.Resolve(driver).BuildConnectionString()), CancellationToken);
+        await using var cleanup = CleanupRows(session);
         var connection = session.Connection;
-        await VerifyTruncationAsync(session,
+        await VerifyRowsRemovedAsync(session,
             token => connection.TruncateAsync<EntityWithAutoKey>(commandOptions: session.CommandOptions, cancellationToken: token));
     }
-
-    private sealed class DerivedSqliteConnection(string connectionString) : SqliteConnection(connectionString);
 }

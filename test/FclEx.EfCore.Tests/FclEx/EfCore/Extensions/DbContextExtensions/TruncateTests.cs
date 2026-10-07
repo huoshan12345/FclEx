@@ -1,29 +1,24 @@
+using FclEx.Utils;
+
 namespace FclEx.EfCore.Extensions.DbContextExtensions;
 
 public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
-    public static TheoryData<DbDriver, string?, bool, bool> OptionCases
-    {
-        get
-        {
-            var cases = new TheoryData<DbDriver, string?, bool, bool>();
-            foreach (var (driver, schema) in GetDriverSchemaCases(Schemas))
-                foreach (var restart in new[] { false, true })
-                    foreach (var cascade in new[] { false, true })
-                        cases.Add(driver, schema, restart, cascade);
-            return cases;
-        }
-    }
+    public static TheoryData<DbDriver, string?, bool, bool> OptionCases => TruncateTestCases.GetOptionCases(Schemas);
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task TruncateAsync_RemovesAllRowsAndPreservesTrackedEntities(DbDriver driver, string? schema)
+    public async Task TruncateAsync_DefaultEntryPointsRemoveAllRowsAndPreserveTrackedEntities(DbDriver driver, string? schema)
     {
         Assert.SkipMySql(driver);
         using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(EntityWithAutoKey)], cancellationToken: CancellationToken);
         await using var context = session.CreateDbContext(Fixture, schema);
+        await using var cleanup = CleanupRows(context);
         await VerifyTruncationAsync(context, token => context.TruncateAsync<EntityWithAutoKey>(token));
         await VerifyTruncationAsync(context, token => context.TruncateAsync(typeof(EntityWithAutoKey), token));
+        var entityType = context.Model.FindEntityType(typeof(EntityWithAutoKey))!;
+        await VerifyTruncationAsync(context, token => context.TruncateAsync(entityType, token));
+        await VerifyTruncationAsync(context, token => context.EntityWithAutoKey.TruncateAsync(token));
     }
 
     [Theory]
@@ -34,19 +29,17 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         Assert.SkipMySql(driver);
         using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(EntityWithAutoKey)], cancellationToken: CancellationToken);
         await using var context = session.CreateDbContext(Fixture, schema);
+        await using var cleanup = CleanupRows(context);
         await VerifyTruncationAsync(context,
-            token => context.TruncateAsync<EntityWithAutoKey>(restartIdentity, cascade, token), restartIdentity, cascade);
+            token => context.TruncateAsync<EntityWithAutoKey>(restartIdentity, cascade, token), restartIdentity);
         await VerifyTruncationAsync(context,
-            token => context.TruncateAsync(typeof(EntityWithAutoKey), restartIdentity, cascade, token), restartIdentity, cascade);
+            token => context.TruncateAsync(typeof(EntityWithAutoKey), restartIdentity, cascade, token), restartIdentity);
+        var entityType = context.Model.FindEntityType(typeof(EntityWithAutoKey))!;
+        await VerifyTruncationAsync(context,
+            token => context.TruncateAsync(entityType, restartIdentity, cascade, token), restartIdentity);
+        await VerifyTruncationAsync(context,
+            token => context.EntityWithAutoKey.TruncateAsync(restartIdentity, cascade, token), restartIdentity);
     }
-
-    internal static bool SupportsOptions(DbDriver driver, bool restartIdentity, bool cascade) => driver switch
-    {
-        DbDriver.Npgsql => true,
-        DbDriver.Oracle => !restartIdentity,
-        DbDriver.Sqlite => !cascade,
-        _ => restartIdentity && !cascade,
-    };
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
@@ -55,21 +48,32 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         Assert.SkipMySql(driver);
         using var session = Fixture.TruncateTables.CreateClosedConnectionSession(driver, schema);
         await using var context = session.CreateDbContext(Fixture, schema);
+        await using var cleanup = CleanupRows(context);
         var entityType = context.Model.FindEntityType(typeof(EntityWithAutoKey))!;
         Assert.Equal(schema, entityType.GetSchema());
-        await VerifyTruncationAsync(context, token => context.TruncateAsync<EntityWithAutoKey>(token));
-        await VerifyTruncationAsync(context, token => context.TruncateAsync(typeof(EntityWithAutoKey), token));
-        await VerifyTruncationAsync(context, token => context.TruncateAsync(entityType, token));
-        await VerifyTruncationAsync(context, token => context.EntityWithAutoKey.TruncateAsync(token));
+        await VerifyRowsRemovedAsync(context, token => context.TruncateAsync<EntityWithAutoKey>(token));
+        await VerifyRowsRemovedAsync(context, token => context.TruncateAsync(typeof(EntityWithAutoKey), token));
+        await VerifyRowsRemovedAsync(context, token => context.TruncateAsync(entityType, token));
+        await VerifyRowsRemovedAsync(context, token => context.EntityWithAutoKey.TruncateAsync(token));
         var restart = driver != DbDriver.Oracle;
-        await VerifyTruncationAsync(context, token => context.TruncateAsync<EntityWithAutoKey>(restart, false, token), restart);
-        await VerifyTruncationAsync(context, token => context.TruncateAsync(typeof(EntityWithAutoKey), restart, false, token), restart);
-        await VerifyTruncationAsync(context, token => context.TruncateAsync(entityType, restart, false, token), restart);
-        await VerifyTruncationAsync(context, token => context.EntityWithAutoKey.TruncateAsync(restart, false, token), restart);
+        await VerifyRowsRemovedAsync(context, token => context.TruncateAsync<EntityWithAutoKey>(restart, false, token));
+        await VerifyRowsRemovedAsync(context, token => context.TruncateAsync(typeof(EntityWithAutoKey), restart, false, token));
+        await VerifyRowsRemovedAsync(context, token => context.TruncateAsync(entityType, restart, false, token));
+        await VerifyRowsRemovedAsync(context, token => context.EntityWithAutoKey.TruncateAsync(restart, false, token));
     }
+
+    // Cleanup belongs to the test; seeding clears between verification calls.
+    internal static IAsyncDisposable CleanupRows(TestDbContext context)
+        => AsyncDisposable.Create(async () =>
+        {
+            context.ChangeTracker.Clear();
+            await context.EntityWithAutoKey.ExecuteDeleteAsync();
+        });
 
     internal static async Task<EntityWithAutoKey> SeedAsync(TestDbContext context)
     {
+        // A prior verification can reset identity values while leaving entities tracked.
+        context.ChangeTracker.Clear();
         await context.EntityWithAutoKey.ExecuteDeleteAsync(CancellationToken);
         var first = new EntityWithAutoKey { Name = Guid.NewGuid().ToString(), Value = 1 };
         var second = new EntityWithAutoKey { Name = Guid.NewGuid().ToString(), Value = -1 };
@@ -80,62 +84,49 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         return second;
     }
 
-    // All overloads share this result-based contract against an isolated EntityWithAutoKey table.
+    internal static async Task<(EntityWithAutoKey Entity, int PreviousId)> VerifyRowsRemovedAsync(
+        TestDbContext context, Func<CancellationToken, Task> truncate)
+    {
+        var tracked = await SeedAsync(context);
+        var previousId = tracked.Id;
+        await truncate(CancellationToken);
+        Assert.Equal(0, await context.EntityWithAutoKey.CountAsync(CancellationToken));
+        return (tracked, previousId);
+    }
+
+    // Identity and tracking contracts are checked by the core result/option tests.
     internal static async Task VerifyTruncationAsync(
-        TestDbContext context, Func<CancellationToken, Task> truncate,
-        bool? restartIdentity = null, bool cascade = false)
+        TestDbContext context, Func<CancellationToken, Task> truncate, bool? restartIdentity = null)
     {
-        try
-        {
-            var tracked = await SeedAsync(context);
-            var previousId = tracked.Id;
-            if (restartIdentity is { } option && !SupportsOptions(context.DbDriver, option, cascade))
-            {
-                await Assert.ThrowsAsync<NotSupportedException>(() => truncate(CancellationToken));
-                Assert.Equal(2, await context.EntityWithAutoKey.CountAsync(CancellationToken));
-                Assert.Equal(EntityState.Unchanged, context.Entry(tracked).State);
-                return;
-            }
-
-            await truncate(CancellationToken);
-            Assert.Equal(0, await context.EntityWithAutoKey.CountAsync(CancellationToken));
-            Assert.Equal(EntityState.Unchanged, context.Entry(tracked).State);
-            Assert.Equal(previousId, tracked.Id);
-            // Clear tracking only after checking the contract, before the database can reuse old keys.
-            context.ChangeTracker.Clear();
-            var next = new EntityWithAutoKey { Name = Guid.NewGuid().ToString(), Value = 1 };
-            context.EntityWithAutoKey.Add(next);
-            await context.SaveChangesAsync(CancellationToken);
-            var resets = restartIdentity ?? context.DbDriver is not (DbDriver.Npgsql or DbDriver.Oracle);
-            if (resets)
-                Assert.Equal(1, next.Id);
-            else
-                Assert.True(next.Id > previousId, $"Expected identity to continue after {previousId}, got {next.Id}.");
-        }
-        finally
-        {
-            context.ChangeTracker.Clear();
-            await context.EntityWithAutoKey.ExecuteDeleteAsync();
-        }
+        var (tracked, previousId) = await VerifyRowsRemovedAsync(context, truncate);
+        Assert.Equal(EntityState.Unchanged, context.Entry(tracked).State);
+        Assert.Equal(previousId, tracked.Id);
+        context.ChangeTracker.Clear();
+        var next = new EntityWithAutoKey { Name = Guid.NewGuid().ToString(), Value = 1 };
+        context.EntityWithAutoKey.Add(next);
+        await context.SaveChangesAsync(CancellationToken);
+        if (restartIdentity ?? context.DbDriver is not (DbDriver.Npgsql or DbDriver.Oracle))
+            Assert.Equal(1, next.Id);
+        else
+            Assert.True(next.Id > previousId, $"Expected identity to continue after {previousId}, got {next.Id}.");
     }
 
-    public static TheoryData<DbDriver, string?> CascadeCases
+    [Theory]
+    [MemberData(nameof(TruncateTestCases.UnsupportedOptionCases), MemberType = typeof(TruncateTestCases))]
+    public async Task TruncateAsync_UnsupportedOptionsThrowBeforeOpeningConnection(
+        DbDriver driver, bool restartIdentity, bool cascade)
     {
-        get
-        {
-            var cases = GetDriverSchemaCases(Schemas)
-                .Where(pair => pair.Driver is DbDriver.Npgsql or DbDriver.Oracle)
-                .Select(pair => (pair.Driver, pair.Schema)).ToTheoryData();
-            // xUnit 4's deferred zero-row theory reports a failed summary even with SkipTestWithoutData.
-            // An explicitly skipped row preserves filtered runs when no cascade driver is selected.
-            if (cases.Count == 0)
-                cases.Add(new TheoryDataRow<DbDriver, string?>(SelectedDrivers.FirstOrDefault(), null)
-                {
-                    Skip = "No selected driver supports TRUNCATE CASCADE.",
-                });
-            return cases;
-        }
+        Assert.SkipMySql(driver);
+        await using var context = Fixture.CreateDbContext(driver);
+        var entityType = context.Model.FindEntityType(typeof(EntityWithAutoKey))!;
+        await Assert.ThrowsAsync<NotSupportedException>(() => context.TruncateAsync<EntityWithAutoKey>(restartIdentity, cascade));
+        await Assert.ThrowsAsync<NotSupportedException>(() => context.TruncateAsync(typeof(EntityWithAutoKey), restartIdentity, cascade));
+        await Assert.ThrowsAsync<NotSupportedException>(() => context.TruncateAsync(entityType, restartIdentity, cascade));
+        await Assert.ThrowsAsync<NotSupportedException>(() => context.EntityWithAutoKey.TruncateAsync(restartIdentity, cascade));
+        Assert.Equal(ConnectionState.Closed, context.Database.GetDbConnection().State);
     }
+
+    public static TheoryData<DbDriver, string?> CascadeCases => TruncateTestCases.GetCascadeCases(Schemas);
 
     [Theory]
     [MemberData(nameof(CascadeCases))]
@@ -222,27 +213,31 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task TruncateAsync_ObservesCancellationWithoutRemovingRows(DbDriver driver, string? schema)
+    public async Task TruncateAsync_AllEntryPointsObserveCancellationWithoutRemovingRows(DbDriver driver, string? schema)
     {
         Assert.SkipMySql(driver);
         using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(EntityWithAutoKey)], cancellationToken: CancellationToken);
         await using var context = session.CreateDbContext(Fixture, schema);
-        try
-        {
-            var tracked = await SeedAsync(context);
-            using var source = new CancellationTokenSource();
-            source.Cancel();
-            var restart = driver != DbDriver.Oracle;
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => context.TruncateAsync<EntityWithAutoKey>(source.Token));
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => context.TruncateAsync<EntityWithAutoKey>(restart, false, source.Token));
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => context.TruncateAsync(typeof(EntityWithAutoKey), restart, false, source.Token));
-            Assert.Equal(2, await context.EntityWithAutoKey.CountAsync(CancellationToken));
-            Assert.Equal(EntityState.Unchanged, context.Entry(tracked).State);
-        }
-        finally
-        {
-            await context.EntityWithAutoKey.ExecuteDeleteAsync();
-        }
+        await using var cleanup = CleanupRows(context);
+        var tracked = await SeedAsync(context);
+        var entityType = context.Model.FindEntityType(typeof(EntityWithAutoKey))!;
+        var restart = driver != DbDriver.Oracle;
+        var token = new CancellationToken(true);
+        Func<Task>[] truncations =
+        [
+            () => context.TruncateAsync<EntityWithAutoKey>(token),
+            () => context.TruncateAsync<EntityWithAutoKey>(restart, false, token),
+            () => context.TruncateAsync(typeof(EntityWithAutoKey), token),
+            () => context.TruncateAsync(typeof(EntityWithAutoKey), restart, false, token),
+            () => context.TruncateAsync(entityType, token),
+            () => context.TruncateAsync(entityType, restart, false, token),
+            () => context.EntityWithAutoKey.TruncateAsync(token),
+            () => context.EntityWithAutoKey.TruncateAsync(restart, false, token),
+        ];
+        foreach (var truncate in truncations)
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(truncate);
+        Assert.Equal(2, await context.EntityWithAutoKey.CountAsync(CancellationToken));
+        Assert.Equal(EntityState.Unchanged, context.Entry(tracked).State);
     }
 
     [Fact]
