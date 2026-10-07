@@ -15,36 +15,36 @@ public partial class TruncateTests
         schema = session.Schema;
         var options = new CommandOptions
         {
-            EntityMappingSource = new MappingSource(Session.GetTableName(typeof(EntityWithAutoKey)), schema),
+            EntityMappingSource = new MappingSource(session.GetTableName(typeof(EntityWithAutoKey)), schema),
             SqlAdapter = DapperHelper.GetSqlAdapter(connection),
             TimeoutSeconds = 10,
         };
-        await VerifyTruncationAsync(connection, driver, schema,
+        await VerifyTruncationAsync(session,
             token => connection.TruncateAsync<MappedRow>(commandOptions: options, cancellationToken: token));
         var restart = driver != DbDriver.Oracle;
         var cascade = driver is DbDriver.Npgsql or DbDriver.Oracle;
-        await VerifyTruncationAsync(connection, driver, schema,
+        await VerifyTruncationAsync(session,
             token => connection.TruncateAsync<MappedRow>(restart, cascade, commandOptions: options, cancellationToken: token),
             restart, cascade);
-        var wrongSchema = options with { EntityMappingSource = new MappingSource(Session.GetTableName(typeof(EntityWithAutoKey)), "missing_" + Guid.NewGuid().ToString("N")) };
+        var wrongSchema = options with { EntityMappingSource = new MappingSource(session.GetTableName(typeof(EntityWithAutoKey)), "missing_" + Guid.NewGuid().ToString("N")) };
         // Null retains the mapped schema, so only explicit-schema cases can override it.
         if (schema is not null)
-            await VerifyTruncationAsync(connection, driver, schema,
+            await VerifyTruncationAsync(session,
                 token => connection.TruncateAsync<MappedRow>(schema, wrongSchema, token));
         // TableExists intentionally excludes SQL Server temporary tables; keep its catalog check
         // against the ordinary attribute-mapped table, and truncate the isolated copy below.
         Assert.True(await connection.TableExistsAsync<HasTableAttributeEntity>(targetSchema, cancellationToken: CancellationToken));
         try
         {
-            await DeleteAllAsync<HasTableAttributeEntity>(connection, schema);
-            await connection.InsertAsync(new HasTableAttributeEntity(), schema, commandOptions: Options, cancellationToken: CancellationToken);
-            Assert.Equal(1, await CountAsync<HasTableAttributeEntity>(connection, schema));
-            await connection.TruncateAsync<HasTableAttributeEntity>(schema, commandOptions: Options, cancellationToken: CancellationToken);
-            Assert.Equal(0, await CountAsync<HasTableAttributeEntity>(connection, schema));
+            await DeleteAllAsync<HasTableAttributeEntity>(session);
+            await connection.InsertAsync(new HasTableAttributeEntity(), schema, commandOptions: session.CommandOptions, cancellationToken: CancellationToken);
+            Assert.Equal(1, await CountAsync<HasTableAttributeEntity>(session));
+            await connection.TruncateAsync<HasTableAttributeEntity>(schema, commandOptions: session.CommandOptions, cancellationToken: CancellationToken);
+            Assert.Equal(0, await CountAsync<HasTableAttributeEntity>(session));
         }
         finally
         {
-            await DeleteAllAsync<HasTableAttributeEntity>(connection, schema);
+            await DeleteAllAsync<HasTableAttributeEntity>(session);
         }
     }
 
@@ -55,20 +55,19 @@ public partial class TruncateTests
         Assert.SkipMySql(driver);
 
         using var session = await CreateSessionAsync(driver, schema);
-        var connection = session.Connection;
         schema = session.Schema;
         try
         {
-            await SeedAsync(connection, schema);
+            await SeedAsync(session);
             using var closed = Fixture.CreateDbConnection(driver, schema == "pg_temp" ? null : schema);
             await Assert.ThrowsAnyAsync<DbException>(() => closed.TruncateAsync("missing.'\";--", schema,
                 cancellationToken: CancellationToken));
             Assert.Equal(ConnectionState.Closed, closed.State);
-            Assert.Equal(2, await CountAsync<EntityWithAutoKey>(connection, schema));
+            Assert.Equal(2, await CountAsync<EntityWithAutoKey>(session));
         }
         finally
         {
-            await DeleteAllAsync<EntityWithAutoKey>(connection, schema);
+            await DeleteAllAsync<EntityWithAutoKey>(session);
         }
     }
 
