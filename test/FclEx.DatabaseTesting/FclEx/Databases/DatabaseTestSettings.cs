@@ -13,7 +13,11 @@ public static class DatabaseTestSettings
 
     public static readonly DbDriver[] SupportedDrivers =
     [
-        DbDriver.SqlServer, DbDriver.Sqlite, DbDriver.Npgsql, DbDriver.MySql, DbDriver.MySqlConnector,
+        DbDriver.SqlServer, 
+        DbDriver.Sqlite,
+        DbDriver.Npgsql, 
+        DbDriver.MySql,
+        DbDriver.MySqlConnector,
 #if SUPPORT_ORACLE
         DbDriver.Oracle,
 #endif
@@ -31,12 +35,17 @@ public static class DatabaseTestSettings
     {
         if (selection is null)
         {
-            return !isGithubAction
-                ? [DbDriver.SqlServer, DbDriver.Sqlite]
-                : isWindows
-                    ? [DbDriver.Npgsql, DbDriver.Sqlite]
-                    : SupportedDrivers.Where(driver => driver is DbDriver.SqlServer
-                        or DbDriver.MySqlConnector or DbDriver.Oracle or DbDriver.Sqlite).ToArray();
+            return isGithubAction
+                ? isWindows
+                    ? [
+                        DbDriver.Npgsql,
+                        DbDriver.Sqlite
+                    ]
+                    : SupportedDrivers
+                : [
+                    DbDriver.SqlServer,
+                    DbDriver.Sqlite,
+                ];
         }
 
         var drivers = new List<DbDriver>();

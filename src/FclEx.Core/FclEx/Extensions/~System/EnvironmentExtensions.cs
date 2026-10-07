@@ -73,5 +73,51 @@ public static class EnvironmentExtensions
         /// Gets whether the current process is running on FreeBSD.
         /// </summary>
         public static bool IsFreeBSD => RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD);
+
+        /// <summary>
+        /// Determines whether the specified environment variable is defined,
+        /// even if its value is an empty string.
+        /// </summary>
+        /// <param name="name">The name of the environment variable.</param>
+        /// <returns>
+        /// <see langword="true"/> if the variable is defined; otherwise, <see langword="false"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException"><paramref name="name"/> is <see langword="null"/>.</exception>
+        public static bool IsEnvironmentVariableDefined(string name)
+        {
+            return Environment.GetEnvironmentVariable(name) is not null;
+        }
+
+        /// <summary>
+        /// Determines whether the specified environment variable is defined and its value is not empty.
+        /// A whitespace-only value is considered non-empty.
+        /// </summary>
+        /// <param name="name">The name of the environment variable.</param>
+        /// <returns>
+        /// <see langword="true"/> if the variable is defined and its value is not an empty string;
+        /// otherwise, <see langword="false"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException"><paramref name="name"/> is <see langword="null"/>.</exception>
+        public static bool HasEnvironmentVariableValue(string name)
+        {
+            return Environment.GetEnvironmentVariable(name).IsNotEmpty();
+        }
+
+        /// <summary>
+        /// Determines whether the value of the specified environment variable is equal to the given value.
+        /// </summary>
+        /// <param name="name">The name of the environment variable.</param>
+        /// <param name="value">The value to compare against.</param>
+        /// <param name="comparison">The string comparison rule to use. The default is <see cref="StringComparison.Ordinal"/>.</param>
+        /// <returns>
+        /// <see langword="true"/> if the variable is defined and its value equals <paramref name="value"/>
+        /// under the specified comparison; otherwise, <see langword="false"/>.
+        /// Returns <see langword="false"/> if <paramref name="value"/> is <see langword="null"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException"><paramref name="name"/> is <see langword="null"/>.</exception>
+        public static bool EnvironmentVariableEquals(string name, string value, StringComparison comparison = StringComparison.Ordinal)
+        {
+            return value is not null && string.Equals(Environment.GetEnvironmentVariable(name), value, comparison);
+        }
     }
 }
