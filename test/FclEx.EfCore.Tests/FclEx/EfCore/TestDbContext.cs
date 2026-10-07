@@ -1,6 +1,4 @@
-using MySql.Data.MySqlClient;
 using System.Collections.Concurrent;
-using Oracle.ManagedDataAccess.Client;
 
 #if NET10_0_OR_GREATER
 using Microting.EntityFrameworkCore.MySql.Infrastructure.Internal;
@@ -25,8 +23,7 @@ public class TestDbContext(
 
     public DbDriver DbDriver { get; } = dbDriver;
 
-    private string _connectionString = connectionString;
-    public string ConnectionString => _connectionString;
+    public string ConnectionString { get; } = connectionString;
 
     public DbSet<EntityWithAutoKey> EntityWithAutoKey { get; set; }
     public DbSet<EntityWithGuidKey> EntityWithGuidKey { get; set; }
@@ -55,13 +52,13 @@ public class TestDbContext(
                 builder.UseNpgsql(ConnectionString);
                 break;
             case DbDriver.MySql:
-                UseMySQL(builder, ref _connectionString, Schema);
+                builder.UseMySQL(ConnectionString);
                 break;
             case DbDriver.MySqlConnector:
-                UseMySql(builder, ref _connectionString, Schema);
+                UseMySql(builder, ConnectionString);
                 break;
             case DbDriver.Oracle:
-                UseOracle(builder, ref _connectionString, Schema);
+                builder.UseOracle(ConnectionString);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(DbDriver), DbDriver, null);
@@ -121,18 +118,11 @@ public class TestDbContext(
 
     private static readonly ConcurrentDictionary<string, ServerVersion> MySqlServerVersions = new();
 
-    private static void UseMySql(DbContextOptionsBuilder builder, ref string connectionString, string? schema)
+    private static void UseMySql(DbContextOptionsBuilder builder, string connectionString)
     {
-        var sb = new MySqlConnectionStringBuilder(connectionString);
-        if (schema.IsNotEmpty())
-        {
-            sb.Database = schema;
-        }
-        var str = sb.ConnectionString;
-        var ver = MySqlServerVersions.GetOrAdd(str, m => ServerVersion.AutoDetect(m));
-        builder.UseMySql(str, ver, o => o.SchemaBehavior(MySqlSchemaBehavior.Translate, (_, table) => table));
+        var ver = MySqlServerVersions.GetOrAdd(connectionString, m => ServerVersion.AutoDetect(m));
+        builder.UseMySql(connectionString, ver, o => o.SchemaBehavior(MySqlSchemaBehavior.Translate, (_, table) => table));
         builder.ReplaceService<ISqlGenerationHelper, CustomMySqlSqlGenerationHelper>();
-        connectionString = str;
     }
 
     public class CustomMySqlSqlGenerationHelper(
@@ -143,29 +133,4 @@ public class TestDbContext(
         public override string GetSchemaName(string name, string schema) => schema;
     }
 
-    private static void UseMySQL(DbContextOptionsBuilder builder, ref string connectionString, string? schema)
-    {
-        var sb = new MySqlConnectionStringBuilder(connectionString);
-        if (schema.IsNotEmpty())
-        {
-            sb.Database = schema;
-        }
-        var str = sb.ConnectionString;
-        builder.UseMySQL(str);
-        connectionString = str;
-    }
-
-    private static void UseOracle(DbContextOptionsBuilder builder, ref string connectionString, string? schema)
-    {
-        var sb = new OracleConnectionStringBuilder(connectionString);
-        if (schema.IsNotEmpty())
-        {
-            sb.UserID = schema;
-        }
-        // oracle requires the username to be double-quoted to preserve case sensitivity
-        sb.UserID = sb.UserID.EnsureDoubleQuoted();
-        var str = sb.ConnectionString;
-        builder.UseOracle(str);
-        connectionString = str;
-    }
 }

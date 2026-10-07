@@ -65,6 +65,8 @@
     <Project Path="test/FclEx.Caching.Redis.Tests/FclEx.Caching.Redis.Tests.csproj" />
     <Project Path="test/FclEx.Caching.Tests/FclEx.Caching.Tests.csproj" />
     <Project Path="test/FclEx.Core.Tests/FclEx.Core.Tests.csproj" />
+    <Project Path="test/FclEx.DatabaseTesting/FclEx.DatabaseTesting.csproj" />
+    <File Path="test/DATABASE-TESTING.md" />
     <Project Path="test/FclEx.Dapper.Tests/FclEx.Dapper.Tests.csproj" />
     <Project Path="test/FclEx.EfCore.Tests/FclEx.EfCore.Tests.csproj" />
     <Project Path="test/FclEx.Http.Tests/FclEx.Http.Tests.csproj" />

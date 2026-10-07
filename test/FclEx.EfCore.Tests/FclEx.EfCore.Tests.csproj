@@ -22,6 +22,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.Dapper\FclEx.Dapper.csproj" />
     <ProjectReference Include="..\..\src\FclEx.EfCore\FclEx.EfCore.csproj" />
-    <ProjectReference Include="..\FclEx.Dapper.Tests\FclEx.Dapper.Tests.csproj" />
+    <ProjectReference Include="../FclEx.Core.Tests/FclEx.Core.Tests.csproj" />
+    <ProjectReference Include="../FclEx.DatabaseTesting/FclEx.DatabaseTesting.csproj" />
+    <Compile Include="../DatabaseTests/*.cs" Link="FclEx/Databases/%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

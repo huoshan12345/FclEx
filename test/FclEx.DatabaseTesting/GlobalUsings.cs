@@ -1,0 +1,13 @@
+global using System.ComponentModel.DataAnnotations;
+global using System.ComponentModel.DataAnnotations.Schema;
+global using System.Data;
+global using System.Data.Common;
+global using System.Diagnostics;
+global using System.IO;
+global using System.Runtime.InteropServices;
+global using Dapper;
+global using FclEx.Dapper;
+global using FclEx.Domain;
+global using FclEx.Extensions;
+global using Microsoft.Data.Sqlite;
+global using static FclEx.Databases.DatabaseTestSettings;

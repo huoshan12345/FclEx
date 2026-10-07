@@ -6,7 +6,7 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     public static readonly string[] AssemblyNames = ["efcore", "dapper"];
     public static readonly int[] DotNetVersions = [4, 8, 9, 10];
     public static readonly TheoryData<DbDriver, string, int, string> SetupDatabaseCases =
-        (from db in DbDrivers.Except(DbDriver.MySql)
+        (from db in ProvisioningDrivers
          from assembly in AssemblyNames
          from ver in DotNetVersions
          from os in OSNames
@@ -29,11 +29,13 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
             : DefaultUserPassword;
         var defaultUser = new DatabaseUser(WithAssemblyInfo(DefaultUserName), defaultPassword, WithAssemblyInfo(UserSchema));
         var database = WithAssemblyInfo(DbName);
-        var connectionString = Fixture.ConnectionStrings.Get(dbDriver, database).Build();
+        using var environment = new TestDatabaseEnvironment(EfCoreFixture.Databases, database, defaultUser);
 
         foreach (var (_, schema, isFirst, _) in SchemaNames.IndexEx())
         {
-            await using var context = new TestDbContext(dbDriver, connectionString, WithAssemblyInfo(schema));
+            var currentSchema = WithAssemblyInfo(schema);
+            var connectionString = environment.Resolve(dbDriver, currentSchema).BuildConnectionString();
+            await using var context = new TestDbContext(dbDriver, connectionString, currentSchema);
 
             if (isFirst || dbDriver.IsMySql() || dbDriver is DbDriver.Oracle)
             {
@@ -44,7 +46,7 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
                 {
                     if (dbDriver is DbDriver.Oracle)
                     {
-                        var str = Fixture.ConnectionStrings.Get(dbDriver, defaultUser.UserName).WithUser(defaultUser).Build();
+                        var str = environment.Resolve(dbDriver, login: TestLogin.DefaultSchemaUser).BuildConnectionString();
                         await using var ctx = new TestDbContext(dbDriver, str);
                         await CreateDatabase(ctx, defaultUser.UserName, defaultUser.Password);
                     }
@@ -80,8 +82,8 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     {
         if (context.DbDriver.IsMySql())
         {
-            var config = DapperTestsFixture.Databases.MySql;
-            var builder = new ConnectionStringBuilder(DbDriver.MySql, config, "");
+            var config = EfCoreFixture.Databases.MySql;
+            var target = new TestDatabaseTarget(DbDriver.MySql, config, Database: "");
 
             var databaseName = context.Schema ?? database;
             var sql = $"""
@@ -94,7 +96,7 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
                        SET unique_checks = 1;
                        """;
 
-            await using var con = builder.CreateDbConnection();
+            await using var con = target.CreateConnection();
             await con.ExecuteAsync(sql, cancellationToken: CancellationToken);
         }
         else
@@ -108,11 +110,11 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     {
         if (context.DbDriver is DbDriver.Oracle)
         {
-            var config = DapperTestsFixture.Databases.Oracle;
-            var builder = new ConnectionStringBuilder(DbDriver.Oracle, config, config.UserName);
+            var config = EfCoreFixture.Databases.Oracle;
+            var target = new TestDatabaseTarget(DbDriver.Oracle, config);
             var userName = context.Schema ?? database;
             var pwd = password ?? config.Password;
-            await using var con = builder.CreateDbConnection();
+            await using var con = target.CreateConnection();
             await CreateUser(context.DbDriver, con, new(userName, pwd, userName));
         }
 

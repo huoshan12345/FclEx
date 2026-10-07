@@ -147,8 +147,10 @@ These operations do not advance or reset provider identity, sequence, or auto-in
 
 ## Dapper Global State and Type Handlers
 
-On first use, `DapperHelper` calls `InitializeTypeHandlers()` to register `Dapper.GuidTypeHandler` if no GUID handler is already registered. This removes the built-in `Guid` and `Guid?` type mappings so Dapper uses the handler for parameters. These changes affect all Dapper calls in the process. The method can also be called explicitly before using ordinary Dapper APIs, or after resetting Dapper type handlers. Core CRUD operations do not scan assemblies or change other Dapper settings. Generated queries alias database columns back to CLR property names, so they do not require a global Dapper type map.
+On first use, `DapperHelper` calls `Initialize()` to register `Dapper.GuidTypeHandler` and `Dapper.DateTimeOffsetTypeHandler` independently when no application handler is registered for that type. Registration removes the corresponding built-in mappings, including nullable mappings, so Dapper uses the handlers for parameters. These changes affect all Dapper calls in the process. Call `Initialize()` explicitly before ordinary Dapper operations or after resetting Dapper's handlers. Core CRUD operations do not scan assemblies or change other Dapper settings. Generated queries alias database columns back to CLR property names, so they do not require a global Dapper type map.
 
-`Dapper.GuidTypeHandler` and `Dapper.AssumeUtcDateTimeTypeHandler` are optional helpers. Registering either through `SqlMapper.AddTypeHandler` changes Dapper process-wide state and remains the application's responsibility.
+`DateTimeOffsetTypeHandler` reads native `DateTimeOffset` values, invariant text (including SQLite TEXT), and `DateTime` values. Explicit offsets and available tick precision are preserved. Unspecified date-time values and text without an offset are interpreted as UTC; local date-time values retain their instant. Nullable scalar results preserve database nulls. Parameters retain their supplied offset and use `DbType.DateTimeOffset`; the provider determines whether that representation is supported. This handler does not change the destination column type or recover offsets discarded by a database.
+
+`Dapper.AssumeUtcDateTimeTypeHandler` remains opt-in. Registering it through `SqlMapper.AddTypeHandler` changes Dapper process-wide state and remains the application's responsibility.
 
 See [DESIGN.md](DESIGN.md) for the principles governing future changes.

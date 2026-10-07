@@ -93,6 +93,7 @@ partial class DbConnectionExtensionsTests
     public async Task InsertAsync_MySqlBlob_RoundTripsPayload(DbDriver dbDriver, string? schema)
     {
         Assert.SkipUnlessIncluded(dbDriver, [DbDriver.MySql, DbDriver.MySqlConnector]);
+        Assert.SkipUnlessIncluded(dbDriver);
 
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
 

@@ -1,15 +1,41 @@
 namespace FclEx.EfCore;
 
-public class EfCoreFixture : DapperTestsFixture
+public class EfCoreFixture : CoreTestsFixture
 {
-    internal static Assembly Assembly => typeof(EfCoreFixture).Assembly;
-    internal static readonly string?[] Schemas = SchemaNames.Select(m => WithAssemblyInfo(m, Assembly)).ToArray();
+    public static readonly DatabasesConfig Databases = Config.GetSection("Databases").Get<DatabasesConfig>()!;
+    internal static readonly string?[] Schemas = SchemaNames
+        .Select(schema => WithAssemblyInfo(schema, typeof(EfCoreFixture).Assembly)).ToArray();
 
-    public override string?[] CurrentSchemas => Schemas;
+    public TestDatabaseEnvironment Environment { get; }
+    public DatabaseUser DefaultUser => Environment.DefaultUser;
 
-    public TestDbContext CreateDbContext(DbDriver dbDriver, string? schema = null, bool isUser = false)
+    public EfCoreFixture()
     {
-        var con = GetConnectionStringBuilder(dbDriver, isUser).Build();
-        return new(dbDriver, con, schema);
+        Environment = new(Databases, WithAssemblyInfo(DbName),
+            new(WithAssemblyInfo(DefaultUserName), DefaultUserPassword, WithAssemblyInfo(UserSchema)));
+    }
+
+    public TestDatabaseTarget ResolveTarget(DbDriver driver, TestLogin login = TestLogin.Standard, string? schema = null)
+        => Environment.Resolve(driver, schema, login);
+
+    public TestDbContext CreateDbContext(DbDriver driver, string? schema = null, TestLogin login = TestLogin.Standard)
+        => new(driver, ResolveTarget(driver, login, schema).BuildConnectionString(), schema);
+
+    public override async ValueTask InitializeAsync()
+    {
+        if (DbDrivers.Contains(DbDriver.Sqlite))
+            await Environment.InitializeSqliteAsync();
+
+        foreach (var (driver, schema) in DatabaseTestSettings.SchemaCases(Schemas))
+        {
+            await using var connection = ResolveTarget(driver, schema: schema).CreateConnection();
+            await FixAutoIncrement<EntityWithAutoKey>(connection, driver, schema);
+        }
+    }
+
+    public override ValueTask DisposeAsync()
+    {
+        Environment.Dispose();
+        return base.DisposeAsync();
     }
 }
