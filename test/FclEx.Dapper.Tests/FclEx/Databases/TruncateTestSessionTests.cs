@@ -8,9 +8,9 @@ public class TruncateTestSessionTests(DapperTestsFixture fixture) : DapperTests(
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task Sessions_IsolateWholeTableOperations(DbDriver driver, string? schema)
     {
-        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
-        using var first = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(EntityWithAutoKey)], CancellationToken);
-        using var second = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(EntityWithAutoKey)], CancellationToken);
+        Assert.SkipMySql(driver);
+        using var first = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(EntityWithAutoKey)], cancellationToken: CancellationToken);
+        using var second = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(EntityWithAutoKey)], cancellationToken: CancellationToken);
         var firstTable = first.GetQualifiedTableName(typeof(EntityWithAutoKey));
         var secondTable = second.GetQualifiedTableName(typeof(EntityWithAutoKey));
         try

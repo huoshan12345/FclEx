@@ -9,8 +9,9 @@ public class DbSetExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     public async Task TruncateAsync_ExplicitOptionsHonorDatabaseCapabilities(
         DbDriver driver, string? schema, bool restartIdentity, bool cascade)
     {
-        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(EntityWithAutoKey)], CancellationToken);
+        Assert.SkipMySql(driver);
+        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema,
+            [typeof(EntityWithAutoKey)], cancellationToken: CancellationToken);
         await using var context = session.CreateDbContext(Fixture, schema);
         await TruncateTests.VerifyTruncationAsync(context,
             token => context.EntityWithAutoKey.TruncateAsync(restartIdentity, cascade, token), restartIdentity, cascade);
@@ -20,8 +21,9 @@ public class DbSetExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_RemovesAllRowsAndPreservesTrackedEntities(DbDriver driver, string? schema)
     {
-        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(EntityWithAutoKey)], CancellationToken);
+        Assert.SkipMySql(driver);
+        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema,
+            [typeof(EntityWithAutoKey)], cancellationToken: CancellationToken);
         await using var context = session.CreateDbContext(Fixture, schema);
         await TruncateTests.VerifyTruncationAsync(context, token => context.EntityWithAutoKey.TruncateAsync(token));
     }
@@ -30,8 +32,9 @@ public class DbSetExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_PreservesNamedSharedTypeEntityIdentity(DbDriver driver, string? schema)
     {
-        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(EntityWithAutoKey), typeof(EntityWithIdAndIndex)], CancellationToken);
+        Assert.SkipMySql(driver);
+        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema,
+            [typeof(EntityWithAutoKey), typeof(EntityWithIdAndIndex)], cancellationToken: CancellationToken);
         await using var context = session.CreateDbContext(Fixture, schema);
         await TruncateTests.VerifyNamedSharedTypeAsync(context, true);
     }
@@ -55,14 +58,14 @@ public class DbSetExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_ObservesCancellationWithoutRemovingRows(DbDriver driver, string? schema)
     {
-        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(EntityWithAutoKey)], CancellationToken);
+        Assert.SkipMySql(driver);
+        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(EntityWithAutoKey)], cancellationToken: CancellationToken);
         await using var context = session.CreateDbContext(Fixture, schema);
         try
         {
             var tracked = await TruncateTests.SeedAsync(context);
             using var source = new CancellationTokenSource();
-            source.Cancel();
+            await source.CancelAsync();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => context.EntityWithAutoKey.TruncateAsync(source.Token));
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => context.EntityWithAutoKey.TruncateAsync(driver != DbDriver.Oracle, false, source.Token));
             Assert.Equal(2, await context.EntityWithAutoKey.CountAsync(CancellationToken));

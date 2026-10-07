@@ -17,5 +17,10 @@ public static class DatabaseAssertExtensions
         {
             Assert.SkipUnlessIncluded(driver, SelectedDrivers);
         }
+
+        public static void SkipMySql(DbDriver driver)
+        {
+            Assert.SkipMySql(driver);
+        }
     }
 }

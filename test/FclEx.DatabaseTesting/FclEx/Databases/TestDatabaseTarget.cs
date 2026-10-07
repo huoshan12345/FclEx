@@ -51,7 +51,7 @@ public sealed record TestDatabaseTarget(
             Password = Login.Password,
             SslMode = MySqlSslMode.Required,
             MaximumPoolSize = 16,
-            ConnectionTimeout = 30,
+            ConnectionTimeout = 10,
         }.ConnectionString,
         DbDriver.MySqlConnector => new MySqlConnector.MySqlConnectionStringBuilder
         {
@@ -65,14 +65,14 @@ public sealed record TestDatabaseTarget(
             Password = Login.Password,
             SslMode = MySqlConnector.MySqlSslMode.Required,
             MaximumPoolSize = 16,
-            ConnectionTimeout = 30,
+            ConnectionTimeout = 10,
         }.ConnectionString,
         DbDriver.Sqlite => new SqliteConnectionStringBuilder
         {
             DataSource = FilePath ?? throw new InvalidOperationException("SQLite requires a resolved file path."),
             ForeignKeys = true,
             Pooling = false,
-            DefaultTimeout = 30,
+            DefaultTimeout = 10,
         }.ConnectionString,
 #if SUPPORT_ORACLE
         DbDriver.Oracle => new OracleConnectionStringBuilder

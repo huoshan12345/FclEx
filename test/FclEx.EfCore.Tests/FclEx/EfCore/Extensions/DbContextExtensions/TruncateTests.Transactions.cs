@@ -17,9 +17,10 @@ public partial class TruncateTests
     [MemberData(nameof(SqliteDriverCases))]
     public async Task TruncateAsync_AcceptsDerivedConnectionType(DbDriver driver)
     {
-        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, null, [typeof(EntityWithAutoKey)], CancellationToken,
-            new DerivedSqliteConnection(Fixture.ResolveTarget(driver).BuildConnectionString()));
+        Assert.SkipMySql(driver);
+
+        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, null, [typeof(EntityWithAutoKey)],
+            new DerivedSqliteConnection(Fixture.ResolveTarget(driver).BuildConnectionString()), CancellationToken);
         await using var context = session.CreateDbContext(Fixture, null);
         await VerifyTruncationAsync(context, token => context.TruncateAsync<EntityWithAutoKey>(token));
     }
@@ -82,8 +83,9 @@ public partial class TruncateTests
     public async Task TruncateAsync_UsesCallerTransactionAndCanRollBack(
         DbDriver driver, string? schema, bool restartIdentity)
     {
-        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(EntityWithAutoKey)], CancellationToken);
+        Assert.SkipMySql(driver);
+
+        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(EntityWithAutoKey)], cancellationToken: CancellationToken);
         await using var context = session.CreateDbContext(Fixture, schema);
         try
         {

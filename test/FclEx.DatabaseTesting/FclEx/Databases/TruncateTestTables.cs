@@ -1,5 +1,6 @@
-using System.Collections.Concurrent;
+// ReSharper disable UseAwaitUsing
 
+// ReSharper disable LoopCanBeConvertedToQuery
 namespace FclEx.Databases;
 
 /// <summary>Creates connection-local tables and pre-creates reusable Oracle tables for truncate tests.</summary>
@@ -9,8 +10,13 @@ public sealed class TruncateTestTables(TestDatabaseEnvironment environment)
     private readonly Dictionary<string, OracleTablePool> _oraclePools = new();
     private static readonly Type[] EntityTypes =
     [
-        typeof(EntityWithAutoKey), typeof(EntityWithIdAndIndex), typeof(EntityWithGuidKey),
-        typeof(EntityWithoutKey), typeof(HasTableAttributeEntity), typeof(EntityHasStates), typeof(EntityWithNavigation),
+        typeof(EntityWithAutoKey),
+        typeof(EntityWithIdAndIndex),
+        typeof(EntityWithGuidKey),
+        typeof(EntityWithoutKey),
+        typeof(HasTableAttributeEntity),
+        typeof(EntityHasStates),
+        typeof(EntityWithNavigation),
     ];
 
     /// <summary>Initializes only selected targets. Existing tables are retained between test runs.</summary>
@@ -20,6 +26,7 @@ public sealed class TruncateTestTables(TestDatabaseEnvironment environment)
         {
             if (driver == DbDriver.MySql)
                 continue;
+
             using var connection = environment.Resolve(driver, schema).CreateConnection();
             await connection.OpenAsync(cancellationToken);
             // One test owns this table per target/project, preserving ordinary schema and connection-state coverage.
@@ -43,8 +50,11 @@ public sealed class TruncateTestTables(TestDatabaseEnvironment environment)
 
     /// <summary>Leases Oracle tables or creates the requested temporary tables on a new open connection.</summary>
     public async Task<TruncateTestSession> CreateSessionAsync(
-        DbDriver driver, string? schema, IEnumerable<Type> entityTypes,
-        CancellationToken cancellationToken = default, DbConnection? connection = null)
+        DbDriver driver,
+        string? schema,
+        IEnumerable<Type> entityTypes,
+        DbConnection? connection = null,
+        CancellationToken cancellationToken = default)
     {
         string prefix;
         Action? release = null;
@@ -70,10 +80,14 @@ public sealed class TruncateTestTables(TestDatabaseEnvironment environment)
         {
             session = new TruncateTestSession(connection ?? environment.Resolve(driver, schema).CreateConnection(), driver,
                 driver switch { DbDriver.Npgsql => "pg_temp", DbDriver.SqlServer => null, _ => schema }, prefix, release);
+
             await session.Connection.OpenAsync(cancellationToken);
-            if (driver != DbDriver.Oracle)
-                foreach (var entityType in entityTypes.Distinct())
-                    await CreateTableAsync(session, entityType, temporary: true, cancellationToken);
+
+            if (driver == DbDriver.Oracle)
+                return session;
+
+            foreach (var entityType in entityTypes.Distinct())
+                await CreateTableAsync(session, entityType, temporary: true, cancellationToken);
             return session;
         }
         catch
@@ -95,14 +109,15 @@ public sealed class TruncateTestTables(TestDatabaseEnvironment environment)
     {
         var driver = session.Driver;
         var adapter = DapperHelper.GetSqlAdapter(session.Connection);
-        string Column(string name) => adapter.GetQuotedColumnName(name);
         var table = session.GetQualifiedTableName(entityType);
         var integer = driver == DbDriver.Oracle ? "NUMBER(10)" : "INTEGER";
         var longInteger = driver == DbDriver.Oracle ? "NUMBER(19)" : driver == DbDriver.Sqlite ? "INTEGER" : "BIGINT";
         var text = driver switch
         {
-            DbDriver.SqlServer => "nvarchar(100)", DbDriver.Oracle => "NVARCHAR2(100)",
-            DbDriver.Sqlite => "TEXT", _ => "varchar(100)",
+            DbDriver.SqlServer => "nvarchar(100)",
+            DbDriver.Oracle => "NVARCHAR2(100)",
+            DbDriver.Sqlite => "TEXT",
+            _ => "varchar(100)",
         };
         string Identity(string type) => driver switch
         {
@@ -117,28 +132,41 @@ public sealed class TruncateTestTables(TestDatabaseEnvironment environment)
             var id = entityType == typeof(EntityWithGuidKey)
                 ? driver switch
                 {
-                    DbDriver.SqlServer => "uniqueidentifier PRIMARY KEY", DbDriver.Npgsql => "uuid PRIMARY KEY",
-                    DbDriver.Oracle => "RAW(16) PRIMARY KEY", DbDriver.Sqlite => "TEXT PRIMARY KEY",
+                    DbDriver.SqlServer => "uniqueidentifier PRIMARY KEY",
+                    DbDriver.Npgsql => "uuid PRIMARY KEY",
+                    DbDriver.Oracle => "RAW(16) PRIMARY KEY",
+                    DbDriver.Sqlite => "TEXT PRIMARY KEY",
                     _ => "char(36) PRIMARY KEY",
                 }
                 : Identity(entityType == typeof(EntityHasStates) || entityType == typeof(EntityWithNavigation) ? longInteger : integer);
             columns.Add($"{Column("Id")} {id}");
         }
         if (entityType != typeof(HasTableAttributeEntity) && entityType != typeof(EntityWithGuidKey))
+        {
             columns.Add($"{Column("Name")} {text}" + (entityType == typeof(EntityWithIdAndIndex) ? " NOT NULL UNIQUE"
-                : entityType == typeof(EntityHasStates) || entityType == typeof(EntityWithNavigation) ? " NOT NULL" : " NULL"));
+                : entityType == typeof(EntityHasStates) || entityType == typeof(EntityWithNavigation) ? " NOT NULL"
+                : " NULL"));
+        }
         if (entityType == typeof(EntityWithAutoKey) || entityType == typeof(EntityWithIdAndIndex)
             || entityType == typeof(EntityWithGuidKey) || entityType == typeof(EntityWithoutKey))
+        {
             columns.Add($"{Column("Value")} {integer} NOT NULL");
+        }
         if (entityType == typeof(EntityWithGuidKey))
+        {
             columns.Add($"{Column("Order")} {integer} NULL");
+        }
         if (entityType == typeof(EntityHasStates))
         {
             var timestamp = driver == DbDriver.Oracle ? "TIMESTAMP WITH TIME ZONE" : "timestamp with time zone";
             foreach (var name in new[] { "CreatedAt", "UpdatedAt", "DeletedAt" })
+            {
                 columns.Add($"{Column(name)} {timestamp} NOT NULL");
+            }
             foreach (var name in new[] { "IsDisabled", "IsDeleted" })
+            {
                 columns.Add($"{Column(name)} BOOLEAN NOT NULL");
+            }
         }
         if (entityType == typeof(EntityWithNavigation))
         {
@@ -152,6 +180,9 @@ public sealed class TruncateTestTables(TestDatabaseEnvironment environment)
         if (!temporary && driver == DbDriver.SqlServer)
             sql = $"IF OBJECT_ID(N'{table.Replace("'", "''")}', N'U') IS NULL {sql}";
         await session.Connection.ExecuteAsync(sql, cancellationToken: cancellationToken);
+        return;
+
+        string Column(string name) => adapter.GetQuotedColumnName(name);
     }
 
     private sealed class OracleTablePool

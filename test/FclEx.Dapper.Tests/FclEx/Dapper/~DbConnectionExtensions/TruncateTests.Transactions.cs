@@ -68,8 +68,8 @@ public partial class TruncateTests
     public async Task TruncateAsync_AcceptsDerivedConnectionType(DbDriver driver)
     {
         SkipMySql(driver);
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, null, [typeof(EntityWithAutoKey)], CancellationToken,
-            new DerivedSqliteConnection(Fixture.DatabaseEnvironment.Resolve(driver).BuildConnectionString()));
+        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, null, [typeof(EntityWithAutoKey)],
+            new DerivedSqliteConnection(Fixture.DatabaseEnvironment.Resolve(driver).BuildConnectionString()), CancellationToken);
         Session = session;
         var connection = session.Connection;
         await VerifyTruncationAsync(connection, driver, null,

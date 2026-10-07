@@ -9,7 +9,7 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
     private async Task<TruncateTestSession> CreateSessionAsync(DbDriver driver, string? schema, params Type[] entityTypes)
     {
         Session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema,
-            entityTypes.Length == 0 ? [typeof(EntityWithAutoKey)] : entityTypes, CancellationToken);
+            entityTypes.Length == 0 ? [typeof(EntityWithAutoKey)] : entityTypes, cancellationToken: CancellationToken);
         return Session;
     }
 
@@ -20,7 +20,7 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
          select (pair.Driver, pair.Schema, restart, cascade)).ToTheoryData();
 
     private static void SkipMySql(DbDriver driver)
-        => Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
+        => Assert.SkipMySql(driver);
 
     private static bool SupportsOptions(DbDriver driver, bool restartIdentity, bool cascade) => driver switch
     {
@@ -57,13 +57,13 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
         await VerifyTruncationAsync(connection, driver, schema,
             token => connection.TruncateAsync(Session.GetTableName(typeof(EntityWithAutoKey)), schema, Options, token));
         foreach (var restart in new[] { false, true })
-        foreach (var cascade in new[] { false, true })
-        {
-            await VerifyTruncationAsync(connection, driver, schema,
-                token => connection.TruncateAsync<EntityWithAutoKey>(restart, cascade, schema, Options, token), restart, cascade);
-            await VerifyTruncationAsync(connection, driver, schema,
-                token => connection.TruncateAsync(Session.GetTableName(typeof(EntityWithAutoKey)), restart, cascade, schema, Options, token), restart, cascade);
-        }
+            foreach (var cascade in new[] { false, true })
+            {
+                await VerifyTruncationAsync(connection, driver, schema,
+                    token => connection.TruncateAsync<EntityWithAutoKey>(restart, cascade, schema, Options, token), restart, cascade);
+                await VerifyTruncationAsync(connection, driver, schema,
+                    token => connection.TruncateAsync(Session.GetTableName(typeof(EntityWithAutoKey)), restart, cascade, schema, Options, token), restart, cascade);
+            }
         if (schema is not null)
         {
             var options = Options with
