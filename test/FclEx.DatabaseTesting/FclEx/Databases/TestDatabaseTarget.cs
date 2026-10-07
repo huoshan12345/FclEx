@@ -29,9 +29,9 @@ public sealed record TestDatabaseTarget(
             InitialCatalog = Database,
             UserID = Login.UserName,
             Password = Login.Password,
-            ConnectTimeout = 3,
+            ConnectTimeout = 5,
             ConnectRetryInterval = 1,
-            ConnectRetryCount = 1,
+            ConnectRetryCount = 2,
             TrustServerCertificate = true,
         }.ConnectionString,
         DbDriver.Npgsql => new NpgsqlConnectionStringBuilder

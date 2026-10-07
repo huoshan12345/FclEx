@@ -12,12 +12,14 @@ public sealed class TestDatabaseEnvironment(
 
     public TestDatabaseTarget Resolve(DbDriver driver, string? schema = null, TestLogin login = TestLogin.Standard)
     {
-        if (!Enum.IsDefined(typeof(TestLogin), login))
+        if (login.IsValid() == false)
             throw new ArgumentOutOfRangeException(nameof(login), login, null);
+
         if (driver == DbDriver.Sqlite)
         {
             if (schema is not null)
                 throw new NotSupportedException("SQLite test targets do not support explicit server schemas.");
+
             var directory = _sqliteDirectory ?? throw new InvalidOperationException("Initialize SQLite before creating connections.");
             return new(driver, new(), FilePath: Path.Combine(directory, "test.sqlite"));
         }
