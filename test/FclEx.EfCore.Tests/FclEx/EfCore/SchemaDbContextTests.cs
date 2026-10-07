@@ -4,6 +4,8 @@ public class SchemaDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
     private static async Task TestData(TestDbContext context, string? schema)
     {
+        Assert.True(await context.Database.GetDbConnection().TableExistsAsync<EntityWithAutoKey>(schema,
+            cancellationToken: CancellationToken));
         var entity = new EntityWithAutoKey
         {
             Name = Guid.NewGuid().ToString(),
@@ -28,23 +30,23 @@ public class SchemaDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         {
             case DbDriver.Npgsql:
             {
-                await using var con = Fixture.ResolveTarget(DbDriver.Npgsql, TestLogin.DefaultSchemaUser).CreateConnection();
+                await using var con = Fixture.ResolveTarget(DbDriver.Npgsql, login: TestLogin.DefaultSchemaUser).CreateConnection();
                 return await con.ExecuteScalarAsync<string>("SHOW SEARCH_PATH;");
             }
             case DbDriver.MySql:
             case DbDriver.MySqlConnector:
             {
-                await using var con = Fixture.ResolveTarget(dbDriver, TestLogin.DefaultSchemaUser).CreateConnection();
+                await using var con = Fixture.ResolveTarget(dbDriver, login: TestLogin.DefaultSchemaUser).CreateConnection();
                 return await con.ExecuteScalarAsync<string>("SELECT SCHEMA();");
             }
             case DbDriver.SqlServer:
             {
-                await using var con = Fixture.ResolveTarget(DbDriver.SqlServer, TestLogin.DefaultSchemaUser).CreateConnection();
+                await using var con = Fixture.ResolveTarget(DbDriver.SqlServer, login: TestLogin.DefaultSchemaUser).CreateConnection();
                 return await con.ExecuteScalarAsync<string>("SELECT SCHEMA_NAME();");
             }
             case DbDriver.Oracle:
             {
-                await using var con = Fixture.ResolveTarget(DbDriver.Oracle, TestLogin.DefaultSchemaUser).CreateConnection();
+                await using var con = Fixture.ResolveTarget(DbDriver.Oracle, login: TestLogin.DefaultSchemaUser).CreateConnection();
                 return await con.ExecuteScalarAsync<string>("SELECT USER FROM dual;");
             }
             case DbDriver.Sqlite:
@@ -65,13 +67,13 @@ public class SchemaDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         else if (dbDriver.IsMySql())
         {
             Assert.NotNull(defaultSchema);
-            var target = Fixture.ResolveTarget(dbDriver, TestLogin.DefaultSchemaUser);
+            var target = Fixture.ResolveTarget(dbDriver, login: TestLogin.DefaultSchemaUser);
             Assert.Equal(target.Database, defaultSchema);
         }
         else if (dbDriver is DbDriver.Oracle)
         {
             Assert.NotNull(defaultSchema);
-            var target = Fixture.ResolveTarget(dbDriver, TestLogin.DefaultSchemaUser);
+            var target = Fixture.ResolveTarget(dbDriver, login: TestLogin.DefaultSchemaUser);
             Assert.Equal(target.Login.UserName, defaultSchema);
         }
         else
@@ -80,7 +82,7 @@ public class SchemaDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
             Assert.Equal(Fixture.DefaultUser.DefaultSchema, defaultSchema);
         }
 
-        await using var context = Fixture.CreateDbContext(dbDriver, null, TestLogin.DefaultSchemaUser);
+        await using var context = Fixture.CreateDbContext(dbDriver, null, login: TestLogin.DefaultSchemaUser);
         await TestData(context, defaultSchema);
     }
 

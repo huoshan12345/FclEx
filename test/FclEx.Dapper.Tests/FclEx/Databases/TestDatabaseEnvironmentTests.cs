@@ -33,6 +33,22 @@ public class TestDatabaseEnvironmentTests
         => new(CreateConfiguration(password), "database", new("test_user", "test-password", "user_schema"));
 
     [Theory]
+    [InlineData(DbDriver.SqlServer)]
+    [InlineData(DbDriver.Sqlite)]
+    public void Resolve_InvalidLogin_Throws(DbDriver driver)
+    {
+        using var environment = CreateEnvironment();
+        Assert.Throws<ArgumentOutOfRangeException>(() => environment.Resolve(driver, login: (TestLogin)(-1)));
+    }
+
+    [Fact]
+    public void Resolve_SqliteExplicitSchema_Throws()
+    {
+        using var environment = CreateEnvironment();
+        Assert.Throws<NotSupportedException>(() => environment.Resolve(DbDriver.Sqlite, "tenant"));
+    }
+
+    [Theory]
     [MemberData(nameof(TargetCases))]
     public void Resolve_KeepsDatabaseOwnerAndLoginConceptsDistinct(DbDriver driver, TestLogin login, string? schema)
     {

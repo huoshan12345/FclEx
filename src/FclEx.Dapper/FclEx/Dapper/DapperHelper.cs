@@ -37,8 +37,8 @@ public static class DapperHelper
 
     /// <summary>Registers default GUID and date-time-offset handlers when no application handler exists.</summary>
     /// <remarks>
-    /// Called automatically on first use of this helper. Registration removes the corresponding built-in
-    /// type mappings so parameters use the handlers, and affects all Dapper calls in the process.
+    /// Called automatically on first use of this helper. Installing a default handler removes the corresponding
+    /// parameter type mappings, including application mappings, so parameters use that handler. This affects all Dapper calls in the process.
     /// Each application-supplied handler is preserved independently. Call this method explicitly before
     /// ordinary Dapper operations, or to restore defaults after resetting Dapper's handlers.
     /// </remarks>

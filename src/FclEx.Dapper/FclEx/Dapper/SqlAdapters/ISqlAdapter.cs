@@ -1,7 +1,7 @@
 namespace FclEx.Dapper.SqlAdapters;
 
 /// <summary>
-/// Defines provider-specific SQL generation and parameter behavior used by FclEx.Dapper CRUD operations.
+/// Defines provider-specific SQL generation, table metadata queries, and parameter behavior used by FclEx.Dapper.
 /// </summary>
 /// <remarks>
 /// An adapter registered with <see cref="DapperHelper.RegisterSqlAdapter(Type, ISqlAdapter)"/> must keep all
@@ -30,6 +30,17 @@ public interface ISqlAdapter
     /// <param name="name">The unquoted column name from trusted application configuration.</param>
     /// <returns>The delimited identifier, with embedded terminating delimiters escaped.</returns>
     string GetQuotedColumnName(string name);
+
+    /// <summary>Builds a scalar query that counts visible base tables matching a table name.</summary>
+    /// <param name="tableNameParameter">The SQL placeholder for an unquoted, unqualified table-name value.</param>
+    /// <param name="schemaParameter">
+    /// The SQL placeholder for an optional schema-name value, or null to use the provider's default namespace.
+    /// A database-null schema value also selects the default namespace. Adapters without schema support ignore it.
+    /// </param>
+    /// <returns>A query whose first result is a numeric count; views and synonyms are excluded.</returns>
+    /// <remarks>Placeholders are trusted SQL fragments produced by <see cref="GetParameterPlaceholder"/>.</remarks>
+    /// <exception cref="NotSupportedException">This adapter does not support table metadata queries.</exception>
+    string BuildTableExistsCommandText(string tableNameParameter, string? schemaParameter = null);
 
     /// <summary>
     /// Gets the maximum number of rows that one parameterized multi-row INSERT command can contain.

@@ -37,13 +37,7 @@ Unset the override to restore the defaults:
 Remove-Item Env:FCLEX_TEST_DATABASES -ErrorAction SilentlyContinue
 ```
 
-| Run environment | Default drivers |
-| --- | --- |
-| Local | SqlServer, Sqlite |
-| Windows CI | Npgsql, Sqlite |
-| Linux CI | SqlServer, MySqlConnector, Oracle where supported, Sqlite |
-
-These defaults retain the previous remote selections and add SQLite. Provider-specific tests still apply their original driver constraints; an explicit selection also limits those cases. Independent specialized SQLite tests retain their own local setup.
+Default selection is defined in DatabaseTestSettings and can change independently of this README. Every supported driver is eligible for CI coverage on each supported operating system; splitting drivers between jobs is an execution-time choice, not a compatibility rule. Use FCLEX_TEST_DATABASES for focused runs. Provider-specific tests retain their original driver constraints; independent specialized SQLite tests retain their own local setup.
 
 ## SQLite schema and lifetime
 
@@ -68,9 +62,9 @@ The exporter generates SQL without opening a database. Rebuild the shared librar
 
 Remote resources keep the existing project/framework/OS names and schema/default-login cases. Fixtures own their `DatabaseEnvironment`. `TestDatabaseEnvironment.Resolve` maps MySQL's schema scenario to the selected database and Oracle's owner scenario to the actual login. `TestDatabaseTarget` builds the appropriate native connection string without global credential caching. `TestDbContext` consumes the resolved string without rewriting it.
 
-Normal startup does not recreate remote tables or users. `SynchronizeIdentitySequenceAsync` retains the existing PostgreSQL identity-sequence repair. `SelectedDrivers` identifies this process's normal run selection. The explicitly enabled `TestDbContextTests.SetupDatabase` remains the destructive provisioning operation; its engine matrix is independent of the normal provider override and excludes SQLite and the duplicate MySql.Data engine.
+Normal startup does not recreate remote tables or users. `SynchronizeIdentitySequenceAsync` first checks the mapped table through the production TableExistsAsync extension and returns zero when it is absent; otherwise it retains the existing PostgreSQL identity-sequence repair. `SelectedDrivers` identifies this process's normal run selection. The explicitly enabled `TestDbContextTests.SetupDatabase` remains the destructive provisioning operation; its engine matrix is independent of the normal provider override and excludes SQLite and the duplicate MySql.Data engine.
 
-Remote names isolate projects, frameworks, operating systems, and schema scenarios, but two simultaneous runs using the same combination still share a resource. Avoid overlapping such runs. CI concurrency slots and remote schema fingerprinting are deferred operational improvements described in [DATABASE-TESTING.md](../DATABASE-TESTING.md); they are not implemented by this helper.
+Remote names isolate projects, frameworks, operating systems, and schema scenarios. Common cases are designed for parallel execution using independent rows. Tests with exclusive operations explicitly disable their own parallel execution. That setting applies within a test process; environment naming itself does not provide a cross-process lock. No global serialization or slot allocation is introduced here.
 
 ## Compatibility failures
 

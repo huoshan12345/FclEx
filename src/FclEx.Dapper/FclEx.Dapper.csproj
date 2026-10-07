@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Description>Focused Dapper extensions for cached CRUD SQL, bounded multi-row inserts, local transactions, explicit entity mappings, and provider-specific SQL adapters.</Description>
+    <Description>Focused Dapper extensions for cached CRUD SQL, bounded multi-row inserts, local transactions, table existence checks, explicit entity mappings, and provider-specific SQL adapters.</Description>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Dapper" />

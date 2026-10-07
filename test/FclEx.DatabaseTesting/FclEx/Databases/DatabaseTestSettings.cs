@@ -75,18 +75,20 @@ public static class DatabaseTestSettings
     }
 
     /// <summary>Sets a PostgreSQL identity sequence's next value to one greater than the table's maximum key.</summary>
-    /// <returns>The configured next sequence value for PostgreSQL, or zero for other drivers.</returns>
+    /// <returns>The configured next sequence value for PostgreSQL, or zero for other drivers or a missing table.</returns>
     /// <remarks>
     /// Uses the shared test model's integer Id column. This changes persistent sequence state and must
     /// run without concurrent inserts into the same table.
     /// </remarks>
-    public static Task<int> SynchronizeIdentitySequenceAsync<T>(IDbConnection connection, DbDriver driver, string? schema)
+    public static async Task<int> SynchronizeIdentitySequenceAsync<T>(DbConnection connection, DbDriver driver, string? schema)
     {
         if (driver != DbDriver.Npgsql)
-            return Task.FromResult(0);
+            return 0;
+        if (!await connection.TableExistsAsync<T>(schema))
+            return 0;
 
         var table = DapperHelper.GetTableNameWithSchema(connection, schema, typeof(T));
-        return connection.ExecuteScalarAsync<int>($"""
+        return await connection.ExecuteScalarAsync<int>($"""
             SELECT setval(
                 pg_get_serial_sequence('{table}', 'Id'),
                 COALESCE((SELECT MAX("Id") FROM {table}), 0) + 1,

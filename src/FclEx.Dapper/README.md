@@ -145,9 +145,24 @@ Use `InsertWithExplicitGeneratedKeysAsync` or `BulkInsertAsync(..., includeAutoK
 
 These operations do not advance or reset provider identity, sequence, or auto-increment state. The caller must maintain that state so later database-generated keys do not conflict with explicitly inserted values.
 
+## Table Existence Checks
+
+Use `TableExistsAsync` to query a table by name or entity mapping:
+
+```csharp
+bool exists = await connection.TableExistsAsync("Orders", schema: "Sales", cancellationToken: cancellationToken);
+bool mappedTableExists = await connection.TableExistsAsync<Order>(commandOptions: options, cancellationToken: cancellationToken);
+```
+
+Names are unquoted components passed as parameters, rather than interpolated SQL. The entity overload honors its mapping source and mapped schema; an explicit schema overrides the mapping. Command options support a local transaction, timeout, and adapter override. The operation restores a connection it opened to Closed and preserves an already-open connection.
+
+SQL Server and PostgreSQL use native unqualified-name resolution when no schema is supplied. Oracle uses CURRENT_SCHEMA and exact catalog casing. MySqlConnector treats schema as a database name; MySql.Data ignores it and checks the selected database. SQLite searches main and temp with case-insensitive name comparison and ignores schema arguments. SQLite attached databases and SQL Server temporary tables are outside this lookup. Views and synonyms are excluded. A false result reflects catalog visibility for the current login; database access failures propagate. The check does not reserve or lock the table against concurrent DDL.
+
+`ISqlAdapter.BuildTableExistsCommandText` supplies the metadata query. Direct interface implementations must implement this new member. `SqlAdapterBase` preserves existing derived implementations with a default that throws NotSupportedException until metadata querying is supplied.
+
 ## Dapper Global State and Type Handlers
 
-On first use, `DapperHelper` calls `Initialize()` to register `Dapper.GuidTypeHandler` and `Dapper.DateTimeOffsetTypeHandler` independently when no application handler is registered for that type. Registration removes the corresponding built-in mappings, including nullable mappings, so Dapper uses the handlers for parameters. These changes affect all Dapper calls in the process. Call `Initialize()` explicitly before ordinary Dapper operations or after resetting Dapper's handlers. Core CRUD operations do not scan assemblies or change other Dapper settings. Generated queries alias database columns back to CLR property names, so they do not require a global Dapper type map.
+On first use, `DapperHelper` calls `Initialize()` to register `Dapper.GuidTypeHandler` and `Dapper.DateTimeOffsetTypeHandler` independently when no application handler is registered for that type. Installing a default handler removes the corresponding parameter type maps, including nullable and application mappings, so Dapper uses that handler for parameters. Applications registering their own handlers remain responsible for removing conflicting parameter maps. These changes affect all Dapper calls in the process. Call `Initialize()` explicitly before ordinary Dapper operations or after resetting Dapper's handlers. Core CRUD operations do not scan assemblies or change other Dapper settings. Generated queries alias database columns back to CLR property names, so they do not require a global Dapper type map.
 
 `DateTimeOffsetTypeHandler` reads native `DateTimeOffset` values, invariant text (including SQLite TEXT), and `DateTime` values. Explicit offsets and available tick precision are preserved. Unspecified date-time values and text without an offset are interpreted as UTC; local date-time values retain their instant. Nullable scalar results preserve database nulls. Parameters retain their supplied offset and use `DbType.DateTimeOffset`; the provider determines whether that representation is supported. This handler does not change the destination column type or recover offsets discarded by a database.
 

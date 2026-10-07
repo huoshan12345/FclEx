@@ -75,6 +75,10 @@ public abstract class SqlAdapterBase : ISqlAdapter
     }
 
     /// <inheritdoc />
+    public virtual string BuildTableExistsCommandText(string tableNameParameter, string? schemaParameter = null)
+        => throw new NotSupportedException($"'{GetType().FullName}' does not support table metadata queries.");
+
+    /// <inheritdoc />
     public abstract int GetMaxInsertBatchSize(int parameterCountPerRow);
 
     /// <inheritdoc />

@@ -5,6 +5,11 @@ namespace FclEx.Dapper.SqlAdapters;
 /// </summary>
 public class MySqlAdapter : SqlAdapterBase
 {
+    /// <inheritdoc />
+    /// <remarks>Checks base tables in the selected database; the schema argument is ignored, as in this adapter's CRUD operations.</remarks>
+    public override string BuildTableExistsCommandText(string tableNameParameter, string? schemaParameter = null)
+        => $"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = {tableNameParameter} AND table_type = 'BASE TABLE'";
+
     private const int MaxParametersPerCommand = 65535;
 
     /// <inheritdoc />

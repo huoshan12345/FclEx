@@ -180,7 +180,7 @@ Acceptance: both executable test projects depend on shared infrastructure withou
 
 1. Give provisioning an explicit environment/engine manifest instead of deriving it from the current normal-test provider selection.
 2. Optionally record a schema version or fingerprint and fail normal startup with useful instructions when a prepared environment is outdated.
-3. Audit concurrent workflows sharing the same project/framework/OS resources. If overlap is possible, serialize access to a stable slot or provision a small pool of stable slots.
+3. Audit operations requiring exclusive access within a shared environment. Keep ordinary common cases parallel and restrict an individual test only when its operation requires it; investigate concrete cross-process conflicts before adding a lease or slot mechanism.
 4. Keep destructive provisioning separate from ordinary CI tests and perform it only when explicitly requested.
 
 Acceptance: overlapping runs have a documented isolation strategy, and stale environments are diagnosed without automatic remote destruction. Random per-run remote databases are not required by this plan.
@@ -238,7 +238,7 @@ The initial SQLite conversion failure is now a retained regression that passes t
 
 ### Remaining operational work
 
-1. Remote names still allow two runs of the same project/framework/OS combination to share resources. Avoid concurrent use of that combination; CI serialization or a pre-provisioned stable-slot pool remains a separate operational change.
+1. Common cases are designed for parallel execution using independent data. Exclusive operations retain test-level parallelization restrictions; no global CI serialization or resource-slot allocation is introduced.
 2. Remote schema fingerprints are not implemented. Provisioning remains explicit, and its refactored path has been compiled but not executed against remote databases.
 3. Linux runtime validation remains for CI. Windows validation does not establish Linux SQLite native dependency or filesystem behavior.
 4. The production package purpose is unchanged, so the root README and package Description do not require changes. Its package README, design notes, XML documentation, and regressions describe the new conversion behavior.
@@ -255,3 +255,7 @@ See [FclEx.DatabaseTesting/README.md](FclEx.DatabaseTesting/README.md) for curre
 6. [EF namespace tests](FclEx.EfCore.Tests/FclEx/EfCore/SchemaDbContextTests.cs) and [Dapper common cases](FclEx.Dapper.Tests/FclEx/Dapper/DapperTests.cs).
 7. [SQLite migration tests](FclEx.Dapper.Tests/FclEx/Dapper/SqliteMigrationTests.cs) and [specialized EF SQLite lifecycle](FclEx.EfCore.Tests/FclEx/EfCore/Extensions/DbContextExtensions/ApplyChangesSqliteTests.DbContext.cs).
 8. [Shared configuration and environment naming](FclEx.Core.Tests/FclEx/CoreTestsFixture.cs) and [CI workflow](../.github/workflows/build.yml).
+
+## 9. Follow-up implementation
+
+Production TableExistsAsync now checks tables by literal name or entity mapping through the built-in provider adapters. Sequence synchronization returns zero for a missing PostgreSQL table before executing setval. Target resolution uses a consistent driver/schema/login argument order, and invalid SQLite namespace scenarios are rejected. The creator-controlled SQLite lifetime and existing common-test parallelization remain unchanged. README driver selection guidance is independent of OS/job allocation. See DATABASE-TESTING-REVIEW.md for the agreed review outcomes; the original requirements and initial assessment above remain historical context.

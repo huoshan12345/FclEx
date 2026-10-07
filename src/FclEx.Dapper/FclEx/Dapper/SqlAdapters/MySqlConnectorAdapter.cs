@@ -5,6 +5,14 @@ namespace FclEx.Dapper.SqlAdapters;
 /// </summary>
 public class MySqlConnectorAdapter : SqlAdapterBase
 {
+    /// <inheritdoc />
+    /// <remarks>Uses the schema as a database name, defaulting to the connection's selected database.</remarks>
+    public override string BuildTableExistsCommandText(string tableNameParameter, string? schemaParameter = null)
+    {
+        var database = schemaParameter is null ? "DATABASE()" : $"COALESCE({schemaParameter}, DATABASE())";
+        return $"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = {database} AND table_name = {tableNameParameter} AND table_type = 'BASE TABLE'";
+    }
+
     private const int MaxParametersPerCommand = 65535;
 
     /// <inheritdoc />

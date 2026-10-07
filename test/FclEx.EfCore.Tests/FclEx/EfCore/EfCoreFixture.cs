@@ -15,11 +15,11 @@ public class EfCoreFixture : CoreTestsFixture
             new(WithAssemblyInfo(DefaultUserName), DefaultUserPassword, WithAssemblyInfo(UserSchema)));
     }
 
-    public TestDatabaseTarget ResolveTarget(DbDriver driver, TestLogin login = TestLogin.Standard, string? schema = null)
+    public TestDatabaseTarget ResolveTarget(DbDriver driver, string? schema = null, TestLogin login = TestLogin.Standard)
         => DatabaseEnvironment.Resolve(driver, schema, login);
 
     public TestDbContext CreateDbContext(DbDriver driver, string? schema = null, TestLogin login = TestLogin.Standard)
-        => new(driver, ResolveTarget(driver, login, schema).BuildConnectionString(), schema);
+        => new(driver, ResolveTarget(driver, schema, login).BuildConnectionString(), schema);
 
     public override async ValueTask InitializeAsync()
     {

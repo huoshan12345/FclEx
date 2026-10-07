@@ -5,6 +5,16 @@ namespace FclEx.Dapper.SqlAdapters;
 /// </summary>
 public class SqliteAdapter : SqlAdapterBase
 {
+    /// <inheritdoc />
+    /// <remarks>Checks main and temp using SQLite's case-insensitive identifier comparison. Attached databases and schema arguments are excluded.</remarks>
+    public override string BuildTableExistsCommandText(string tableNameParameter, string? schemaParameter = null)
+        => $"""
+            SELECT COUNT(*) FROM (
+                SELECT name, type FROM main.sqlite_master
+                UNION ALL
+                SELECT name, type FROM temp.sqlite_master
+            ) WHERE type = 'table' AND name = {tableNameParameter} COLLATE NOCASE
+            """;
     private const int MaxParametersPerCommand = 999;
 
     /// <inheritdoc />
