@@ -7,7 +7,7 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
         public string? Id { get; set; }
     }
 
-    public static readonly TheoryData<DbDriver, bool> ContainsAnyCases = DbDrivers
+    public static readonly TheoryData<DbDriver, bool> ContainsAnyCases = SelectedDrivers
         .CrossJoin([true, false])
         .ToTheoryData();
 
@@ -75,7 +75,7 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
     private static TheoryData<DbDriver, bool, string, string, string> CreateWildcardCases()
     {
         var cases = new TheoryData<DbDriver, bool, string, string, string>();
-        foreach (var driver in DbDrivers)
+        foreach (var driver in SelectedDrivers)
         {
             foreach (var escapeWildcards in new[] { false, true })
             {

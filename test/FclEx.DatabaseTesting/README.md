@@ -66,9 +66,9 @@ The exporter generates SQL without opening a database. Rebuild the shared librar
 
 ## Remote provisioning and isolation
 
-Remote resources keep the existing project/framework/OS names and schema/default-login cases. `TestDatabaseEnvironment.Resolve` maps MySQL's schema scenario to the selected database and Oracle's owner scenario to the actual login. `TestDatabaseTarget` builds the appropriate native connection string without global credential caching. `TestDbContext` consumes the resolved string without rewriting it.
+Remote resources keep the existing project/framework/OS names and schema/default-login cases. Fixtures own their `DatabaseEnvironment`. `TestDatabaseEnvironment.Resolve` maps MySQL's schema scenario to the selected database and Oracle's owner scenario to the actual login. `TestDatabaseTarget` builds the appropriate native connection string without global credential caching. `TestDbContext` consumes the resolved string without rewriting it.
 
-Normal startup does not recreate remote tables or users. It retains the existing PostgreSQL identity-sequence repair. The explicitly enabled `TestDbContextTests.SetupDatabase` remains the destructive provisioning operation; its engine matrix is independent of the normal provider override and excludes SQLite and the duplicate MySql.Data engine.
+Normal startup does not recreate remote tables or users. `SynchronizeIdentitySequenceAsync` retains the existing PostgreSQL identity-sequence repair. `SelectedDrivers` identifies this process's normal run selection. The explicitly enabled `TestDbContextTests.SetupDatabase` remains the destructive provisioning operation; its engine matrix is independent of the normal provider override and excludes SQLite and the duplicate MySql.Data engine.
 
 Remote names isolate projects, frameworks, operating systems, and schema scenarios, but two simultaneous runs using the same combination still share a resource. Avoid overlapping such runs. CI concurrency slots and remote schema fingerprinting are deferred operational improvements described in [DATABASE-TESTING.md](../DATABASE-TESTING.md); they are not implemented by this helper.
 

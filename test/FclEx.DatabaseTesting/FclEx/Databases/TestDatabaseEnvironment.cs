@@ -1,3 +1,4 @@
+// ReSharper disable UseAwaitUsing
 namespace FclEx.Databases;
 
 /// <summary>Resolves test namespaces and logins and owns a disposable SQLite database.</summary>

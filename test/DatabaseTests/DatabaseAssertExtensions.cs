@@ -1,6 +1,6 @@
 namespace FclEx.Tests;
 
-public static class Extensions
+public static class DatabaseAssertExtensions
 {
     extension(Assert)
     {
@@ -13,7 +13,7 @@ public static class Extensions
 
         public static void SkipUnlessIncluded(DbDriver driver)
         {
-            Assert.SkipUnlessIncluded(driver, DbDrivers);
+            Assert.SkipUnlessIncluded(driver, SelectedDrivers);
         }
     }
 }

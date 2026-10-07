@@ -65,14 +65,14 @@ public class SchemaDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         else if (dbDriver.IsMySql())
         {
             Assert.NotNull(defaultSchema);
-            var conStr = Fixture.ResolveTarget(dbDriver, TestLogin.DefaultSchemaUser);
-            Assert.Equal(conStr.Database, defaultSchema);
+            var target = Fixture.ResolveTarget(dbDriver, TestLogin.DefaultSchemaUser);
+            Assert.Equal(target.Database, defaultSchema);
         }
         else if (dbDriver is DbDriver.Oracle)
         {
             Assert.NotNull(defaultSchema);
-            var conStr = Fixture.ResolveTarget(dbDriver, TestLogin.DefaultSchemaUser);
-            Assert.Equal(conStr.Login.UserName, defaultSchema);
+            var target = Fixture.ResolveTarget(dbDriver, TestLogin.DefaultSchemaUser);
+            Assert.Equal(target.Login.UserName, defaultSchema);
         }
         else
         {

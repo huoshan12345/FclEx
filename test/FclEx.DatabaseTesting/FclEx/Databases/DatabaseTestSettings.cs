@@ -3,8 +3,8 @@ namespace FclEx.Databases;
 /// <summary>Defines run selection separately from the remote provisioning matrix.</summary>
 public static class DatabaseTestSettings
 {
-    public const string ProviderEnvironmentVariable = "FCLEX_TEST_DATABASES";
-    public const string DbName = "test";
+    public const string DriverSelectionEnvironmentVariable = "FCLEX_TEST_DATABASES";
+    public const string DatabaseName = "test";
     public const string DefaultUserName = "user";
     public const string DefaultUserPassword = "123456";
     public const string SqlServerUserPassword = "0Im1lI9BRZur";
@@ -26,8 +26,9 @@ public static class DatabaseTestSettings
     public static readonly DbDriver[] ProvisioningDrivers = SupportedDrivers
         .Where(driver => driver is not DbDriver.Sqlite and not DbDriver.MySql).ToArray();
 
-    public static readonly DbDriver[] DbDrivers = SelectDrivers(
-        Environment.GetEnvironmentVariable(ProviderEnvironmentVariable),
+    /// <summary>The drivers selected once for this test process, using the override or host defaults.</summary>
+    public static readonly DbDriver[] SelectedDrivers = SelectDrivers(
+        Environment.GetEnvironmentVariable(DriverSelectionEnvironmentVariable),
         !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_ACTION")),
         RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
 
@@ -62,9 +63,10 @@ public static class DatabaseTestSettings
         return drivers.ToArray();
     }
 
-    public static IEnumerable<(DbDriver Driver, string? Schema)> SchemaCases(IEnumerable<string?> schemas)
+    /// <summary>Combines selected drivers with schema scenarios, including only null-schema cases for SQLite.</summary>
+    public static IEnumerable<(DbDriver Driver, string? Schema)> GetDriverSchemaCases(IEnumerable<string?> schemas)
     {
-        foreach (var driver in DbDrivers)
+        foreach (var driver in SelectedDrivers)
         foreach (var schema in schemas)
         {
             if (driver != DbDriver.Sqlite || schema is null)
@@ -72,7 +74,13 @@ public static class DatabaseTestSettings
         }
     }
 
-    public static Task<int> FixAutoIncrement<T>(IDbConnection connection, DbDriver driver, string? schema)
+    /// <summary>Sets a PostgreSQL identity sequence's next value to one greater than the table's maximum key.</summary>
+    /// <returns>The configured next sequence value for PostgreSQL, or zero for other drivers.</returns>
+    /// <remarks>
+    /// Uses the shared test model's integer Id column. This changes persistent sequence state and must
+    /// run without concurrent inserts into the same table.
+    /// </remarks>
+    public static Task<int> SynchronizeIdentitySequenceAsync<T>(IDbConnection connection, DbDriver driver, string? schema)
     {
         if (driver != DbDriver.Npgsql)
             return Task.FromResult(0);

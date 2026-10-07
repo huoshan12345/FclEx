@@ -55,7 +55,7 @@ public class TestDbContext(
                 builder.UseMySQL(ConnectionString);
                 break;
             case DbDriver.MySqlConnector:
-                UseMySql(builder, ConnectionString);
+                ConfigureMySqlConnector(builder, ConnectionString);
                 break;
             case DbDriver.Oracle:
                 builder.UseOracle(ConnectionString);
@@ -118,10 +118,10 @@ public class TestDbContext(
 
     private static readonly ConcurrentDictionary<string, ServerVersion> MySqlServerVersions = new();
 
-    private static void UseMySql(DbContextOptionsBuilder builder, string connectionString)
+    private static void ConfigureMySqlConnector(DbContextOptionsBuilder builder, string connectionString)
     {
-        var ver = MySqlServerVersions.GetOrAdd(connectionString, m => ServerVersion.AutoDetect(m));
-        builder.UseMySql(connectionString, ver, o => o.SchemaBehavior(MySqlSchemaBehavior.Translate, (_, table) => table));
+        var serverVersion = MySqlServerVersions.GetOrAdd(connectionString, m => ServerVersion.AutoDetect(m));
+        builder.UseMySql(connectionString, serverVersion, o => o.SchemaBehavior(MySqlSchemaBehavior.Translate, (_, table) => table));
         builder.ReplaceService<ISqlGenerationHelper, CustomMySqlSqlGenerationHelper>();
     }
 

@@ -28,7 +28,7 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
             ? SqlServerUserPassword
             : DefaultUserPassword;
         var defaultUser = new DatabaseUser(WithAssemblyInfo(DefaultUserName), defaultPassword, WithAssemblyInfo(UserSchema));
-        var database = WithAssemblyInfo(DbName);
+        var database = WithAssemblyInfo(DatabaseName);
         using var environment = new TestDatabaseEnvironment(EfCoreFixture.Databases, database, defaultUser);
 
         foreach (var (_, schema, isFirst, _) in SchemaNames.IndexEx())
