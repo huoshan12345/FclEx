@@ -1,4 +1,6 @@
-namespace FclEx.Tests;
+using FclEx.Databases;
+
+namespace Xunit;
 
 public static class DatabaseAssertExtensions
 {

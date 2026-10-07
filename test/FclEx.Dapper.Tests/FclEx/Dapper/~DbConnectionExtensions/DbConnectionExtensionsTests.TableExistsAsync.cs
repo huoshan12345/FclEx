@@ -1,3 +1,4 @@
+﻿// ReSharper disable UseAwaitUsing
 namespace FclEx.Dapper;
 
 partial class DbConnectionExtensionsTests

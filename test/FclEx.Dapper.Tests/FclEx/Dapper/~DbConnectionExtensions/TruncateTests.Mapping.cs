@@ -1,7 +1,7 @@
 // ReSharper disable UseAwaitUsing
 namespace FclEx.Dapper;
 
-public partial class DbConnectionTruncateTests
+public partial class TruncateTests
 {
     [Theory(DisableParallelization = true)]
     [MemberData(nameof(DbSchemaTestCases))]

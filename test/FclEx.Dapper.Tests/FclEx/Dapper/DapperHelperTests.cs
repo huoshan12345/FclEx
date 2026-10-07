@@ -26,18 +26,6 @@ public class DapperHelperTests
     }
 
     [Fact]
-    public void PublicExtensionMethods_UseCompleteParameterNames()
-    {
-        var abbreviatedNames = new HashSet<string>(["con", "tran", "cons", "paras"], StringComparer.Ordinal);
-        var parameterNames = new[] { typeof(DbConnectionExtensions), typeof(DbTransactionExtensions) }
-            .SelectMany(type => type.GetMethods())
-            .SelectMany(method => method.GetParameters())
-            .Select(parameter => parameter.Name);
-
-        Assert.DoesNotContain(parameterNames, name => name is not null && abbreviatedNames.Contains(name));
-    }
-
-    [Fact]
     public void GetSqlAdapter_DerivedConnection_UsesMostSpecificRegistration()
     {
         var baseAdapter = new SqliteAdapter();

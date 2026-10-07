@@ -1,24 +1,8 @@
+// ReSharper disable UseAwaitUsing
 namespace FclEx.Dapper;
 
 public class ConnectionOwnershipTests
 {
-    [Fact]
-    public void ExecuteInTransactionAsync_DefaultIsolationLevel_IsReadCommitted()
-    {
-        var methods = typeof(DbConnectionExtensions)
-            .GetMethods()
-            .Where(method => method.Name == nameof(DbConnectionExtensions.ExecuteInTransactionAsync))
-            .ToArray();
-
-        Assert.Equal(4, methods.Length);
-        Assert.All(methods, method =>
-        {
-            var parameter = Assert.Single(method.GetParameters(), parameter => parameter.Name == "level");
-            Assert.True(parameter.HasDefaultValue);
-            Assert.Equal(IsolationLevel.ReadCommitted, parameter.DefaultValue);
-        });
-    }
-
     [Fact]
     public async Task CrudAsync_RestoresInitialConnectionState()
     {

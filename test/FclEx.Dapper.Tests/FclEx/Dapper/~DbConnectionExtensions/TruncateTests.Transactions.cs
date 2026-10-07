@@ -1,7 +1,7 @@
 // ReSharper disable UseAwaitUsing
 namespace FclEx.Dapper;
 
-public partial class DbConnectionTruncateTests
+public partial class TruncateTests
 {
     public static TheoryData<DbDriver, string?, bool> TransactionCases =>
         (from pair in GetDriverSchemaCases(Schemas)

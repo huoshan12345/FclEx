@@ -17,6 +17,9 @@
     <Reference Include="System.ComponentModel.DataAnnotations" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\FclEx.Xunit.v3\FclEx.Xunit.v3.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <EmbeddedResource Include="Schemas/Sqlite.sql" LogicalName="FclEx.DatabaseTesting.Sqlite.sql" />
   </ItemGroup>
 </Project>

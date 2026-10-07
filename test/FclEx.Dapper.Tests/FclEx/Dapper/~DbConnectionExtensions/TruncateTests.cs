@@ -2,7 +2,7 @@
 namespace FclEx.Dapper;
 
 [TestClass(DisableParallelization = true)]
-public partial class DbConnectionTruncateTests(DapperTestsFixture fixture) : DapperTests(fixture)
+public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fixture)
 {
     public static TheoryData<DbDriver, string?, bool, bool> OptionCases =>
         (from pair in GetDriverSchemaCases(Schemas)

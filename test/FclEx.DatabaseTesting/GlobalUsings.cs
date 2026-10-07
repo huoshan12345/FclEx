@@ -10,4 +10,5 @@ global using FclEx.Dapper;
 global using FclEx.Domain;
 global using FclEx.Extensions;
 global using Microsoft.Data.Sqlite;
+global using Xunit;
 global using static FclEx.Databases.DatabaseTestSettings;
