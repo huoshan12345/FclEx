@@ -19,8 +19,6 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
          from cascade in new[] { false, true }
          select (pair.Driver, pair.Schema, restart, cascade)).ToTheoryData();
 
-    private static void SkipMySql(DbDriver driver)
-        => Assert.SkipMySql(driver);
 
     private static bool SupportsOptions(DbDriver driver, bool restartIdentity, bool cascade) => driver switch
     {
@@ -34,7 +32,8 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_RemovesAllRowsAndPreservesEntityValuesAndConnectionState(DbDriver driver, string? schema)
     {
-        SkipMySql(driver);
+        Assert.SkipMySql(driver);
+
         using var session = await CreateSessionAsync(driver, schema);
         var connection = session.Connection;
         schema = session.Schema;
@@ -48,7 +47,8 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_PreservesClosedConnectionState(DbDriver driver, string? schema)
     {
-        SkipMySql(driver);
+        Assert.SkipMySql(driver);
+
         using var session = Fixture.TruncateTables.CreateClosedConnectionSession(driver, schema);
         Session = session;
         var connection = session.Connection;
@@ -56,23 +56,30 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
             token => connection.TruncateAsync<EntityWithAutoKey>(schema, Options, token));
         await VerifyTruncationAsync(connection, driver, schema,
             token => connection.TruncateAsync(Session.GetTableName(typeof(EntityWithAutoKey)), schema, Options, token));
+
         foreach (var restart in new[] { false, true })
+        {
             foreach (var cascade in new[] { false, true })
             {
                 await VerifyTruncationAsync(connection, driver, schema,
                     token => connection.TruncateAsync<EntityWithAutoKey>(restart, cascade, schema, Options, token), restart, cascade);
+
                 await VerifyTruncationAsync(connection, driver, schema,
                     token => connection.TruncateAsync(Session.GetTableName(typeof(EntityWithAutoKey)), restart, cascade, schema, Options, token), restart, cascade);
             }
+        }
+
         if (schema is not null)
         {
             var options = Options with
             {
                 EntityMappingSource = new MappingSource(Session.GetTableName(typeof(EntityWithAutoKey)), "missing_schema"),
             };
+
             await VerifyTruncationAsync(connection, driver, schema,
                 token => connection.TruncateAsync<MappedRow>(schema, options, token));
         }
+
         Assert.Equal(ConnectionState.Closed, connection.State);
     }
 
@@ -81,7 +88,8 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
     public async Task TruncateAsync_ExplicitOptionsHonorDatabaseCapabilities(
         DbDriver driver, string? schema, bool restartIdentity, bool cascade)
     {
-        SkipMySql(driver);
+        Assert.SkipMySql(driver);
+
         using var session = await CreateSessionAsync(driver, schema);
         var connection = session.Connection;
         schema = session.Schema;
@@ -155,7 +163,8 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_HandlesTablesWithoutIdentityAndKeylessMappings(DbDriver driver, string? schema)
     {
-        SkipMySql(driver);
+        Assert.SkipMySql(driver);
+
         using var session = await CreateSessionAsync(driver, schema, typeof(EntityWithGuidKey), typeof(EntityWithoutKey));
         var connection = session.Connection;
         schema = session.Schema;
@@ -185,7 +194,8 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_ObservesCancellationWithoutRemovingRows(DbDriver driver, string? schema)
     {
-        SkipMySql(driver);
+        Assert.SkipMySql(driver);
+
         using var session = await CreateSessionAsync(driver, schema);
         var connection = session.Connection;
         schema = session.Schema;
@@ -230,7 +240,8 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
     [MemberData(nameof(CascadeCases))]
     public async Task TruncateAsync_CascadeRemovesReferencingRows(DbDriver driver, string? schema)
     {
-        SkipMySql(driver);
+        Assert.SkipMySql(driver);
+
         using var session = await CreateSessionAsync(driver, schema, typeof(EntityHasStates), typeof(EntityWithNavigation));
         var connection = session.Connection;
         schema = session.Schema;

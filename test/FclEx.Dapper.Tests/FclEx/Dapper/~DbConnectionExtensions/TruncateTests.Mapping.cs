@@ -7,7 +7,8 @@ public partial class TruncateTests
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_UsesMappedTableSchemaAndAdapterOverrides(DbDriver driver, string? schema)
     {
-        SkipMySql(driver);
+        Assert.SkipMySql(driver);
+
         var targetSchema = schema;
         using var session = await CreateSessionAsync(driver, schema, typeof(EntityWithAutoKey), typeof(HasTableAttributeEntity));
         var connection = session.Connection;
@@ -51,7 +52,8 @@ public partial class TruncateTests
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_MissingLiteralTableNameDoesNotRemoveExistingRows(DbDriver driver, string? schema)
     {
-        SkipMySql(driver);
+        Assert.SkipMySql(driver);
+
         using var session = await CreateSessionAsync(driver, schema);
         var connection = session.Connection;
         schema = session.Schema;

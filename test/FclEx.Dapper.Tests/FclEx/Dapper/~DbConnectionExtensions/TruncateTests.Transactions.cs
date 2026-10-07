@@ -25,7 +25,8 @@ public partial class TruncateTests
     [MemberData(nameof(TransactionCases))]
     public async Task TruncateAsync_UsesCallerTransactionAndCanRollBack(DbDriver driver, string? schema, bool restartIdentity)
     {
-        SkipMySql(driver);
+        Assert.SkipMySql(driver);
+
         using var session = await CreateSessionAsync(driver, schema);
         var connection = session.Connection;
         schema = session.Schema;
@@ -67,7 +68,8 @@ public partial class TruncateTests
     [MemberData(nameof(SqliteDriverCases))]
     public async Task TruncateAsync_AcceptsDerivedConnectionType(DbDriver driver)
     {
-        SkipMySql(driver);
+        Assert.SkipMySql(driver);
+
         using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, null, [typeof(EntityWithAutoKey)],
             new DerivedSqliteConnection(Fixture.DatabaseEnvironment.Resolve(driver).BuildConnectionString()), CancellationToken);
         Session = session;
