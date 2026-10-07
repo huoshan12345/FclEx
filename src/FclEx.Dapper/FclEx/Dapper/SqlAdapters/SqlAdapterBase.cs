@@ -79,6 +79,15 @@ public abstract class SqlAdapterBase : ISqlAdapter
         => throw new NotSupportedException($"'{GetType().FullName}' does not support table metadata queries.");
 
     /// <inheritdoc />
+    public virtual string BuildTruncateCommandText(string quotedTableName, bool? restartIdentity, bool cascade)
+        => throw new NotSupportedException($"'{GetType().FullName}' does not support table truncation.");
+
+    /// <inheritdoc />
+    public virtual Task<int> ExecuteTruncateAsync(
+        DbCommand command, string tableName, bool? restartIdentity, CancellationToken cancellationToken = default)
+        => command.ExecuteNonQueryAsync(cancellationToken);
+
+    /// <inheritdoc />
     public abstract int GetMaxInsertBatchSize(int parameterCountPerRow);
 
     /// <inheritdoc />

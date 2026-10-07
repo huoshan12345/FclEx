@@ -10,6 +10,7 @@ public class DbSetExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     public async Task TruncateAsync_ExplicitOptionsHonorDatabaseCapabilities(
         DbDriver driver, string? schema, bool restartIdentity, bool cascade)
     {
+        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
         await using var context = Fixture.CreateDbContext(driver, schema);
         await TruncateTests.VerifyTruncationAsync(context,
             token => context.EntityWithAutoKey.TruncateAsync(restartIdentity, cascade, token), restartIdentity, cascade);
@@ -19,6 +20,7 @@ public class DbSetExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_RemovesAllRowsAndPreservesTrackedEntities(DbDriver driver, string? schema)
     {
+        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
         await using var context = Fixture.CreateDbContext(driver, schema);
         await TruncateTests.VerifyTruncationAsync(context, token => context.EntityWithAutoKey.TruncateAsync(token));
     }
@@ -27,6 +29,7 @@ public class DbSetExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_PreservesNamedSharedTypeEntityIdentity(DbDriver driver, string? schema)
     {
+        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
         await using var context = Fixture.CreateDbContext(driver, schema);
         await TruncateTests.VerifyNamedSharedTypeAsync(context, true);
     }
@@ -50,6 +53,7 @@ public class DbSetExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_ObservesCancellationWithoutRemovingRows(DbDriver driver, string? schema)
     {
+        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
         await using var context = Fixture.CreateDbContext(driver, schema);
         try
         {

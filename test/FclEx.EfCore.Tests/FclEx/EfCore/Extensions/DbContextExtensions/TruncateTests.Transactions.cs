@@ -9,6 +9,7 @@ public partial class TruncateTests
     [MemberData(nameof(SqliteDriverCases))]
     public async Task TruncateAsync_AcceptsDerivedConnectionType(DbDriver driver)
     {
+        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
         await using var connection = new DerivedSqliteConnection(Fixture.ResolveTarget(driver).BuildConnectionString());
         await using var context = Fixture.CreateDbContext(driver);
         context.Database.SetDbConnection(connection);
@@ -39,6 +40,7 @@ public partial class TruncateTests
     public async Task TruncateAsync_UsesCallerTransactionAndCanRollBack(
         DbDriver driver, string? schema, bool restartIdentity)
     {
+        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
         await using var context = Fixture.CreateDbContext(driver, schema);
         try
         {

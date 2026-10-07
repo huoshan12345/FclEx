@@ -6,6 +6,14 @@ namespace FclEx.Dapper.SqlAdapters;
 public class MySqlAdapter : SqlAdapterBase
 {
     /// <inheritdoc />
+    public override string BuildTruncateCommandText(string quotedTableName, bool? restartIdentity, bool cascade)
+    {
+        if (restartIdentity == false || cascade)
+            throw new NotSupportedException("MySQL TRUNCATE requires restartIdentity=true and cascade=false.");
+        return $"TRUNCATE TABLE {quotedTableName};";
+    }
+
+    /// <inheritdoc />
     /// <remarks>Checks base tables in the selected database; the schema argument is ignored, as in this adapter's CRUD operations.</remarks>
     public override string BuildTableExistsCommandText(string tableNameParameter, string? schemaParameter = null)
         => $"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = {tableNameParameter} AND table_type = 'BASE TABLE'";

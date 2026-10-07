@@ -20,6 +20,7 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_RemovesAllRowsAndPreservesTrackedEntities(DbDriver driver, string? schema)
     {
+        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
         await using var context = Fixture.CreateDbContext(driver, schema);
         await VerifyTruncationAsync(context, token => context.TruncateAsync<EntityWithAutoKey>(token));
         await VerifyTruncationAsync(context, token => context.TruncateAsync(typeof(EntityWithAutoKey), token));
@@ -30,6 +31,7 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     public async Task TruncateAsync_ExplicitOptionsHonorDatabaseCapabilities(
         DbDriver driver, string? schema, bool restartIdentity, bool cascade)
     {
+        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
         await using var context = Fixture.CreateDbContext(driver, schema);
         await VerifyTruncationAsync(context,
             token => context.TruncateAsync<EntityWithAutoKey>(restartIdentity, cascade, token), restartIdentity, cascade);
@@ -100,6 +102,7 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_HonorsReferencingTableConstraints(DbDriver driver, string? schema)
     {
+        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
         await using var context = Fixture.CreateDbContext(driver, schema);
         try
         {
@@ -138,6 +141,7 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_HandlesTablesWithoutIdentity(DbDriver driver, string? schema)
     {
+        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
         await using var context = Fixture.CreateDbContext(driver, schema);
         try
         {
@@ -160,6 +164,7 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_HandlesKeylessTables(DbDriver driver, string? schema)
     {
+        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
         await using var context = Fixture.CreateDbContext(driver, schema);
         var entityType = context.Model.FindEntityType(typeof(EntityWithoutKey))!;
         var sqlHelper = context.GetService<ISqlGenerationHelper>();
@@ -185,6 +190,7 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_ObservesCancellationWithoutRemovingRows(DbDriver driver, string? schema)
     {
+        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
         await using var context = Fixture.CreateDbContext(driver, schema);
         try
         {

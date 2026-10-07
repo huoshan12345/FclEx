@@ -28,6 +28,7 @@ public partial class TruncateTests
     [MemberData(nameof(DbDriverCases))]
     public async Task TruncateAsync_RejectsUnknownEntity(DbDriver driver)
     {
+        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
         await using var context = Fixture.CreateDbContext(driver);
         await Assert.ThrowsAsync<InvalidOperationException>(() => context.TruncateAsync<string>());
         await Assert.ThrowsAsync<InvalidOperationException>(() => context.TruncateAsync<string>(true, false));

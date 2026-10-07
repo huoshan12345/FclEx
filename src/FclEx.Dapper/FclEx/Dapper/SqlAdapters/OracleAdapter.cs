@@ -3,6 +3,14 @@ namespace FclEx.Dapper.SqlAdapters;
 public class OracleAdapter : SqlAdapterBase
 {
     /// <inheritdoc />
+    public override string BuildTruncateCommandText(string quotedTableName, bool? restartIdentity, bool cascade)
+    {
+        if (restartIdentity == true)
+            throw new NotSupportedException("Oracle TRUNCATE does not restart identity sequences.");
+        return $"TRUNCATE TABLE {quotedTableName}" + (cascade ? " CASCADE" : "");
+    }
+
+    /// <inheritdoc />
     /// <remarks>Uses the session's CURRENT_SCHEMA when no owner is supplied. Names retain their exact catalog casing.</remarks>
     public override string BuildTableExistsCommandText(string tableNameParameter, string? schemaParameter = null)
     {

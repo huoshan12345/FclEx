@@ -160,6 +160,39 @@ SQL Server and PostgreSQL use native unqualified-name resolution when no schema 
 
 `ISqlAdapter.BuildTableExistsCommandText` supplies the metadata query. Direct interface implementations must implement this new member. `SqlAdapterBase` preserves existing derived implementations with a default that throws NotSupportedException until metadata querying is supplied.
 
+## Table Truncation
+
+`TruncateAsync` accepts an unquoted table name or an entity mapping and removes every row in the physical table:
+
+```csharp
+await connection.TruncateAsync<Order>(schema: "Sales", commandOptions: options, cancellationToken: cancellationToken);
+await connection.TruncateAsync("Orders", restartIdentity: true, cascade: false,
+    schema: "Sales", commandOptions: options, cancellationToken: cancellationToken);
+```
+
+The entity overload honors its mapping source and mapped schema; an explicit schema overrides the mapping.
+No key is required. Identifier components are escaped by the resolved or overridden SQL adapter. The helper
+preserves the connection's initial state and accepts local transactions, timeouts, and cancellation through
+the existing command options. It does not validate EF-style inheritance or table sharing and does not
+consult application filters, soft-delete rules, or entity state.
+
+| Database | Default identity behavior | Explicit options |
+| --- | --- | --- |
+| SQL Server / MySQL | Reset | `restartIdentity: true, cascade: false` |
+| PostgreSQL | Preserve | All combinations |
+| Oracle | Preserve | `restartIdentity: false`; CASCADE requires Oracle 12c+ and ON DELETE CASCADE foreign keys |
+| SQLite | Reset AUTOINCREMENT when present | `cascade: false`; reset or preserve AUTOINCREMENT |
+
+SQLite uses DELETE followed by sequence maintenance in one transaction. It preserves caller-owned
+transactions and otherwise creates and commits a local transaction. Main and temp tables are supported;
+attached databases are excluded. DELETE triggers and foreign-key actions execute. Ordinary ROWID allocation
+follows SQLite rules regardless of `restartIdentity`. Native TRUNCATE behavior is database-dependent:
+foreign keys can prevent execution, CASCADE can affect additional tables, and MySQL/Oracle implicitly commit.
+
+Adapters provide `BuildTruncateCommandText` and `ExecuteTruncateAsync`. Direct `ISqlAdapter` implementations
+must implement these new members. `SqlAdapterBase` rejects unsupported truncation by default and provides
+ordinary command execution; SQLite overrides execution for atomic sequence maintenance.
+
 ## Dapper Global State and Type Handlers
 
 On first use, `DapperHelper` calls `Initialize()` to register `Dapper.GuidTypeHandler` and `Dapper.DateTimeOffsetTypeHandler` independently when no application handler is registered for that type. Installing a default handler removes the corresponding parameter type maps, including nullable and application mappings, so Dapper uses that handler for parameters. Applications registering their own handlers remain responsible for removing conflicting parameter maps. These changes affect all Dapper calls in the process. Call `Initialize()` explicitly before ordinary Dapper operations or after resetting Dapper's handlers. Core CRUD operations do not scan assemblies or change other Dapper settings. Generated queries alias database columns back to CLR property names, so they do not require a global Dapper type map.

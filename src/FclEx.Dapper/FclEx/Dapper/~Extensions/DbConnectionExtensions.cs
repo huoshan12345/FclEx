@@ -16,7 +16,7 @@ internal readonly record struct InsertSqlKey(
     int RowCount);
 
 /// <summary>
-/// Provides cached CRUD commands, table metadata checks, and execution helpers for <see cref="DbConnection"/>.
+/// Provides cached CRUD commands, table metadata checks, truncation, and execution helpers for <see cref="DbConnection"/>.
 /// </summary>
 public static partial class DbConnectionExtensions
 {
