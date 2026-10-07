@@ -13,9 +13,9 @@ public static class DatabaseTestSettings
 
     public static readonly DbDriver[] SupportedDrivers =
     [
-        DbDriver.SqlServer, 
+        DbDriver.SqlServer,
         DbDriver.Sqlite,
-        DbDriver.Npgsql, 
+        DbDriver.Npgsql,
         DbDriver.MySql,
         DbDriver.MySqlConnector,
 #if SUPPORT_ORACLE
@@ -41,10 +41,10 @@ public static class DatabaseTestSettings
                     ? [
                         DbDriver.Npgsql,
                         DbDriver.Sqlite,
+                        DbDriver.MySqlConnector,
                     ]
                     : [
                         DbDriver.SqlServer,
-                        DbDriver.MySqlConnector,
                         DbDriver.Oracle,
                     ]
                 : [
@@ -54,16 +54,18 @@ public static class DatabaseTestSettings
                 ];
         }
 
-        var drivers = new List<DbDriver>();
-        foreach (var name in selection.Split(','))
+        var drivers = new HashSet<DbDriver>();
+        foreach (var name in selection.Split(',').Select(m => m.Trim()).Where(m => m.IsNotEmpty()))
         {
-            if (!Enum.TryParse<DbDriver>(name.Trim(), true, out var driver)
-                || !SupportedDrivers.Contains(driver)
-                || !string.Equals(name.Trim(), driver.ToString(), StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException($"Unsupported database driver '{name}'. Supported drivers: {string.Join(", ", SupportedDrivers)}.", nameof(selection));
+            if (Enum.TryParse<DbDriver>(name, true, out var driver) == false
+                || SupportedDrivers.Contains(driver) == false)
+            {
+                throw new ArgumentException(
+                    $"Unsupported database driver '{name}'. Supported drivers: {string.Join(", ", SupportedDrivers)}.",
+                    nameof(selection));
+            }
 
-            if (!drivers.Contains(driver))
-                drivers.Add(driver);
+            drivers.Add(driver);
         }
         return drivers.ToArray();
     }
@@ -71,12 +73,12 @@ public static class DatabaseTestSettings
     /// <summary>Combines selected drivers with schema scenarios, including only null-schema cases for SQLite.</summary>
     public static IEnumerable<(DbDriver Driver, string? Schema)> GetDriverSchemaCases(IEnumerable<string?> schemas)
     {
-        foreach (var driver in SelectedDrivers)
-        foreach (var schema in schemas)
-        {
-            if (driver != DbDriver.Sqlite || schema is null)
-                yield return (driver, schema);
-        }
+        return from driver in SelectedDrivers
+               from schema in schemas
+#pragma warning disable IDE0078
+               where driver is not DbDriver.Sqlite || schema is null
+#pragma warning restore IDE0078
+               select (driver, schema);
     }
 
     /// <summary>Sets a PostgreSQL identity sequence's next value to one greater than the table's maximum key.</summary>
