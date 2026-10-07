@@ -20,7 +20,7 @@ public static class DatabaseAssertExtensions
 
         public static void SkipMySql(DbDriver driver)
         {
-            Assert.SkipMySql(driver);
+            Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
         }
     }
 }
