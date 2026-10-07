@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
-namespace FclEx.EfCore.Extensions;
+namespace FclEx.EfCore.Extensions.DbContextExtensions;
 
 internal sealed class TruncateTestContext(DbContextOptions options, string shape = "simple") : DbContext(options)
 {

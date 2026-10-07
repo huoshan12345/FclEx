@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore.Metadata;
-using static FclEx.EfCore.Extensions.TruncateTestContext;
+using static FclEx.EfCore.Extensions.DbContextExtensions.TruncateTestContext;
 
-namespace FclEx.EfCore.Extensions;
+namespace FclEx.EfCore.Extensions.DbContextExtensions;
 
 public partial class DbContextTruncateTests
 {

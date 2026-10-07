@@ -1,4 +1,5 @@
-using static FclEx.EfCore.Extensions.TruncateTestContext;
+using FclEx.EfCore.Extensions.DbContextExtensions;
+using static FclEx.EfCore.Extensions.DbContextExtensions.TruncateTestContext;
 
 namespace FclEx.EfCore.Extensions;
 
