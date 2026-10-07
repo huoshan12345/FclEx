@@ -616,6 +616,9 @@ public static partial class DbConnectionExtensions
         {
             var adapter = commandOptions.SqlAdapter ?? GetSqlAdapter(con);
             var (sql, paras) = sqlFunc(adapter);
+#if NET5_0_OR_GREATER
+            await
+#endif
             using var cmd = con.CreateCommand(sql, paras, commandOptions.TimeoutSeconds, commandOptions.Transaction);
             await con.TryOpenAsync(cancellationToken);
             return await func(adapter, cmd);

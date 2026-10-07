@@ -40,10 +40,15 @@ public static class DatabaseTestSettings
                 ? isWindows
                     ? [
                         DbDriver.Npgsql,
-                        DbDriver.Sqlite
+                        DbDriver.Sqlite,
                     ]
-                    : SupportedDrivers
+                    : [
+                        DbDriver.SqlServer,
+                        DbDriver.MySqlConnector,
+                        DbDriver.Oracle,
+                    ]
                 : [
+                    DbDriver.MySqlConnector,
                     DbDriver.SqlServer,
                     DbDriver.Sqlite,
                 ];
