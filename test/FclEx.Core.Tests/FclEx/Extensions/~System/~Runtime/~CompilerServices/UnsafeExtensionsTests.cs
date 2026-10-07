@@ -76,7 +76,7 @@ public class UnsafeExtensionsTests
         return size;
     }
 
-    [LocalOnlyFact]
+    [Fact(Explicit = true)]
     public void CompareSizeOf()
     {
         var table = new ConsoleTable(new()

@@ -23,7 +23,7 @@ public class ConversationsApiTests : SlackTests
         }
     }
 
-    [LocalOnlyTheory]
+    [Theory(Explicit = true)]
     [InlineData(SlackChannelIds.MonitoringLogTest)]
     public async Task History_Test(string channel)
     {

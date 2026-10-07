@@ -18,9 +18,7 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     /// Set up databases for all test cases.
     /// Run this only when test entities are changed.
     /// </summary>
-    [LocalOnlyTheory(
-        Skip = "Run this only when necessary",
-        DisableParallelization = true)]
+    [Theory(Explicit = true, DisableParallelization = true)]
     [MemberData(nameof(SetupDatabaseCases))]
     public async Task SetupDatabase(DbDriver dbDriver, string assemblyName, int dotNetVersion, string os)
     {

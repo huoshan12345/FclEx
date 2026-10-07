@@ -28,7 +28,7 @@ public class SendAsyncTests : HttpServerTests
         .Take(1)
         .Any(InterfaceHasIpv6Enabled);
 
-    [LocalOnlyTheory]
+    [Theory(Explicit = true)]
     [InlineData(true)]
     [InlineData(false)]
     public async Task SendAsync_WithIpVersionPolicy_UsesRequestedAddressFamily(bool ipv6)

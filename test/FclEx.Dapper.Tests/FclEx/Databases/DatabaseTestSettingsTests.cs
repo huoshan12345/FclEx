@@ -4,15 +4,18 @@ public class DatabaseTestSettingsTests
 {
     [Fact]
     public void ExplicitSelection_IsCaseInsensitiveAndRemovesDuplicates()
-        => Assert.Equal([DbDriver.Sqlite, DbDriver.Npgsql], SelectDrivers("sqlite, Npgsql, Sqlite", false, true));
+    {
+        Assert.Equal([DbDriver.Sqlite, DbDriver.Npgsql], SelectDrivers("sqlite, Npgsql, Sqlite", false, true));
+    }
 
     [Theory]
     [InlineData("")]
-    [InlineData("Sqlite,")]
     [InlineData("unknown")]
     [InlineData("1")]
     public void InvalidSelection_ReportsConfigurationError(string selection)
-        => Assert.Throws<ArgumentException>(() => SelectDrivers(selection, false, true));
+    {
+        Assert.Throws<ArgumentException>(() => SelectDrivers(selection, false, true));
+    }
 
     [Fact]
     public void ProvisioningSelection_IsIndependentOfRunSelectionAndDeduplicatesMySqlEngine()

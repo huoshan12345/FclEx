@@ -71,7 +71,7 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         await ctx.Context.Database.CloseConnectionAsync();
     }
 
-    [LocalOnlyFact]
+    [Fact(Explicit = true)]
     public async Task Connect_WithSsh_Test()
     {
         Assert.SkipUnlessIncluded(DbDriver.Npgsql);

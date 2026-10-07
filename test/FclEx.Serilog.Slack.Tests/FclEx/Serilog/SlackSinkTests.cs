@@ -4,7 +4,7 @@ namespace FclEx.Serilog;
 
 public class SlackSinkTests : SlackTests
 {
-    [LocalOnlyFact]
+    [Fact(Explicit = true)]
     public async Task EmitBatchAsync_Test()
     {
         var start = DateTimeOffset.Now;

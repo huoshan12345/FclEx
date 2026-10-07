@@ -57,7 +57,7 @@ public static class DatabaseTestSettings
         var drivers = new HashSet<DbDriver>();
         foreach (var name in selection.Split(',').Select(m => m.Trim()).Where(m => m.IsNotEmpty()))
         {
-            if (Enum.TryParse<DbDriver>(name, true, out var driver) == false
+            if (Enum.TryParse<DbDriver>(name, ignoreCase: true, fromNumeric: false, out var driver) == false
                 || SupportedDrivers.Contains(driver) == false)
             {
                 throw new ArgumentException(
@@ -67,6 +67,12 @@ public static class DatabaseTestSettings
 
             drivers.Add(driver);
         }
+
+        if (drivers.IsEmpty())
+            throw new ArgumentException(
+                $"No supported database drivers were selected. Supported drivers: {string.Join(", ", SupportedDrivers)}.",
+                nameof(selection));
+
         return drivers.ToArray();
     }
 

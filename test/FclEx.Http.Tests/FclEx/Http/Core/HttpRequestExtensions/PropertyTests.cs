@@ -223,7 +223,7 @@ public class PropertyTests : HttpServerTests
         Assert.Equal("https://alice:secret@api.example.com:8443/v1/items?x=1#section", request.GetUri().ToString());
     }
 
-    [LocalOnlyFact]
+    [Fact(Explicit = true)]
     public async Task SaveCharSetTestResponseBytes()
     {
         var assemblyName = typeof(PropertyTests).Assembly.GetName().Name;
