@@ -6,7 +6,7 @@ public class EfCoreTestsCollection : ICollectionFixture<EfCoreFixture>;
 [Collection(nameof(EfCoreTestsCollection))]
 public class EfCoreTests(EfCoreFixture fixture) : DatabaseTests
 {
-    public static readonly TheoryData<DbDriver, string?> DbSchemaTestCases = DatabaseTestSettings.GetDriverSchemaCases(Schemas).ToTheoryData();
+    public static readonly TheoryData<DbDriver, string?> DbSchemaTestCases = GetDriverSchemaCases(Schemas).ToTheoryData();
 
     public EfCoreFixture Fixture { get; } = fixture;
 

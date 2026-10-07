@@ -1,3 +1,5 @@
+using FclEx.Xunit;
+
 namespace FclEx.Databases;
 
 /// <summary>Defines run selection separately from the remote provisioning matrix.</summary>
@@ -24,13 +26,14 @@ public static class DatabaseTestSettings
     ];
 
     public static readonly DbDriver[] ProvisioningDrivers = SupportedDrivers
-        .Where(driver => driver is not DbDriver.Sqlite and not DbDriver.MySql).ToArray();
+        .Where(driver => driver is not DbDriver.Sqlite and not DbDriver.MySql)
+        .ToArray();
 
     /// <summary>The drivers selected once for this test process, using the override or host defaults.</summary>
     public static readonly DbDriver[] SelectedDrivers = SelectDrivers(
         Environment.GetEnvironmentVariable(DriverSelectionEnvironmentVariable),
-        !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_ACTION")),
-        RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+        TestHelper.IsGithubAction,
+        TestHelper.IsWindows);
 
     public static DbDriver[] SelectDrivers(string? selection, bool isGithubAction, bool isWindows)
     {
@@ -41,11 +44,11 @@ public static class DatabaseTestSettings
                     ? [
                         DbDriver.Npgsql,
                         DbDriver.Sqlite,
-                        DbDriver.MySqlConnector,
+                        DbDriver.SqlServer,
                     ]
                     : [
-                        DbDriver.SqlServer,
                         DbDriver.Oracle,
+                        DbDriver.MySqlConnector,
                     ]
                 : [
                     DbDriver.MySqlConnector,
