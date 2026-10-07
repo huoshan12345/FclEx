@@ -1,101 +1,69 @@
 using FclEx.EfCore.Extensions.DbContextExtensions;
-using static FclEx.EfCore.Extensions.DbContextExtensions.TruncateTestContext;
 
 namespace FclEx.EfCore.Extensions;
 
-public class DbSetExtensionsTests
+[TestClass(DisableParallelization = true)]
+public class DbSetExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
-    [Theory]
-    [MemberData(nameof(DbContextTruncateTests.OptionCases), MemberType = typeof(DbContextTruncateTests))]
-    public async Task TruncateAsync_ExplicitOptionsHonorProviderCapabilities(
-        int provider, bool restartIdentity, bool cascade, string? expected)
+    [Theory(DisableParallelization = true)]
+    [MemberData(nameof(TruncateTests.OptionCases), MemberType = typeof(TruncateTests))]
+    public async Task TruncateAsync_ExplicitOptionsHonorDatabaseCapabilities(
+        DbDriver driver, string? schema, bool restartIdentity, bool cascade)
     {
-        var recorder = new CommandRecorder();
-        await using var context = Create(provider, "simple", recorder);
-        using var source = new CancellationTokenSource();
-
-        if (expected is null)
-        {
-            await Assert.ThrowsAsync<NotSupportedException>(() =>
-                context.Set<Item>().TruncateAsync(restartIdentity, cascade, source.Token));
-            Assert.Empty(recorder.Commands);
-            Assert.Equal(0, recorder.OpenCount);
-        }
-        else
-        {
-            await context.Set<Item>().TruncateAsync(restartIdentity, cascade, source.Token);
-            Assert.Equal([expected], recorder.Commands);
-            Assert.Equal(source.Token, recorder.CommandToken);
-        }
+        await using var context = Fixture.CreateDbContext(driver, schema);
+        await TruncateTests.VerifyTruncationAsync(context,
+            token => context.EntityWithAutoKey.TruncateAsync(restartIdentity, cascade, token), restartIdentity, cascade);
     }
 
-    [Theory]
-    [MemberData(nameof(DbContextTruncateTests.ProviderCases), MemberType = typeof(DbContextTruncateTests))]
-    public async Task TruncateAsync_UsesSetMetadataAndCancellation(int provider, string expected)
+    [Theory(DisableParallelization = true)]
+    [MemberData(nameof(DbSchemaTestCases))]
+    public async Task TruncateAsync_RemovesAllRowsAndPreservesTrackedEntities(DbDriver driver, string? schema)
     {
-        var recorder = new CommandRecorder();
-        await using var context = Create(provider, "simple", recorder);
-        using var source = new CancellationTokenSource();
-
-        await context.Set<Item>().TruncateAsync(source.Token);
-
-        Assert.Equal([expected], recorder.Commands);
-        Assert.Equal(source.Token, recorder.CommandToken);
+        await using var context = Fixture.CreateDbContext(driver, schema);
+        await TruncateTests.VerifyTruncationAsync(context, token => context.EntityWithAutoKey.TruncateAsync(token));
     }
 
-    [Fact]
-    public async Task TruncateAsync_PreservesNamedSharedTypeEntityIdentity()
+    [Theory(DisableParallelization = true)]
+    [MemberData(nameof(DbSchemaTestCases))]
+    public async Task TruncateAsync_PreservesNamedSharedTypeEntityIdentity(DbDriver driver, string? schema)
     {
-        var recorder = new CommandRecorder();
-        await using var context = Create(0, "shared-type", recorder);
-
-        await context.Set<Dictionary<string, object>>("Second").TruncateAsync();
-        await context.Set<Dictionary<string, object>>("Second").TruncateAsync(true, false);
-
-        Assert.Equal(["TRUNCATE TABLE [Tenant].[Second];", "TRUNCATE TABLE [Tenant].[Second];"], recorder.Commands);
-    }
-
-    [Fact]
-    public async Task TruncateAsync_RejectsSharedPhysicalTable()
-    {
-        var recorder = new CommandRecorder();
-        await using var context = Create(0, "owned", recorder);
-
-        await Assert.ThrowsAsync<NotSupportedException>(() => context.Set<Item>().TruncateAsync());
-        await Assert.ThrowsAsync<NotSupportedException>(() => context.Set<Item>().TruncateAsync(true, false));
-
-        Assert.Equal(0, recorder.OpenCount);
+        await using var context = Fixture.CreateDbContext(driver, schema);
+        await TruncateTests.VerifyNamedSharedTypeAsync(context, true);
     }
 
     [Fact]
     public async Task TruncateAsync_ValidatesNullSet()
     {
-        await Assert.ThrowsAsync<ArgumentNullException>(() => ((DbSet<Item>)null!).TruncateAsync());
-        await Assert.ThrowsAsync<ArgumentNullException>(() => ((DbSet<Item>)null!).TruncateAsync(true, false));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => ((DbSet<EntityWithAutoKey>)null!).TruncateAsync());
+        await Assert.ThrowsAsync<ArgumentNullException>(() => ((DbSet<EntityWithAutoKey>)null!).TruncateAsync(true, false));
     }
 
     [Fact]
-    public async Task TruncateAsync_RejectsSqlite()
+    public async Task TruncateAsync_RejectsSharedPhysicalTable()
     {
-        var recorder = new CommandRecorder();
-        await using var context = Create(4, "simple", recorder);
-
-        await Assert.ThrowsAsync<NotSupportedException>(() => context.Set<Item>().TruncateAsync());
-
-        Assert.Equal(0, recorder.OpenCount);
+        await using var context = TruncateTests.CreateMappingContext(Fixture, "owned");
+        await Assert.ThrowsAsync<NotSupportedException>(() => context.Set<TruncateTests.MappingEntity>().TruncateAsync());
+        await Assert.ThrowsAsync<NotSupportedException>(() => context.Set<TruncateTests.MappingEntity>().TruncateAsync(true, false));
     }
 
-    [Fact]
-    public async Task TruncateAsync_ObservesCancellation()
+    [Theory(DisableParallelization = true)]
+    [MemberData(nameof(DbSchemaTestCases))]
+    public async Task TruncateAsync_ObservesCancellationWithoutRemovingRows(DbDriver driver, string? schema)
     {
-        var recorder = new CommandRecorder();
-        await using var context = Create(0, "simple", recorder);
-        using var source = new CancellationTokenSource();
-        source.Cancel();
-
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => context.Set<Item>().TruncateAsync(source.Token));
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => context.Set<Item>().TruncateAsync(true, false, source.Token));
-
-        Assert.Empty(recorder.Commands);
+        await using var context = Fixture.CreateDbContext(driver, schema);
+        try
+        {
+            var tracked = await TruncateTests.SeedAsync(context);
+            using var source = new CancellationTokenSource();
+            source.Cancel();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => context.EntityWithAutoKey.TruncateAsync(source.Token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => context.EntityWithAutoKey.TruncateAsync(driver != DbDriver.Oracle, false, source.Token));
+            Assert.Equal(2, await context.EntityWithAutoKey.CountAsync(CancellationToken));
+            Assert.Equal(EntityState.Unchanged, context.Entry(tracked).State);
+        }
+        finally
+        {
+            await context.EntityWithAutoKey.ExecuteDeleteAsync();
+        }
     }
 }
