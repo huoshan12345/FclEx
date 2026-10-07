@@ -58,6 +58,10 @@ Oracle `CASCADE` can truncate additional referencing tables outside the EF model
 mapping validation applies only to the target table. Foreign keys and other database
 restrictions may prevent truncation.
 
+SQLite resolves temporary tables before main tables and resets the sequence in the
+same database as the deleted table. A same-named main table is unaffected when a
+temporary table shadows it. Attached SQLite databases are outside this API's scope.
+
 SQLite has DELETE semantics: delete triggers and configured foreign-key actions run,
 even with `cascade: false` (that flag controls the native TRUNCATE CASCADE clause).
 Sequence reset is parameterized and works when `sqlite_sequence` does not exist.

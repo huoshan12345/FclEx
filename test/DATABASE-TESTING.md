@@ -60,7 +60,7 @@ Operations involving whole-table cleanup, explicit identity values, sequence rep
 
 ### R6. Separate provisioning from normal execution
 
-Retain the existing pre-provisioned remote database model. Normal test startup must not drop remote databases, recreate users, or rebuild remote schemas. Provisioning remains an explicit operation.
+Retain the existing pre-provisioned remote database model. Normal test startup must not drop remote databases, recreate users, or rebuild remote schemas. Provisioning remains an explicit operation. Truncate fixtures may create missing dedicated tables idempotently; they retain existing definitions and data until the owning test cleans its rows.
 
 SQLite is local and disposable: its structure must be created automatically before the relevant tests run, with a defined cleanup lifetime. Local initialization must not require administrative access to a remote database.
 
@@ -259,3 +259,22 @@ See [FclEx.DatabaseTesting/README.md](FclEx.DatabaseTesting/README.md) for curre
 ## 9. Follow-up implementation
 
 Production TableExistsAsync now checks tables by literal name or entity mapping through the built-in provider adapters. Sequence synchronization returns zero for a missing PostgreSQL table before executing setval. Target resolution uses a consistent driver/schema/login argument order, and invalid SQLite namespace scenarios are rejected. The creator-controlled SQLite lifetime and existing common-test parallelization remain unchanged. README driver selection guidance is independent of OS/job allocation. See DATABASE-TESTING-REVIEW.md for the agreed review outcomes; the original requirements and initial assessment above remain historical context.
+
+## 8. Truncate Isolation Update
+
+Truncate result tests retain the common identity, tracking, cancellation, keyless, metadata, mapping, connection-state, and rollback contracts while using isolated physical tables. SQL Server, PostgreSQL, MySQL, and SQLite use connection-local temporary tables. Oracle fixture startup uses `CREATE TABLE IF NOT EXISTS` for four leased table groups per schema, including a parent/child pair with `ON DELETE CASCADE`. Successful closed-connection Dapper coverage and EF default/explicit schema coverage use a separate ordinary table with one test owner per target and project. No truncate class or theory disables parallelization.
+
+Native foreign-key rejection cases have been removed at the repository owner's request. Successful PostgreSQL and Oracle cascade behavior remains covered. SQLite temporary-table sequence reset is a production EF regression fix, with cases both without a main table and with a shadowed main table. The latter verifies that the main table and its sequence remain unchanged.
+
+This design requires a recent Oracle version supporting `CREATE TABLE IF NOT EXISTS`. It does not introduce structural checks or migrations for previously created tables. Exact duplicate runs of one remote matrix entry still require external coordination.
+
+### Validation on Windows
+
+Filtered real-database runs exercised SQL Server, PostgreSQL, MySqlConnector, Oracle, and SQLite. MySql.Data truncate cases remain explicitly skipped.
+
+1. EF Core: 249 applicable truncate/DbSet cases passed on net8, net9, and net10 (net8/net9 include the separately filtered nine ordinary-schema cases). The net10 run with nearby entity and ChangeTracker cases passed 359 tests in about 33 seconds.
+2. Dapper: the net8 run with session-isolation and environment tests passed 142 cases; net9 with session-isolation passed 115; net472 with session-isolation passed 91, excluding Oracle as required by that target. The net10 run with neighboring connection/environment cases passed 320 and skipped two unselected MySql.Data cases.
+3. The original net10 truncate-only selection passed 106 Dapper cases in about 28 seconds and 240 EF cases in about 28 seconds, before adding the ordinary-schema and session-isolation regressions. These timings describe the observed filtered runs rather than a controlled before/after benchmark.
+4. Separate SQLite-only runs passed the temporary identity and main-table isolation regressions. Restricted theories return explicit skipped rows when their drivers are unselected, avoiding xUnit 4.0.1's failed summary for a deferred zero-row theory.
+
+These are focused class/method selections, not complete project or solution runs. Linux execution was not performed locally.

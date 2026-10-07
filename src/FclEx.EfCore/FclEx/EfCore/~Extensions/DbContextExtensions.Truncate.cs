@@ -18,7 +18,8 @@ public static partial class DbContextExtensions
     /// Recognizes SQL Server, PostgreSQL, MySQL, Oracle, and SQLite by the connection's assembly and type name,
     /// including derived connection types, independently of the EF provider name.
     /// SQL Server and MySQL reset identity values; PostgreSQL and Oracle preserve them.
-    /// SQLite deletes all rows and resets the table's AUTOINCREMENT sequence if one exists.
+    /// SQLite deletes all rows and resets the table's AUTOINCREMENT sequence if one exists,
+    /// resolving temporary tables before main tables. Attached SQLite databases are excluded.
     /// Inheritance, multi-table mappings, and tables shared by multiple entities are rejected.
     /// All rows are removed regardless of query filters or soft-delete rules. Tracked entities are not synchronized.
     /// No TRUNCATE CASCADE option is enabled. Foreign keys and other database restrictions can prevent truncation.
@@ -201,7 +202,7 @@ public static partial class DbContextExtensions
         var qualifiedTableName = sqlHelper.DelimitIdentifier(table.Name, table.Schema);
         cancellationToken.ThrowIfCancellationRequested();
         if (dialect == TruncateDialect.Sqlite)
-            return DeleteSqliteTableAsync(context, qualifiedTableName, table.Name, restartIdentity != false, cancellationToken);
+            return DeleteSqliteTableAsync(context, table.Name, restartIdentity != false, cancellationToken);
 
         // Identifiers come from the model and are escaped by the active provider.
         var sql = $"TRUNCATE TABLE {qualifiedTableName}";
@@ -250,7 +251,6 @@ public static partial class DbContextExtensions
 
     private static async Task DeleteSqliteTableAsync(
         DbContext context,
-        string qualifiedTableName,
         string tableName,
         bool restartIdentity,
         CancellationToken cancellationToken)
@@ -259,17 +259,28 @@ public static partial class DbContextExtensions
         await using var transaction = context.Database.CurrentTransaction is null
             ? await context.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false)
             : null;
-        var deleteSql = $"DELETE FROM {qualifiedTableName};";
+        // SQLite resolves unqualified table names in temp before main. Sequence maintenance
+        // must use the same database as the table, including when only temp has AUTOINCREMENT.
+        var isTemporary = await context.Database.SqlQueryRaw<int>(
+                "SELECT COUNT(*) AS Value FROM temp.sqlite_master WHERE type = 'table' AND name = {0} COLLATE NOCASE",
+                tableName)
+            .SingleAsync(cancellationToken).ConfigureAwait(false);
+        var database = isTemporary != 0 ? "temp" : "main";
+        var sqlHelper = context.GetService<ISqlGenerationHelper>();
+        var deleteSql = $"DELETE FROM {database}.{sqlHelper.DelimitIdentifier(tableName)};";
         await context.Database.ExecuteSqlRawAsync(deleteSql, cancellationToken).ConfigureAwait(false);
         if (restartIdentity)
         {
             // sqlite_sequence exists only after an AUTOINCREMENT table has been created.
-            var hasSequence = await context.Database.SqlQueryRaw<int>(
-                "SELECT COUNT(*) AS Value FROM sqlite_master WHERE type = 'table' AND name = 'sqlite_sequence'")
+            var sequenceExistsSql = $"SELECT COUNT(*) AS Value FROM {database}.sqlite_master WHERE type = 'table' AND name = 'sqlite_sequence'";
+            var hasSequence = await context.Database.SqlQueryRaw<int>(sequenceExistsSql)
                 .SingleAsync(cancellationToken).ConfigureAwait(false);
             if (hasSequence != 0)
+            {
+                var resetSequenceSql = $"DELETE FROM {database}.sqlite_sequence WHERE name = {{0}} COLLATE NOCASE;";
                 await context.Database.ExecuteSqlRawAsync(
-                    "DELETE FROM sqlite_sequence WHERE name = {0};", new object[] { tableName }, cancellationToken).ConfigureAwait(false);
+                    resetSequenceSql, new object[] { tableName }, cancellationToken).ConfigureAwait(false);
+            }
         }
         if (transaction is not null)
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);

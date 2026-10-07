@@ -3,15 +3,18 @@ namespace FclEx.Dapper;
 
 public partial class TruncateTests
 {
-    [Theory(DisableParallelization = true)]
+    [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_UsesMappedTableSchemaAndAdapterOverrides(DbDriver driver, string? schema)
     {
         SkipMySql(driver);
-        using var connection = Fixture.CreateDbConnection(driver, schema);
+        var targetSchema = schema;
+        using var session = await CreateSessionAsync(driver, schema, typeof(EntityWithAutoKey), typeof(HasTableAttributeEntity));
+        var connection = session.Connection;
+        schema = session.Schema;
         var options = new CommandOptions
         {
-            EntityMappingSource = new MappingSource(schema),
+            EntityMappingSource = new MappingSource(Session.GetTableName(typeof(EntityWithAutoKey)), schema),
             SqlAdapter = DapperHelper.GetSqlAdapter(connection),
             TimeoutSeconds = 10,
         };
@@ -22,18 +25,20 @@ public partial class TruncateTests
         await VerifyTruncationAsync(connection, driver, schema,
             token => connection.TruncateAsync<MappedRow>(restart, cascade, commandOptions: options, cancellationToken: token),
             restart, cascade);
-        var wrongSchema = options with { EntityMappingSource = new MappingSource("missing_" + Guid.NewGuid().ToString("N")) };
+        var wrongSchema = options with { EntityMappingSource = new MappingSource(Session.GetTableName(typeof(EntityWithAutoKey)), "missing_" + Guid.NewGuid().ToString("N")) };
         // Null retains the mapped schema, so only explicit-schema cases can override it.
         if (schema is not null)
             await VerifyTruncationAsync(connection, driver, schema,
                 token => connection.TruncateAsync<MappedRow>(schema, wrongSchema, token));
-        Assert.True(await connection.TableExistsAsync<HasTableAttributeEntity>(schema, cancellationToken: CancellationToken));
+        // TableExists intentionally excludes SQL Server temporary tables; keep its catalog check
+        // against the ordinary attribute-mapped table, and truncate the isolated copy below.
+        Assert.True(await connection.TableExistsAsync<HasTableAttributeEntity>(targetSchema, cancellationToken: CancellationToken));
         try
         {
             await DeleteAllAsync<HasTableAttributeEntity>(connection, schema);
-            await connection.InsertAsync(new HasTableAttributeEntity(), schema, cancellationToken: CancellationToken);
+            await connection.InsertAsync(new HasTableAttributeEntity(), schema, commandOptions: Options, cancellationToken: CancellationToken);
             Assert.Equal(1, await CountAsync<HasTableAttributeEntity>(connection, schema));
-            await connection.TruncateAsync<HasTableAttributeEntity>(schema, cancellationToken: CancellationToken);
+            await connection.TruncateAsync<HasTableAttributeEntity>(schema, commandOptions: Options, cancellationToken: CancellationToken);
             Assert.Equal(0, await CountAsync<HasTableAttributeEntity>(connection, schema));
         }
         finally
@@ -42,18 +47,21 @@ public partial class TruncateTests
         }
     }
 
-    [Theory(DisableParallelization = true)]
+    [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_MissingLiteralTableNameDoesNotRemoveExistingRows(DbDriver driver, string? schema)
     {
         SkipMySql(driver);
-        using var connection = Fixture.CreateDbConnection(driver, schema);
+        using var session = await CreateSessionAsync(driver, schema);
+        var connection = session.Connection;
+        schema = session.Schema;
         try
         {
             await SeedAsync(connection, schema);
-            await Assert.ThrowsAnyAsync<DbException>(() => connection.TruncateAsync("missing.'\";--", schema,
+            using var closed = Fixture.CreateDbConnection(driver, schema == "pg_temp" ? null : schema);
+            await Assert.ThrowsAnyAsync<DbException>(() => closed.TruncateAsync("missing.'\";--", schema,
                 cancellationToken: CancellationToken));
-            Assert.Equal(ConnectionState.Closed, connection.State);
+            Assert.Equal(ConnectionState.Closed, closed.State);
             Assert.Equal(2, await CountAsync<EntityWithAutoKey>(connection, schema));
         }
         finally
@@ -101,9 +109,9 @@ public partial class TruncateTests
         public int Value { get; set; }
     }
 
-    private sealed class MappingSource(string? schema) : IEntityMappingSource
+    private sealed class MappingSource(string tableName, string? schema) : IEntityMappingSource
     {
-        private readonly EntityMapping _mapping = new(typeof(MappedRow), nameof(EntityWithAutoKey),
+        private readonly EntityMapping _mapping = new(typeof(MappedRow), tableName,
             DapperHelper.GetEntityMapping(typeof(MappedRow)).Properties, schema);
 
         public EntityMapping GetMapping(Type entityType)

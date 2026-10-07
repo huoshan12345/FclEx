@@ -98,7 +98,12 @@ public partial class TruncateTests
         foreach (var extension in reference.GetService<IDbContextOptions>().Extensions)
             ((IDbContextOptionsBuilderInfrastructure)options).AddOrUpdateExtension(extension);
         options.UseModel(model);
-        return new DbContext(options.Options);
+        var context = new DbContext(options.Options);
+        // Temporary tables must share the open session. Validation-only models retain
+        // their own connection so disposing their short-lived reference does not dispose it.
+        if (reference.Database.GetDbConnection().State == ConnectionState.Open)
+            context.Database.SetDbConnection(reference.Database.GetDbConnection());
+        return context;
     }
 
     internal class MappingEntity

@@ -17,13 +17,16 @@ namespace FclEx.EfCore;
 public class TestDbContext(
     DbDriver dbDriver,
     string connectionString,
-    string? schema = null)
-    : SchemaDbContext(schema)
+    string? schema = null,
+    DbContextOptions<TestDbContext>? options = null)
+    : SchemaDbContext(options ?? new DbContextOptionsBuilder<TestDbContext>().Options, schema)
 {
 
     public DbDriver DbDriver { get; } = dbDriver;
 
     public string ConnectionString { get; } = connectionString;
+
+    internal void ConfigureModel(ModelBuilder builder) => OnModelCreating(builder);
 
     public DbSet<EntityWithAutoKey> EntityWithAutoKey { get; set; }
     public DbSet<EntityWithGuidKey> EntityWithGuidKey { get; set; }

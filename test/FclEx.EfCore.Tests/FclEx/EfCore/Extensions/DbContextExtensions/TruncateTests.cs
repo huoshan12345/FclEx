@@ -1,6 +1,5 @@
 namespace FclEx.EfCore.Extensions.DbContextExtensions;
 
-[TestClass(DisableParallelization = true)]
 public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
     public static TheoryData<DbDriver, string?, bool, bool> OptionCases
@@ -16,23 +15,25 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         }
     }
 
-    [Theory(DisableParallelization = true)]
+    [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_RemovesAllRowsAndPreservesTrackedEntities(DbDriver driver, string? schema)
     {
         Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
-        await using var context = Fixture.CreateDbContext(driver, schema);
+        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(EntityWithAutoKey)], CancellationToken);
+        await using var context = session.CreateDbContext(Fixture, schema);
         await VerifyTruncationAsync(context, token => context.TruncateAsync<EntityWithAutoKey>(token));
         await VerifyTruncationAsync(context, token => context.TruncateAsync(typeof(EntityWithAutoKey), token));
     }
 
-    [Theory(DisableParallelization = true)]
+    [Theory]
     [MemberData(nameof(OptionCases))]
     public async Task TruncateAsync_ExplicitOptionsHonorDatabaseCapabilities(
         DbDriver driver, string? schema, bool restartIdentity, bool cascade)
     {
         Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
-        await using var context = Fixture.CreateDbContext(driver, schema);
+        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(EntityWithAutoKey)], CancellationToken);
+        await using var context = session.CreateDbContext(Fixture, schema);
         await VerifyTruncationAsync(context,
             token => context.TruncateAsync<EntityWithAutoKey>(restartIdentity, cascade, token), restartIdentity, cascade);
         await VerifyTruncationAsync(context,
@@ -47,6 +48,26 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         _ => restartIdentity && !cascade,
     };
 
+    [Theory]
+    [MemberData(nameof(DbSchemaTestCases))]
+    public async Task TruncateAsync_UsesConfiguredSchemaOnOrdinaryTable(DbDriver driver, string? schema)
+    {
+        Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
+        using var session = Fixture.TruncateTables.CreateClosedConnectionSession(driver, schema);
+        await using var context = session.CreateDbContext(Fixture, schema);
+        var entityType = context.Model.FindEntityType(typeof(EntityWithAutoKey))!;
+        Assert.Equal(schema, entityType.GetSchema());
+        await VerifyTruncationAsync(context, token => context.TruncateAsync<EntityWithAutoKey>(token));
+        await VerifyTruncationAsync(context, token => context.TruncateAsync(typeof(EntityWithAutoKey), token));
+        await VerifyTruncationAsync(context, token => context.TruncateAsync(entityType, token));
+        await VerifyTruncationAsync(context, token => context.EntityWithAutoKey.TruncateAsync(token));
+        var restart = driver != DbDriver.Oracle;
+        await VerifyTruncationAsync(context, token => context.TruncateAsync<EntityWithAutoKey>(restart, false, token), restart);
+        await VerifyTruncationAsync(context, token => context.TruncateAsync(typeof(EntityWithAutoKey), restart, false, token), restart);
+        await VerifyTruncationAsync(context, token => context.TruncateAsync(entityType, restart, false, token), restart);
+        await VerifyTruncationAsync(context, token => context.EntityWithAutoKey.TruncateAsync(restart, false, token), restart);
+    }
+
     internal static async Task<EntityWithAutoKey> SeedAsync(TestDbContext context)
     {
         await context.EntityWithAutoKey.ExecuteDeleteAsync(CancellationToken);
@@ -59,7 +80,7 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         return second;
     }
 
-    // All overloads share this result-based contract against the provisioned EntityWithAutoKey table.
+    // All overloads share this result-based contract against an isolated EntityWithAutoKey table.
     internal static async Task VerifyTruncationAsync(
         TestDbContext context, Func<CancellationToken, Task> truncate,
         bool? restartIdentity = null, bool cascade = false)
@@ -98,12 +119,32 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         }
     }
 
-    [Theory(DisableParallelization = true)]
-    [MemberData(nameof(DbSchemaTestCases))]
-    public async Task TruncateAsync_HonorsReferencingTableConstraints(DbDriver driver, string? schema)
+    public static TheoryData<DbDriver, string?> CascadeCases
+    {
+        get
+        {
+            var cases = GetDriverSchemaCases(Schemas)
+                .Where(pair => pair.Driver is DbDriver.Npgsql or DbDriver.Oracle)
+                .Select(pair => (pair.Driver, pair.Schema)).ToTheoryData();
+            // xUnit 4's deferred zero-row theory reports a failed summary even with SkipTestWithoutData.
+            // An explicitly skipped row preserves filtered runs when no cascade driver is selected.
+            if (cases.Count == 0)
+                cases.Add(new TheoryDataRow<DbDriver, string?>(SelectedDrivers.FirstOrDefault(), null)
+                {
+                    Skip = "No selected driver supports TRUNCATE CASCADE.",
+                });
+            return cases;
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(CascadeCases))]
+    public async Task TruncateAsync_CascadeRemovesReferencingRows(DbDriver driver, string? schema)
     {
         Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
-        await using var context = Fixture.CreateDbContext(driver, schema);
+        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema,
+            [typeof(EntityHasStates), typeof(EntityWithNavigation)], CancellationToken);
+        await using var context = session.CreateDbContext(Fixture, schema);
         try
         {
             await context.EntityWithNavigation.ExecuteDeleteAsync(CancellationToken);
@@ -114,21 +155,11 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
                 Name = Guid.NewGuid().ToString(), Navigation = parent,
             });
             await context.SaveChangesAsync(CancellationToken);
-            if (driver == DbDriver.Npgsql)
-            {
-                await context.TruncateAsync<EntityHasStates>(true, true, CancellationToken);
-                Assert.Equal(0, await context.EntityHasStates.CountAsync(CancellationToken));
-                Assert.Equal(0, await context.EntityWithNavigation.CountAsync(CancellationToken));
-            }
-            else
-            {
-                // The existing foreign key has no ON DELETE CASCADE. Oracle CASCADE therefore
-                // cannot truncate it, and SQLite's DELETE fallback must honor the reference too.
-                await Assert.ThrowsAnyAsync<DbException>(() => context.TruncateAsync<EntityHasStates>(
-                    driver != DbDriver.Oracle, driver == DbDriver.Oracle, CancellationToken));
-                Assert.Equal(1, await context.EntityHasStates.CountAsync(CancellationToken));
-                Assert.Equal(1, await context.EntityWithNavigation.CountAsync(CancellationToken));
-            }
+            Assert.Equal(1, await context.EntityHasStates.CountAsync(CancellationToken));
+            Assert.Equal(1, await context.EntityWithNavigation.CountAsync(CancellationToken));
+            await context.TruncateAsync<EntityHasStates>(driver == DbDriver.Npgsql, true, CancellationToken);
+            Assert.Equal(0, await context.EntityHasStates.CountAsync(CancellationToken));
+            Assert.Equal(0, await context.EntityWithNavigation.CountAsync(CancellationToken));
         }
         finally
         {
@@ -137,12 +168,13 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         }
     }
 
-    [Theory(DisableParallelization = true)]
+    [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_HandlesTablesWithoutIdentity(DbDriver driver, string? schema)
     {
         Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
-        await using var context = Fixture.CreateDbContext(driver, schema);
+        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(EntityWithGuidKey)], CancellationToken);
+        await using var context = session.CreateDbContext(Fixture, schema);
         try
         {
             await context.EntityWithGuidKey.ExecuteDeleteAsync(CancellationToken);
@@ -160,12 +192,13 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         }
     }
 
-    [Theory(DisableParallelization = true)]
+    [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_HandlesKeylessTables(DbDriver driver, string? schema)
     {
         Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
-        await using var context = Fixture.CreateDbContext(driver, schema);
+        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(EntityWithoutKey)], CancellationToken);
+        await using var context = session.CreateDbContext(Fixture, schema);
         var entityType = context.Model.FindEntityType(typeof(EntityWithoutKey))!;
         var sqlHelper = context.GetService<ISqlGenerationHelper>();
         var table = sqlHelper.DelimitIdentifier(entityType.GetTableName()!, entityType.GetSchema());
@@ -186,12 +219,13 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         }
     }
 
-    [Theory(DisableParallelization = true)]
+    [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task TruncateAsync_ObservesCancellationWithoutRemovingRows(DbDriver driver, string? schema)
     {
         Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
-        await using var context = Fixture.CreateDbContext(driver, schema);
+        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(EntityWithAutoKey)], CancellationToken);
+        await using var context = session.CreateDbContext(Fixture, schema);
         try
         {
             var tracked = await SeedAsync(context);

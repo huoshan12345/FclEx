@@ -55,6 +55,9 @@ public sealed record TestDatabaseTarget(
         }.ConnectionString,
         DbDriver.MySqlConnector => new MySqlConnector.MySqlConnectionStringBuilder
         {
+            // EF's MySqlConnector providers require these options before an externally owned connection is opened.
+            AllowUserVariables = true,
+            UseAffectedRows = false,
             Server = Login.Host,
             Port = (uint)Login.Port,
             Database = Database,

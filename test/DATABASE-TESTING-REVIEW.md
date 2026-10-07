@@ -16,7 +16,7 @@ The common tests cover existing and missing tables, mapped names and schemas, li
 
 ## 3. Parallel execution
 
-Keep the current parallel execution design. Common cases use independent rows and are intended to run concurrently in an OS/framework/assembly/schema environment. Tests that require exclusive operations can explicitly disable their parallel execution. No global CI serialization, resource slots, or locking is introduced.
+Keep the current parallel execution design. Common cases use independent rows and are intended to run concurrently in an OS/framework/assembly/schema environment. Tests that require exclusive operations can explicitly disable their parallel execution. No global CI serialization is introduced. Truncate tests now use connection-local temporary tables, except for fixture-precreated Oracle table groups with per-target leases and dedicated ordinary tables for closed-connection coverage. These leases only coordinate the tests owning those tables.
 
 The earlier observation about two separate processes sharing one resource describes a different boundary; it does not establish that the current common cases are incorrect. A test's parallelization setting is process-local. Investigate a concrete conflicting operation before adding cross-process serialization.
 
