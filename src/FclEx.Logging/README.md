@@ -7,9 +7,9 @@
 - Logger factory and provider convenience helpers.
 - In-memory collectors for log messages, metadata, and scopes.
 - Scoped logging-property helpers.
-- Operation timing helpers.
+- Logging helpers for supplied operation durations.
 - Null logger fallbacks and cleanup utilities.
-- Service registration helpers for logging-related options.
+- Logging provider registration and service cleanup.
 
 ## Usage Notes
 
@@ -70,3 +70,36 @@ own async scope context; provider-created loggers share the factory's scope cont
 Collectors accept every defined level except `LogLevel.None`. They retain entries until
 explicitly cleared, including after provider disposal, so clear them between test phases
 or when the retained data is no longer needed.
+
+## Property Wrappers and Scopes
+
+`logger.With("UserId", userId)` creates a `PropertiesLogger`. Property definitions are
+copied when the wrapper is constructed; object values are retained by reference.
+`LazyLoggerProperty.ValueFactory` runs once per enabled log call. Its result is captured
+before the property scope begins, so all providers and later inspections see the same
+value for that entry. Disabled calls do not evaluate lazy factories. Factory exceptions
+propagate without writing the message, and temporary scopes are restored on failure.
+
+`logger.Properties()` returns a `LoggerPropertyScope`. Each `Push` immediately starts
+a property scope; disposing the group releases its scopes in reverse order. Dispose
+nested scopes before their enclosing scopes. `PushProperty` enumerates an input sequence
+once and captures its property definitions; null or empty sequences start no scope.
+Structured property output requires a provider that supports structured scopes.
+Serilog's `destructureObjects` overloads live in `FclEx.Serilog`.
+
+`RemoveLogging` removes factories, providers, untyped loggers, and both open and closed
+`ILogger<T>` registrations. It unregisters logging rather than replacing it with null
+loggers, and leaves options, concrete provider registrations, and existing service
+providers unchanged. `AddLogging` can register logging again afterward.
+
+## API Changes
+
+- The factory extension `SetMinimumLevel` and its private-field reflection helper have
+  been removed. Configure initial levels through `ILoggingBuilder.SetMinimumLevel`;
+  use Microsoft's options/configuration change notifications for runtime updates.
+- `LoggerProperties` is now `LoggerPropertyScope`, and its integration extension classes
+  are named `LoggerPropertyScopeExtensions`.
+- `FclEx.Logging.Extensions` is now `FclEx.Logging.LoggerExtensions`.
+- `LazyLoggerProperty.Value` is now `ValueFactory`.
+- Provider type categories now match Microsoft's factory categories, including the
+  exclusion of generic arguments. Update category-specific filters if necessary.

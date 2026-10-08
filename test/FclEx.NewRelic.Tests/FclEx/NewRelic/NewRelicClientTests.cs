@@ -11,7 +11,7 @@ public class NewRelicClientTests
         _output = output;
     }
 
-    [LocalOnlyFact]
+    [Fact(Explicit = true)]
     public async Task NrqlQueryAsync_Test()
     {
         var start = new DateTimeOffset(2024, 2, 6, 0, 0, 0, TimeSpan.Zero);
@@ -32,7 +32,7 @@ public class NewRelicClientTests
         }
     }
 
-    [LocalOnlyFact]
+    [Fact(Explicit = true)]
     public async Task NrqlQueryAsync_Facet_Test()
     {
         var start = new DateTimeOffset(2024, 2, 6, 0, 0, 0, TimeSpan.Zero);

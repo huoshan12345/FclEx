@@ -55,6 +55,11 @@ public class RedisTestsFixture : CoreTestsFixture
             .AddTransient<IRedisService, RedisService>()
             .BuildServiceProvider();
     }
+
+    public string GetCacheFullName(string name)
+    {
+        return WithAssemblyInfo(name, '.');
+    }
 }
 
 public class RedisModel(string id)

@@ -1,4 +1,3 @@
-using FclEx.Logging;
 using Serilog.Parsing;
 using static FclEx.Serilog.Fields;
 

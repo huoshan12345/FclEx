@@ -1,12 +1,12 @@
 namespace FclEx.Http.Extensions;
 
-public class LoggerPropertiesExtensionsTests
+public class LoggerPropertyScopeExtensionsTests
 {
     [Fact]
     public void Push_WithHttpRequestMessage_PushesRequestPropertiesToLoggerScopes()
     {
         var logger = new CaptureLogger();
-        using var properties = new LoggerProperties(logger);
+        using var properties = new LoggerPropertyScope(logger);
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://example.com/api/items?id=1")
         {
             Content = new StringContent("payload", Encoding.UTF8, MediaTypeNames.Application.Json),
@@ -29,7 +29,7 @@ public class LoggerPropertiesExtensionsTests
     public void Push_WhenRequestHasNoUriOrContent_PushesNullUriAndContentValues()
     {
         var logger = new CaptureLogger();
-        using var properties = new LoggerProperties(logger);
+        using var properties = new LoggerPropertyScope(logger);
         using var request = new HttpRequestMessage
         {
             Method = HttpMethod.Delete,

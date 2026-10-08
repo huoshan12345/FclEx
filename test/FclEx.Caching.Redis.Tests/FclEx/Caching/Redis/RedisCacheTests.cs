@@ -6,7 +6,7 @@ public class RedisCacheTests(RedisTestsFixture fixture) : RedisTests(fixture)
 
     private async Task TestAsync<T>(string key, T value)
     {
-        key = key.ToLower();
+        key = Fixture.GetCacheFullName(key);
         await EasyCachingProvider.RemoveAsync(key);
 
         var obj = await EasyCachingProvider.GetAsync(key, () => Task.FromResult(value), TimeSpan.FromMinutes(1));
@@ -28,7 +28,7 @@ public class RedisCacheTests(RedisTestsFixture fixture) : RedisTests(fixture)
     [RetryFact]
     public async Task Basic_Test()
     {
-        var name = nameof(Basic_Test) + Environment.Version.Major;
+        var name = Fixture.GetCacheFullName(nameof(Basic_Test));
 
         var cache = CacheManager.GetCache<string>(name);
         var obj = await cache.GetAsync(name, k => Task.FromResult(name));
@@ -63,15 +63,18 @@ public class RedisCacheTests(RedisTestsFixture fixture) : RedisTests(fixture)
     [RetryFact]
     public async Task GetAll_Test()
     {
-        var cache = CacheManager.GetCache<string>(nameof(GetAll_Test) + Environment.Version.Major);
+        var cache = CacheManager.GetCache<string>(Fixture.GetCacheFullName(nameof(GetAll_Test)));
         var keys = Enumerable.Range(1, 3).Select(m => m.ToString()).ToArray();
         await cache.RemoveAllAsync(keys);
         foreach (var key in keys)
         {
-            Assert.False(await cache.ExistsAsync(key));
+            var exist = await cache.ExistsAsync(key);
+            Assert.False(exist, () => $"The key {key} should not exist.");
             await cache.SetAsync(key, key + key, TimeSpan.FromHours(1));
         }
-        var all = await cache.GetAllAsync(keys);
+
+        // ReSharper disable once MethodHasAsyncOverload
+        var all = cache.GetAll(keys);
 
         foreach (var key in keys)
         {
@@ -84,21 +87,22 @@ public class RedisCacheTests(RedisTestsFixture fixture) : RedisTests(fixture)
     [RetryFact]
     public async Task GetAllAsync_Test()
     {
-        var cache = CacheManager.GetCache<string>(nameof(GetAllAsync_Test) + Environment.Version.Major);
+        var cache = CacheManager.GetCache<string>(Fixture.GetCacheFullName(nameof(GetAllAsync_Test)));
         var keys = Enumerable.Range(1, 3).Select(m => m.ToString()).ToArray();
         await cache.RemoveAllAsync(keys);
         foreach (var key in keys)
         {
             var exist = await cache.ExistsAsync(key);
-            Assert.False(exist, key);
+            Assert.False(exist, () => $"The key {key} should not exist.");
             await cache.SetAsync(key, key + key, TimeSpan.FromHours(1));
         }
+
         var all = await cache.GetAllAsync(keys);
 
         foreach (var key in keys)
         {
             Assert.True(all.TryGetValue(key, out var value), () => $"keys: {all.Keys.JoinWith(" ")}, cache key: {cache.Prefix}");
-            Assert.True(value!.HasValue);
+            Assert.True(value.HasValue, () => $"The value for key {key} should have a value.");
             Assert.Equal(key + key, value.Value);
         }
     }

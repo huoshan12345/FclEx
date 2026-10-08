@@ -5,7 +5,7 @@ public class RedisHashTests(RedisTestsFixture fixture) : RedisTests(fixture)
     [RetryFact]
     public async Task Provider_HmSetAsync_HmGetAsync_String_Test()
     {
-        var key = nameof(Provider_HmSetAsync_HmGetAsync_String_Test).ToLower();
+        var key = Fixture.GetCacheFullName(nameof(Provider_HmSetAsync_HmGetAsync_String_Test));
         var manager = Services.GetRequiredService<IRedisManager>();
         var col = manager.GetHash<string>(key);
         var colKey = col.Key;
@@ -21,7 +21,7 @@ public class RedisHashTests(RedisTestsFixture fixture) : RedisTests(fixture)
     [RetryFact]
     public async Task HSetAsync_HGetAsync_String_Test()
     {
-        var key = nameof(HSetAsync_HGetAsync_String_Test).ToLower();
+        var key = Fixture.GetCacheFullName(nameof(HSetAsync_HGetAsync_String_Test));
         var col = RedisManager.GetHash<string>(key);
 
         await col.HSetAsync("1", "11");
@@ -32,7 +32,7 @@ public class RedisHashTests(RedisTestsFixture fixture) : RedisTests(fixture)
     [RetryFact]
     public async Task HmSetAsync_HmGetAsync_String_Test()
     {
-        var key = nameof(HmSetAsync_HmGetAsync_String_Test).ToLower();
+        var key = Fixture.GetCacheFullName(nameof(HmSetAsync_HmGetAsync_String_Test));
         var manager = Services.GetRequiredService<IRedisManager>();
         var col = manager.GetHash<string>(key);
 

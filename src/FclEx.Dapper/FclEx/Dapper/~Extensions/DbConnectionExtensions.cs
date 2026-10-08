@@ -16,7 +16,7 @@ internal readonly record struct InsertSqlKey(
     int RowCount);
 
 /// <summary>
-/// Provides cached CRUD command generation and execution helpers for <see cref="DbConnection"/>.
+/// Provides cached CRUD commands, table metadata checks, truncation, and execution helpers for <see cref="DbConnection"/>.
 /// </summary>
 public static partial class DbConnectionExtensions
 {
@@ -616,6 +616,9 @@ public static partial class DbConnectionExtensions
         {
             var adapter = commandOptions.SqlAdapter ?? GetSqlAdapter(con);
             var (sql, paras) = sqlFunc(adapter);
+#if NET5_0_OR_GREATER
+            await
+#endif
             using var cmd = con.CreateCommand(sql, paras, commandOptions.TimeoutSeconds, commandOptions.Transaction);
             await con.TryOpenAsync(cancellationToken);
             return await func(adapter, cmd);

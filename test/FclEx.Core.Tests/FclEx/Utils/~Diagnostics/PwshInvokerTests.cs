@@ -59,7 +59,7 @@ public class PwshInvokerTests
         Assert.Empty(exception.Result.StandardOutput);
     }
 
-    [LocalOnlyFact]
+    [Fact(Explicit = true)]
     public async Task ExecuteAsync_Cancellation_TerminatesProcess()
     {
         var processIdFile = Path.Combine(Path.GetTempPath(), $"fclex-process-{Guid.NewGuid():N}.pid");

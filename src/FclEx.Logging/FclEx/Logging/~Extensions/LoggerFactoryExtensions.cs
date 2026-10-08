@@ -2,21 +2,6 @@ namespace FclEx.Logging;
 
 public static class LoggerFactoryExtensions
 {
-    public static void SetMinimumLevel(this ILoggerFactory factory, LogLevel minLevel)
-    {
-        Check.NotNull(factory);
-
-        if (factory is LoggerFactory loggerFactory)
-        {
-            var options = FieldInfos.LoggerFactory_FilterOptions.GetRequiredValue<LoggerFilterOptions>(loggerFactory);
-            options.MinLevel = minLevel;
-        }
-        else
-        {
-            throw new NotSupportedException("Not supported logger factory type: " + factory.GetType().LongName());
-        }
-    }
-
     public static ILoggerFactory DefaultIfNull(this ILoggerFactory? factory)
     {
         return factory ?? NullLoggerFactory.Instance;

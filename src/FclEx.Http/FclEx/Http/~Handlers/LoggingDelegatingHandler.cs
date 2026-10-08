@@ -55,7 +55,7 @@ public class LoggingDelegatingHandler : DelegatingHandler
                 ? _successLevel
                 : _failureLevel;
 
-            using var x = new LoggerProperties(_logger)
+            using var x = new LoggerPropertyScope(_logger)
                 .Push(nameof(HttpResponseMessage.StatusCode), statusCode)
                 .Push(LogPropertyNames.DurationMilliseconds, duration.TotalMilliseconds)
                 .Push(LogPropertyNames.RequestEndTime, end)

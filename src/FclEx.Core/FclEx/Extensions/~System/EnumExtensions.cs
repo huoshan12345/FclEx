@@ -145,15 +145,16 @@ public static class EnumExtensions
         }
 
         public static bool TryParse<TEnum>(
-            [NotNullWhen(true)] string? value, 
-            bool ignoreCase, 
-            bool fromNumeric, 
-            out TEnum result) where TEnum : struct, Enum
+            [NotNullWhen(true)] string? value,
+            bool ignoreCase,
+            bool fromNumeric,
+            out TEnum result)
+            where TEnum : struct, Enum
         {
             if (fromNumeric && long.TryParse(value, out var number))
             {
                 var e = number.CastTo<TEnum>();
-                if (Enum.IsDefined(typeof(TEnum), e))
+                if (e.IsValid())
                 {
                     result = e;
                     return true;
@@ -166,7 +167,7 @@ public static class EnumExtensions
             }
 
             var cmp = ignoreCase
-                ? StringComparison.OrdinalIgnoreCase 
+                ? StringComparison.OrdinalIgnoreCase
                 : StringComparison.Ordinal;
 
             var infos = GetInfos<TEnum>();

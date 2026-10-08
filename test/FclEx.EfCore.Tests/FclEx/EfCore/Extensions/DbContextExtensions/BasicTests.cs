@@ -4,6 +4,30 @@ public class BasicTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
     [Theory]
     [MemberData(nameof(DbDriverCases))]
+    public async Task SharedEntity_TimestampsMaterializeThroughDapper(DbDriver dbDriver)
+    {
+        await using var context = Fixture.CreateDbContext(dbDriver);
+        var entity = new EntityHasStates { Name = Guid.NewGuid().ToString() };
+        context.Add(entity);
+        await context.SaveChangesAsync();
+        var connection = context.Database.GetDbConnection();
+        var adapter = DapperHelper.GetSqlAdapter(connection);
+        var table = DapperHelper.GetTableNameWithSchema(connection, null, typeof(EntityHasStates));
+        var column = DapperHelper.GetQuotedColumnName<EntityHasStates>(connection, value => value.Id);
+        var placeholder = adapter.GetParameterPlaceholder("Id");
+
+        var loaded = await connection.QuerySingleAsync<EntityHasStates>(
+            $"SELECT * FROM {table} WHERE {column} = {placeholder}", new { entity.Id });
+
+        Assert.Equal(entity.Id, loaded.Id);
+        Assert.Equal(entity.Name, loaded.Name);
+        AssertDateTime(dbDriver, entity.CreatedAt, loaded.CreatedAt);
+        AssertDateTime(dbDriver, entity.UpdatedAt, loaded.UpdatedAt);
+        Assert.Equal(entity.IsDeleted, loaded.IsDeleted);
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
     public async Task ReturnsExistingEntity_WhenEntityExists(DbDriver dbDriver)
     {
         var name = Guid.NewGuid().ToString();

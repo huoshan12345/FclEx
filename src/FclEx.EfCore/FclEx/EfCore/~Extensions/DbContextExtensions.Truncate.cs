@@ -5,7 +5,7 @@ namespace FclEx.EfCore;
 public static partial class DbContextExtensions
 {
     /// <summary>
-    /// Truncates the entire physical table mapped to the specified entity type using the provider's native behavior.
+    /// Truncates the entire physical table mapped to the specified entity type using native truncation or the SQLite DELETE fallback.
     /// </summary>
     /// <param name="context">The context whose model and connection are used.</param>
     /// <param name="entityClrType">The CLR type of a non-shared entity mapped exclusively to one table.</param>
@@ -13,16 +13,20 @@ public static partial class DbContextExtensions
     /// <returns>A task that completes when the table has been truncated.</returns>
     /// <exception cref="ArgumentNullException">The context or entity CLR type is null.</exception>
     /// <exception cref="InvalidOperationException">The CLR type does not identify an entity in the model.</exception>
-    /// <exception cref="NotSupportedException">The provider or table mapping is unsupported.</exception>
+    /// <exception cref="NotSupportedException">The connection type or table mapping is unsupported.</exception>
     /// <remarks>
-    /// Supports SQL Server, PostgreSQL, and the Oracle, Pomelo, and Microting MySQL providers.
-    /// SQL Server and MySQL reset identity values; PostgreSQL preserves them.
-    /// SQLite and unknown providers are rejected; this method never falls back to DELETE.
+    /// Recognizes SQL Server, PostgreSQL, MySQL, Oracle, and SQLite by the connection's assembly and type name,
+    /// including derived connection types, independently of the EF provider name.
+    /// SQL Server and MySQL reset identity values; PostgreSQL and Oracle preserve them.
+    /// SQLite deletes all rows and resets the table's AUTOINCREMENT sequence if one exists,
+    /// resolving temporary tables before main tables. Attached SQLite databases are excluded.
     /// Inheritance, multi-table mappings, and tables shared by multiple entities are rejected.
     /// All rows are removed regardless of query filters or soft-delete rules. Tracked entities are not synchronized.
-    /// No cascading option is enabled. Foreign keys and other database restrictions can prevent truncation.
-    /// Uses the current transaction, if any, but transaction and rollback behavior depend on the database;
-    /// in particular, MySQL TRUNCATE causes an implicit commit. No transaction or execution-strategy retry is started.
+    /// No TRUNCATE CASCADE option is enabled. Foreign keys and other database restrictions can prevent truncation.
+    /// SQLite uses DELETE semantics: delete triggers and configured foreign-key actions execute.
+    /// Uses the current transaction, if any. SQLite starts a transaction when none exists so deleting rows
+    /// and resetting the sequence are atomic. Native transaction and rollback behavior depend on the database;
+    /// MySQL and Oracle TRUNCATE cause implicit commits. No execution-strategy retry is started.
     /// </remarks>
     public static Task TruncateAsync(
         this DbContext context,
@@ -41,16 +45,18 @@ public static partial class DbContextExtensions
     /// <summary>Truncates an entity's entire physical table with explicit identity and cascade behavior.</summary>
     /// <param name="context">The context whose model and connection are used.</param>
     /// <param name="entityClrType">The CLR type of a non-shared entity mapped exclusively to one table.</param>
-    /// <param name="restartIdentity">Whether to reset identity values. SQL Server and MySQL require true.</param>
-    /// <param name="cascade">Whether PostgreSQL should also truncate tables that reference the target table.</param>
+    /// <param name="restartIdentity">Whether to reset identity values. SQL Server and MySQL require true; Oracle requires false. SQLite controls AUTOINCREMENT sequences.</param>
+    /// <param name="cascade">Whether PostgreSQL or Oracle should also truncate referencing tables. Oracle requires ON DELETE CASCADE constraints.</param>
     /// <param name="cancellationToken">A token to observe while executing the command.</param>
     /// <returns>A task that completes when truncation has completed.</returns>
     /// <exception cref="ArgumentNullException">The context or entity CLR type is null.</exception>
     /// <exception cref="InvalidOperationException">The CLR type does not identify an entity in the model.</exception>
-    /// <exception cref="NotSupportedException">The provider, options, or table mapping are unsupported.</exception>
+    /// <exception cref="NotSupportedException">The connection type, options, or table mapping are unsupported.</exception>
     /// <remarks>
-    /// PostgreSQL supports all option combinations. SQL Server and MySQL support only restartIdentity=true,
-    /// cascade=false; other combinations are rejected before opening the connection.
+    /// PostgreSQL supports all option combinations. SQL Server and MySQL require restartIdentity=true, cascade=false.
+    /// Oracle requires restartIdentity=false and supports CASCADE for references with ON DELETE CASCADE (Oracle 12c or later).
+    /// SQLite requires cascade=false and can reset or preserve AUTOINCREMENT sequences; ordinary ROWID allocation
+    /// follows SQLite's rules regardless of this option. Unsupported combinations are rejected before opening the connection.
     /// CASCADE can truncate additional tables outside the EF model; mapping validation applies only to the target table.
     /// Query filters and soft-delete rules are bypassed, and tracked entities are not synchronized.
     /// See <see cref="TruncateAsync(DbContext, Type, CancellationToken)"/> for mapping restrictions and transaction behavior.
@@ -78,11 +84,11 @@ public static partial class DbContextExtensions
     /// <returns>A task that completes when the table has been truncated.</returns>
     /// <exception cref="ArgumentNullException">The context is null.</exception>
     /// <exception cref="InvalidOperationException">The CLR type does not identify an entity in the model.</exception>
-    /// <exception cref="NotSupportedException">The provider or table mapping is unsupported.</exception>
+    /// <exception cref="NotSupportedException">The connection type or table mapping is unsupported.</exception>
     /// <remarks>
-    /// Uses the provider's native identity and transaction behavior and bypasses query filters and soft deletion.
+    /// Uses the documented database identity and transaction behavior and bypasses query filters and soft deletion.
     /// Does not synchronize tracked entities. See <see cref="TruncateAsync(DbContext, Type, CancellationToken)"/>
-    /// for supported providers, mapping restrictions, and database side effects.
+    /// for supported connections, the SQLite fallback, mapping restrictions, and database side effects.
     /// </remarks>
     public static Task TruncateAsync<TEntity>(this DbContext context, CancellationToken cancellationToken = default)
         where TEntity : class
@@ -93,13 +99,13 @@ public static partial class DbContextExtensions
     /// <summary>Truncates an entity's entire physical table with explicit identity and cascade behavior.</summary>
     /// <typeparam name="TEntity">The non-shared entity type whose table is truncated.</typeparam>
     /// <param name="context">The context whose model and connection are used.</param>
-    /// <param name="restartIdentity">Whether to reset identity values. SQL Server and MySQL require true.</param>
-    /// <param name="cascade">Whether PostgreSQL should also truncate referencing tables.</param>
+    /// <param name="restartIdentity">Whether to reset identity values. SQL Server and MySQL require true; Oracle requires false. SQLite controls AUTOINCREMENT sequences.</param>
+    /// <param name="cascade">Whether PostgreSQL or Oracle should also truncate referencing tables. Oracle requires ON DELETE CASCADE constraints.</param>
     /// <param name="cancellationToken">A token to observe while executing the command.</param>
     /// <returns>A task that completes when truncation has completed.</returns>
     /// <exception cref="ArgumentNullException">The context is null.</exception>
     /// <exception cref="InvalidOperationException">The CLR type does not identify an entity in the model.</exception>
-    /// <exception cref="NotSupportedException">The provider, options, or table mapping are unsupported.</exception>
+    /// <exception cref="NotSupportedException">The connection type, options, or table mapping are unsupported.</exception>
     /// <remarks>
     /// Bypasses query filters and soft deletion and does not synchronize tracked entities.
     /// See <see cref="TruncateAsync(DbContext, Type, bool, bool, CancellationToken)"/> for option support,
@@ -115,18 +121,18 @@ public static partial class DbContextExtensions
         return context.TruncateAsync(typeof(TEntity), restartIdentity, cascade, cancellationToken);
     }
 
-    /// <summary>Truncates the entire physical table identified by entity metadata using the provider's native behavior.</summary>
+    /// <summary>Truncates the entire physical table identified by entity metadata using native truncation or the SQLite DELETE fallback.</summary>
     /// <param name="context">The context whose model and connection are used.</param>
     /// <param name="entityType">Entity metadata from this context's runtime model, including named shared-type entities.</param>
     /// <param name="cancellationToken">A token to observe while executing the command.</param>
     /// <returns>A task that completes when the table has been truncated.</returns>
     /// <exception cref="ArgumentNullException">The context or entity metadata is null.</exception>
     /// <exception cref="ArgumentException">The entity metadata does not belong to the context's runtime model.</exception>
-    /// <exception cref="NotSupportedException">The provider or table mapping is unsupported.</exception>
+    /// <exception cref="NotSupportedException">The connection type or table mapping is unsupported.</exception>
     /// <remarks>
-    /// Uses native identity and transaction behavior, bypasses query filters and soft deletion,
+    /// Uses the documented identity and transaction behavior, bypasses query filters and soft deletion,
     /// and does not synchronize tracked entities. The entity must exclusively map to one table without inheritance.
-    /// See <see cref="TruncateAsync(DbContext, Type, CancellationToken)"/> for supported providers and database side effects.
+    /// See <see cref="TruncateAsync(DbContext, Type, CancellationToken)"/> for supported connections, the SQLite fallback, and database side effects.
     /// </remarks>
     public static Task TruncateAsync(
         this DbContext context,
@@ -139,13 +145,13 @@ public static partial class DbContextExtensions
     /// <summary>Truncates the entire physical table identified by entity metadata with explicit identity and cascade behavior.</summary>
     /// <param name="context">The context whose model and connection are used.</param>
     /// <param name="entityType">Entity metadata from this context's runtime model, including named shared-type entities.</param>
-    /// <param name="restartIdentity">Whether to reset identity values. SQL Server and MySQL require true.</param>
-    /// <param name="cascade">Whether PostgreSQL should also truncate referencing tables.</param>
+    /// <param name="restartIdentity">Whether to reset identity values. SQL Server and MySQL require true; Oracle requires false. SQLite controls AUTOINCREMENT sequences.</param>
+    /// <param name="cascade">Whether PostgreSQL or Oracle should also truncate referencing tables. Oracle requires ON DELETE CASCADE constraints.</param>
     /// <param name="cancellationToken">A token to observe while executing the command.</param>
     /// <returns>A task that completes when truncation has completed.</returns>
     /// <exception cref="ArgumentNullException">The context or entity metadata is null.</exception>
     /// <exception cref="ArgumentException">The entity metadata does not belong to the context's runtime model.</exception>
-    /// <exception cref="NotSupportedException">The provider, options, or table mapping are unsupported.</exception>
+    /// <exception cref="NotSupportedException">The connection type, options, or table mapping are unsupported.</exception>
     /// <remarks>
     /// Bypasses query filters and soft deletion and does not synchronize tracked entities.
     /// See <see cref="TruncateAsync(DbContext, Type, bool, bool, CancellationToken)"/> for option support,
@@ -173,27 +179,13 @@ public static partial class DbContextExtensions
         if (ReferenceEquals(entityType.Model, context.Model) == false)
             throw new ArgumentException("The entity metadata must belong to this DbContext's runtime model.", nameof(entityType));
 
-        var provider = context.Database.ProviderName;
-        switch (provider)
-        {
-            case "Microsoft.EntityFrameworkCore.SqlServer":
-            case "Npgsql.EntityFrameworkCore.PostgreSQL":
-            case "MySql.EntityFrameworkCore":
-            case "Pomelo.EntityFrameworkCore.MySql":
-            case "Microting.EntityFrameworkCore.MySql":
-                break;
-            default:
-                throw new NotSupportedException($"TRUNCATE is not supported for provider '{provider ?? "<none>"}'.");
-        }
-
-        var isPostgreSql = provider == "Npgsql.EntityFrameworkCore.PostgreSQL";
-        if (isPostgreSql == false)
-        {
-            if (restartIdentity == false)
-                throw new NotSupportedException($"Provider '{provider}' cannot truncate a table without resetting identity values.");
-            if (cascade)
-                throw new NotSupportedException($"Provider '{provider}' does not support TRUNCATE CASCADE.");
-        }
+        var dialect = GetTruncateDialect(context.Database.GetDbConnection().GetType());
+        if ((dialect is TruncateDialect.SqlServer or TruncateDialect.MySql) && restartIdentity == false)
+            throw new NotSupportedException("SQL Server and MySQL TRUNCATE always reset identity values.");
+        if (dialect == TruncateDialect.Oracle && restartIdentity == true)
+            throw new NotSupportedException("Oracle TRUNCATE does not restart identity sequences.");
+        if (cascade && dialect is not (TruncateDialect.PostgreSql or TruncateDialect.Oracle))
+            throw new NotSupportedException("TRUNCATE CASCADE is supported only for PostgreSQL and Oracle connections.");
 
         if (entityType.BaseType is not null || entityType.GetDerivedTypes().Any())
             throw new NotSupportedException("TRUNCATE does not support entity inheritance mappings.");
@@ -208,16 +200,89 @@ public static partial class DbContextExtensions
 
         var sqlHelper = context.GetService<ISqlGenerationHelper>();
         var qualifiedTableName = sqlHelper.DelimitIdentifier(table.Name, table.Schema);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (dialect == TruncateDialect.Sqlite)
+            return DeleteSqliteTableAsync(context, table.Name, restartIdentity != false, cancellationToken);
+
         // Identifiers come from the model and are escaped by the active provider.
         var sql = $"TRUNCATE TABLE {qualifiedTableName}";
-        if (isPostgreSql)
+        if (dialect == TruncateDialect.PostgreSql)
         {
             if (restartIdentity is { } restart)
                 sql += restart ? " RESTART IDENTITY" : " CONTINUE IDENTITY";
-            if (cascade)
-                sql += " CASCADE";
         }
-        sql += ";";
+        if (cascade)
+            sql += " CASCADE";
+        // Oracle commands must not include a SQL*Plus statement terminator.
+        if (dialect != TruncateDialect.Oracle)
+            sql += ";";
         return context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
+    }
+
+    internal enum TruncateDialect
+    {
+        SqlServer,
+        PostgreSql,
+        MySql,
+        Oracle,
+        Sqlite,
+    }
+
+    internal static TruncateDialect GetTruncateDialect(Type connectionType)
+    {
+        for (var type = connectionType; type is not null; type = type.BaseType)
+        {
+            var dialect = (type.Assembly.GetName().Name, type.FullName) switch
+            {
+                ("Microsoft.Data.SqlClient", "Microsoft.Data.SqlClient.SqlConnection") => TruncateDialect.SqlServer,
+                ("System.Data.SqlClient", "System.Data.SqlClient.SqlConnection") => TruncateDialect.SqlServer,
+                ("Npgsql", "Npgsql.NpgsqlConnection") => TruncateDialect.PostgreSql,
+                ("MySql.Data", "MySql.Data.MySqlClient.MySqlConnection") => TruncateDialect.MySql,
+                ("MySqlConnector", "MySqlConnector.MySqlConnection") => TruncateDialect.MySql,
+                ("Oracle.ManagedDataAccess", "Oracle.ManagedDataAccess.Client.OracleConnection") => TruncateDialect.Oracle,
+                ("Microsoft.Data.Sqlite", "Microsoft.Data.Sqlite.SqliteConnection") => TruncateDialect.Sqlite,
+                _ => (TruncateDialect?)null,
+            };
+            if (dialect is { } supported)
+                return supported;
+        }
+        throw new NotSupportedException($"TRUNCATE is not supported for connection type '{connectionType.FullName}'.");
+    }
+
+    private static async Task DeleteSqliteTableAsync(
+        DbContext context,
+        string tableName,
+        bool restartIdentity,
+        CancellationToken cancellationToken)
+    {
+        // Keep deleting rows and resetting the sequence atomic, and respect caller-owned transactions.
+        await using var transaction = context.Database.CurrentTransaction is null
+            ? await context.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false)
+            : null;
+        // SQLite resolves unqualified table names in temp before main. Sequence maintenance
+        // must use the same database as the table, including when only temp has AUTOINCREMENT.
+        var isTemporary = await context.Database.SqlQueryRaw<int>(
+                "SELECT COUNT(*) AS Value FROM temp.sqlite_master WHERE type = 'table' AND name = {0} COLLATE NOCASE",
+                tableName)
+            .SingleAsync(cancellationToken).ConfigureAwait(false);
+        var database = isTemporary != 0 ? "temp" : "main";
+        var sqlHelper = context.GetService<ISqlGenerationHelper>();
+        var deleteSql = $"DELETE FROM {database}.{sqlHelper.DelimitIdentifier(tableName)};";
+        await context.Database.ExecuteSqlRawAsync(deleteSql, cancellationToken).ConfigureAwait(false);
+        if (restartIdentity)
+        {
+            // sqlite_sequence exists only after an AUTOINCREMENT table has been created.
+            var sequenceExistsSql = $"SELECT COUNT(*) AS Value FROM {database}.sqlite_master WHERE type = 'table' AND name = 'sqlite_sequence'";
+            var hasSequence = await context.Database.SqlQueryRaw<int>(sequenceExistsSql)
+                .SingleAsync(cancellationToken).ConfigureAwait(false);
+            if (hasSequence != 0)
+            {
+                var resetSequenceSql = $"DELETE FROM {database}.sqlite_sequence WHERE name = {{0}} COLLATE NOCASE;";
+                await context.Database.ExecuteSqlRawAsync(
+                    resetSequenceSql, new object[] { tableName }, cancellationToken).ConfigureAwait(false);
+            }
+        }
+        if (transaction is not null)
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }
 }

@@ -1,17 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <PackageReference Include="FluentMigrator.Runner.SQLite" />
-    <PackageReference Include="Microsoft.Data.SqlClient" />
-    <PackageReference Include="Microsoft.Data.Sqlite" />
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
-    <PackageReference Include="MySql.Data" />
-    <PackageReference Include="MySqlConnector" />
-    <PackageReference Include="Npgsql" />
-    <PackageReference Include="Oracle.ManagedDataAccess.Core"
-                      Condition="$(SupportOracle)" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.Dapper\FclEx.Dapper.csproj" />
     <ProjectReference Include="..\FclEx.Core.Tests\FclEx.Core.Tests.csproj" />
+    <ProjectReference Include="..\FclEx.DatabaseTesting\FclEx.DatabaseTesting.csproj" />
   </ItemGroup>
 </Project>

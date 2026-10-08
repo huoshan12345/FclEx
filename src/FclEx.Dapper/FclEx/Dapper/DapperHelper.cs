@@ -35,16 +35,30 @@ public static class DapperHelper
         Initialize();
     }
 
+    /// <summary>Registers default GUID and date-time-offset handlers when no application handler exists.</summary>
+    /// <remarks>
+    /// Called automatically on first use of this helper. Installing a default handler removes the corresponding
+    /// parameter type mappings, including application mappings, so parameters use that handler. This affects all Dapper calls in the process.
+    /// Each application-supplied handler is preserved independently. Call this method explicitly before
+    /// ordinary Dapper operations, or to restore defaults after resetting Dapper's handlers.
+    /// </remarks>
     public static void Initialize()
     {
         lock (_lock)
         {
-            if (SqlMapper.HasTypeHandler(typeof(Guid)))
-                return;
+            if (!SqlMapper.HasTypeHandler(typeof(Guid)))
+            {
+                SqlMapper.RemoveTypeMap(typeof(Guid));
+                SqlMapper.RemoveTypeMap(typeof(Guid?));
+                SqlMapper.AddTypeHandler(new GuidTypeHandler());
+            }
 
-            SqlMapper.RemoveTypeMap(typeof(Guid));
-            SqlMapper.RemoveTypeMap(typeof(Guid?));
-            SqlMapper.AddTypeHandler(new GuidTypeHandler());
+            if (!SqlMapper.HasTypeHandler(typeof(DateTimeOffset)))
+            {
+                SqlMapper.RemoveTypeMap(typeof(DateTimeOffset));
+                SqlMapper.RemoveTypeMap(typeof(DateTimeOffset?));
+                SqlMapper.AddTypeHandler(new DateTimeOffsetTypeHandler());
+            }
         }
     }
 

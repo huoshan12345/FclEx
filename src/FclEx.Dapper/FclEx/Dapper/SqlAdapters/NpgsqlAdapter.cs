@@ -7,6 +7,27 @@ namespace FclEx.Dapper.SqlAdapters;
 /// </summary>
 public class NpgsqlAdapter : SqlAdapterBase
 {
+    /// <inheritdoc />
+    public override string BuildTruncateCommandText(string quotedTableName, bool? restartIdentity, bool cascade)
+    {
+        var sql = $"TRUNCATE TABLE {quotedTableName}";
+        if (restartIdentity is { } restart)
+            sql += restart ? " RESTART IDENTITY" : " CONTINUE IDENTITY";
+        if (cascade)
+            sql += " CASCADE";
+        return sql + ";";
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Resolves unqualified names through search_path and includes regular and partitioned tables.</remarks>
+    public override string BuildTableExistsCommandText(string tableNameParameter, string? schemaParameter = null)
+    {
+        var table = $"pg_catalog.quote_ident({tableNameParameter}::text)";
+        if (schemaParameter is not null)
+            table = $"CASE WHEN {schemaParameter}::text IS NULL THEN {table} ELSE pg_catalog.quote_ident({schemaParameter}::text) || '.' || {table} END";
+        return $"SELECT COUNT(*) FROM pg_catalog.pg_class WHERE oid = pg_catalog.to_regclass({table}) AND relkind IN ('r', 'p')";
+    }
+
     private const int MaxParametersPerCommand = 65535;
 
     /// <inheritdoc />

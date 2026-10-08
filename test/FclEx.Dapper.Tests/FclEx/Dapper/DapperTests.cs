@@ -12,10 +12,9 @@ public class DapperTests(DapperTestsFixture fixture) : DatabaseTests
 
     public static readonly TheoryData<DbDriver, string?, int> BulkInsertTestCases =
     (
-        from x in DbDrivers
-        from y in Schemas
+        from pair in DatabaseTestSettings.GetDriverSchemaCases(Schemas)
         from z in Counts
-        select (x, y, z)
+        select (pair.Driver, pair.Schema, z)
     ).ToTheoryData();
 
     public static readonly TheoryData<DbDriver, string?> MySqlSchemaCases = new[] { DbDriver.MySqlConnector, DbDriver.MySql }
@@ -23,5 +22,5 @@ public class DapperTests(DapperTestsFixture fixture) : DatabaseTests
         .ToTheoryData();
 
     public static readonly TheoryData<string?> SchemaCases = Schemas.ToTheoryData();
-    public static readonly TheoryData<DbDriver, string?> DbSchemaTestCases = DbDrivers.CrossJoin(Schemas).ToTheoryData();
+    public static readonly TheoryData<DbDriver, string?> DbSchemaTestCases = DatabaseTestSettings.GetDriverSchemaCases(Schemas).ToTheoryData();
 }

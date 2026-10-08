@@ -2,7 +2,7 @@ namespace FclEx.Utils;
 
 public class WslInvokerTests
 {
-    [LocalOnlyFact]
+    [Fact(Explicit = true)]
     public async Task WslPath_Test()
     {
         var path = await WslInvoker.Instance.WslPath(@"D:\projects\FclEx\.github\workflows");

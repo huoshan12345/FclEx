@@ -34,10 +34,10 @@ when it owns its table exclusively; use the `DbSet` or `IEntityType` overload to
 preserve its identity. The `IEntityType` overloads require metadata from the context's
 runtime model; metadata from a different model throws `ArgumentException`.
 
-SQL Server, PostgreSQL, and the Oracle, Pomelo, and Microting MySQL providers are
-supported. SQLite and unknown providers throw `NotSupportedException`; no `DELETE`
-fallback is performed. SQL Server and MySQL reset identity values, while PostgreSQL
-preserves them when using the overloads without boolean options.
+Database dialects are recognized by the connection's assembly and type name (including
+base types), independently of the EF provider name. SQL Server, PostgreSQL, MySQL,
+Oracle Database, and Microsoft.Data.Sqlite connections are supported; unknown
+connections throw `NotSupportedException`.
 
 The overloads accepting `restartIdentity` and `cascade` require both boolean values
 explicitly, with no defaults:
@@ -46,17 +46,33 @@ explicitly, with no defaults:
 await context.TruncateAsync<Customer>(restartIdentity: true, cascade: false, cancellationToken: cancellationToken);
 ```
 
-PostgreSQL supports all combinations, generating `RESTART IDENTITY` or `CONTINUE
-IDENTITY`, and optionally `CASCADE`. SQL Server and MySQL accept only
-`restartIdentity: true, cascade: false`; other combinations throw
-`NotSupportedException` before opening the connection. PostgreSQL `CASCADE` can
-truncate additional referencing tables, including tables outside the EF model.
-Mapping validation applies only to the target table.
+| Database | Without boolean options | Explicit options |
+| --- | --- | --- |
+| SQL Server / MySQL | Native TRUNCATE; resets identity | Requires `restartIdentity: true, cascade: false` |
+| PostgreSQL | Native TRUNCATE; preserves identity | All combinations supported |
+| Oracle Database | Native TRUNCATE; preserves identity | Requires `restartIdentity: false`; CASCADE requires `ON DELETE CASCADE` foreign keys and Oracle 12c or later |
+| SQLite | DELETE; resets the table's AUTOINCREMENT sequence when present | Resets or preserves the AUTOINCREMENT sequence; requires `cascade: false` |
 
-Foreign keys and other database restrictions may prevent truncation. The command
-uses the current transaction, if any, without starting a transaction or retrying
-through an execution strategy. Transaction semantics follow the database: MySQL
-`TRUNCATE` causes an implicit commit and cannot be rolled back like an ordinary delete.
+Unsupported option combinations throw before opening the connection. PostgreSQL and
+Oracle `CASCADE` can truncate additional referencing tables outside the EF model;
+mapping validation applies only to the target table. Foreign keys and other database
+restrictions may prevent truncation.
+
+SQLite resolves temporary tables before main tables and resets the sequence in the
+same database as the deleted table. A same-named main table is unaffected when a
+temporary table shadows it. Attached SQLite databases are outside this API's scope.
+
+SQLite has DELETE semantics: delete triggers and configured foreign-key actions run,
+even with `cascade: false` (that flag controls the native TRUNCATE CASCADE clause).
+Sequence reset is parameterized and works when `sqlite_sequence` does not exist.
+For an ordinary INTEGER PRIMARY KEY without AUTOINCREMENT, SQLite allocates ROWIDs
+according to its own rules; `restartIdentity: false` cannot preserve a removed maximum ROWID.
+
+Commands use the current transaction when present. SQLite starts a transaction when
+none exists so row deletion and sequence reset are atomic. Native transaction semantics
+follow the database: MySQL and Oracle TRUNCATE cause implicit commits. The helper does
+not retry through an execution strategy. Existing tracked entities remain unchanged;
+clear tracking or use a fresh context before inserting rows that may reuse old keys.
 
 ### Keywords with LIKE wildcards
 

@@ -2,6 +2,26 @@ namespace FclEx.Dapper.SqlAdapters;
 
 public class OracleAdapter : SqlAdapterBase
 {
+    /// <inheritdoc />
+    public override string BuildTruncateCommandText(string quotedTableName, bool? restartIdentity, bool cascade)
+    {
+        if (restartIdentity == true)
+            throw new NotSupportedException("Oracle TRUNCATE does not restart identity sequences.");
+        return $"TRUNCATE TABLE {quotedTableName}" + (cascade ? " CASCADE" : "");
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Uses the session's CURRENT_SCHEMA when no owner is supplied. Names retain their exact catalog casing.</remarks>
+    public override string BuildTableExistsCommandText(string tableNameParameter, string? schemaParameter = null)
+    {
+        var owner = "SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA')";
+        if (schemaParameter is not null)
+            owner = $"COALESCE(TO_CHAR({schemaParameter}), {owner})";
+        // Native catalog names and SYS_CONTEXT use the database character set, while string
+        // parameters default to NVarchar2. Normalize before composing or comparing catalog values.
+        return $"SELECT COUNT(*) FROM all_tables WHERE table_name = TO_CHAR({tableNameParameter}) AND owner = {owner}";
+    }
+
     private const int MaxParametersPerCommand = 65535;
     private const string GeneratedKeyParameterName = "fclex_generated_key";
 

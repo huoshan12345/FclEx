@@ -7,6 +7,7 @@ public static class ApplicationBuilderExtensions
     private const string Template = $$"""Request {{{nameof(HttpRequest.Protocol)}}} {{{nameof(HttpRequest.Method)}}} {{{nameof(HttpRequest.Path)}}} - {{{nameof(HttpResponse.StatusCode)}}} finished in {Time:f3}""";
     private const string SecondsTemplate = Template + " seconds.";
     private const string MillisecondsTemplate = Template + " ms.";
+    private const string JwtInfoName = $"@{nameof(JwtInfo)}";
 
     public static IApplicationBuilder UseHttpRequestLogging(this IApplicationBuilder app, bool withJwtInfo)
     {
@@ -17,7 +18,7 @@ public static class ApplicationBuilderExtensions
             var logger = context.RequestServices.CreateLogger(typeof(ApplicationBuilderExtensions));
             var request = context.Request;
 
-            using var logs = new LoggerProperties(logger)
+            using var logs = new LoggerPropertyScope(logger)
                 .Push(LogPropertyNames.StartTime, start)
                 .Push(nameof(HttpContext.TraceIdentifier), context.TraceIdentifier)
                 .Push(request);
@@ -25,7 +26,7 @@ public static class ApplicationBuilderExtensions
             if (withJwtInfo)
             {
                 var tokenInfo = request.GetJwtInfo();
-                logs.Push(nameof(JwtInfo), tokenInfo, true);
+                logs.Push(JwtInfoName, tokenInfo);
             }
 
             await next().NoCapture();
@@ -34,8 +35,8 @@ public static class ApplicationBuilderExtensions
             var duration = end - start;
             var status = context.Response.StatusCode;
 
-            // We have to use another LoggerProperties here because the last one is before an async operation.
-            using var x = new LoggerProperties(logger)
+            // We have to use another LoggerPropertyScope here because the last one is before an async operation.
+            using var x = new LoggerPropertyScope(logger)
                 .Push(nameof(HttpResponse.StatusCode), status)
                 .Push(LogPropertyNames.DurationMilliseconds, duration.TotalMilliseconds)
                 .Push(LogPropertyNames.EndTime, end);

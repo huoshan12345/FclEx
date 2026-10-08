@@ -1,7 +1,7 @@
 namespace FclEx.Dapper.SqlAdapters;
 
 /// <summary>
-/// Defines provider-specific SQL generation and parameter behavior used by FclEx.Dapper CRUD operations.
+/// Defines provider-specific SQL generation, table metadata queries, and parameter behavior used by FclEx.Dapper.
 /// </summary>
 /// <remarks>
 /// An adapter registered with <see cref="DapperHelper.RegisterSqlAdapter(Type, ISqlAdapter)"/> must keep all
@@ -30,6 +30,34 @@ public interface ISqlAdapter
     /// <param name="name">The unquoted column name from trusted application configuration.</param>
     /// <returns>The delimited identifier, with embedded terminating delimiters escaped.</returns>
     string GetQuotedColumnName(string name);
+
+    /// <summary>Builds a scalar query that counts visible base tables matching a table name.</summary>
+    /// <param name="tableNameParameter">The SQL placeholder for an unquoted, unqualified table-name value.</param>
+    /// <param name="schemaParameter">
+    /// The SQL placeholder for an optional schema-name value, or null to use the provider's default namespace.
+    /// A database-null schema value also selects the default namespace. Adapters without schema support ignore it.
+    /// </param>
+    /// <returns>A query whose first result is a numeric count; views and synonyms are excluded.</returns>
+    /// <remarks>Placeholders are trusted SQL fragments produced by <see cref="GetParameterPlaceholder"/>.</remarks>
+    /// <exception cref="NotSupportedException">This adapter does not support table metadata queries.</exception>
+    string BuildTableExistsCommandText(string tableNameParameter, string? schemaParameter = null);
+
+    /// <summary>Builds a whole-table truncation command and validates the requested database options.</summary>
+    /// <param name="quotedTableName">The already quoted, optionally schema-qualified table name.</param>
+    /// <param name="restartIdentity">Whether to reset identity values; null selects native defaults, with SQLite resetting AUTOINCREMENT.</param>
+    /// <param name="cascade">Whether referencing tables should also be truncated.</param>
+    /// <returns>The command text. SQLite uses DELETE and resets its sequence during execution.</returns>
+    /// <exception cref="NotSupportedException">The adapter or requested options are unsupported.</exception>
+    string BuildTruncateCommandText(string quotedTableName, bool? restartIdentity, bool cascade);
+
+    /// <summary>Executes a truncation command, including any provider-specific sequence maintenance.</summary>
+    /// <param name="command">An initialized command on an open connection, with the caller's timeout and transaction.</param>
+    /// <param name="tableName">The unquoted table-name component used for sequence lookup.</param>
+    /// <param name="restartIdentity">The identity option previously validated by BuildTruncateCommandText.</param>
+    /// <param name="cancellationToken">Cancels command execution and any locally owned transaction.</param>
+    /// <returns>The provider's affected-row count; native TRUNCATE counts are not portable.</returns>
+    /// <remarks>SQLite makes deletion and sequence maintenance atomic, preserving caller-owned transactions.</remarks>
+    Task<int> ExecuteTruncateAsync(DbCommand command, string tableName, bool? restartIdentity, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the maximum number of rows that one parameterized multi-row INSERT command can contain.

@@ -20,11 +20,13 @@ global using FclEx.Utils;
 global using Xunit;
 global using Xunit.Sdk;
 global using static FclEx.Dapper.DapperTestsFixture;
+global using static FclEx.Databases.DatabaseTestSettings;
 global using FclEx.Tests;
 global using FluentMigrator;
 global using FluentMigrator.Runner;
 global using Microsoft.Data.Sqlite;
 global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Configuration;
 #if SUPPORT_ORACLE
 global using Oracle.ManagedDataAccess.Client;
 #endif

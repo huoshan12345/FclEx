@@ -145,10 +145,60 @@ Use `InsertWithExplicitGeneratedKeysAsync` or `BulkInsertAsync(..., includeAutoK
 
 These operations do not advance or reset provider identity, sequence, or auto-increment state. The caller must maintain that state so later database-generated keys do not conflict with explicitly inserted values.
 
+## Table Existence Checks
+
+Use `TableExistsAsync` to query a table by name or entity mapping:
+
+```csharp
+bool exists = await connection.TableExistsAsync("Orders", schema: "Sales", cancellationToken: cancellationToken);
+bool mappedTableExists = await connection.TableExistsAsync<Order>(commandOptions: options, cancellationToken: cancellationToken);
+```
+
+Names are unquoted components passed as parameters, rather than interpolated SQL. The entity overload honors its mapping source and mapped schema; an explicit schema overrides the mapping. Command options support a local transaction, timeout, and adapter override. The operation restores a connection it opened to Closed and preserves an already-open connection.
+
+SQL Server and PostgreSQL use native unqualified-name resolution when no schema is supplied. Oracle uses CURRENT_SCHEMA and exact catalog casing. MySqlConnector treats schema as a database name; MySql.Data ignores it and checks the selected database. SQLite searches main and temp with case-insensitive name comparison and ignores schema arguments. SQLite attached databases and SQL Server temporary tables are outside this lookup. Views and synonyms are excluded. A false result reflects catalog visibility for the current login; database access failures propagate. The check does not reserve or lock the table against concurrent DDL.
+
+`ISqlAdapter.BuildTableExistsCommandText` supplies the metadata query. Direct interface implementations must implement this new member. `SqlAdapterBase` preserves existing derived implementations with a default that throws NotSupportedException until metadata querying is supplied.
+
+## Table Truncation
+
+`TruncateAsync` accepts an unquoted table name or an entity mapping and removes every row in the physical table:
+
+```csharp
+await connection.TruncateAsync<Order>(schema: "Sales", commandOptions: options, cancellationToken: cancellationToken);
+await connection.TruncateAsync("Orders", restartIdentity: true, cascade: false,
+    schema: "Sales", commandOptions: options, cancellationToken: cancellationToken);
+```
+
+The entity overload honors its mapping source and mapped schema; an explicit schema overrides the mapping.
+No key is required. Identifier components are escaped by the resolved or overridden SQL adapter. The helper
+preserves the connection's initial state and accepts local transactions, timeouts, and cancellation through
+the existing command options. It does not validate EF-style inheritance or table sharing and does not
+consult application filters, soft-delete rules, or entity state.
+
+| Database | Default identity behavior | Explicit options |
+| --- | --- | --- |
+| SQL Server / MySQL | Reset | `restartIdentity: true, cascade: false` |
+| PostgreSQL | Preserve | All combinations |
+| Oracle | Preserve | `restartIdentity: false`; CASCADE requires Oracle 12c+ and ON DELETE CASCADE foreign keys |
+| SQLite | Reset AUTOINCREMENT when present | `cascade: false`; reset or preserve AUTOINCREMENT |
+
+SQLite uses DELETE followed by sequence maintenance in one transaction. It preserves caller-owned
+transactions and otherwise creates and commits a local transaction. Main and temp tables are supported;
+attached databases are excluded. DELETE triggers and foreign-key actions execute. Ordinary ROWID allocation
+follows SQLite rules regardless of `restartIdentity`. Native TRUNCATE behavior is database-dependent:
+foreign keys can prevent execution, CASCADE can affect additional tables, and MySQL/Oracle implicitly commit.
+
+Adapters provide `BuildTruncateCommandText` and `ExecuteTruncateAsync`. Direct `ISqlAdapter` implementations
+must implement these new members. `SqlAdapterBase` rejects unsupported truncation by default and provides
+ordinary command execution; SQLite overrides execution for atomic sequence maintenance.
+
 ## Dapper Global State and Type Handlers
 
-On first use, `DapperHelper` calls `InitializeTypeHandlers()` to register `Dapper.GuidTypeHandler` if no GUID handler is already registered. This removes the built-in `Guid` and `Guid?` type mappings so Dapper uses the handler for parameters. These changes affect all Dapper calls in the process. The method can also be called explicitly before using ordinary Dapper APIs, or after resetting Dapper type handlers. Core CRUD operations do not scan assemblies or change other Dapper settings. Generated queries alias database columns back to CLR property names, so they do not require a global Dapper type map.
+On first use, `DapperHelper` calls `Initialize()` to register `Dapper.GuidTypeHandler` and `Dapper.DateTimeOffsetTypeHandler` independently when no application handler is registered for that type. Installing a default handler removes the corresponding parameter type maps, including nullable and application mappings, so Dapper uses that handler for parameters. Applications registering their own handlers remain responsible for removing conflicting parameter maps. These changes affect all Dapper calls in the process. Call `Initialize()` explicitly before ordinary Dapper operations or after resetting Dapper's handlers. Core CRUD operations do not scan assemblies or change other Dapper settings. Generated queries alias database columns back to CLR property names, so they do not require a global Dapper type map.
 
-`Dapper.GuidTypeHandler` and `Dapper.AssumeUtcDateTimeTypeHandler` are optional helpers. Registering either through `SqlMapper.AddTypeHandler` changes Dapper process-wide state and remains the application's responsibility.
+`DateTimeOffsetTypeHandler` reads native `DateTimeOffset` values, invariant text (including SQLite TEXT), and `DateTime` values. Explicit offsets and available tick precision are preserved. Unspecified date-time values and text without an offset are interpreted as UTC; local date-time values retain their instant. Nullable scalar results preserve database nulls. Parameters retain their supplied offset and use `DbType.DateTimeOffset`; the provider determines whether that representation is supported. This handler does not change the destination column type or recover offsets discarded by a database.
+
+`Dapper.AssumeUtcDateTimeTypeHandler` remains opt-in. Registering it through `SqlMapper.AddTypeHandler` changes Dapper process-wide state and remains the application's responsibility.
 
 See [DESIGN.md](DESIGN.md) for the principles governing future changes.

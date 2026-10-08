@@ -23,4 +23,6 @@ global using FclEx.Tests;
 global using Microsoft.Data.Sqlite;
 global using Microsoft.EntityFrameworkCore.Infrastructure;
 global using Microsoft.Extensions.Logging;
-global using static FclEx.Dapper.DapperTestsFixture;
+global using Microsoft.Extensions.Configuration;
+global using static FclEx.EfCore.EfCoreFixture;
+global using static FclEx.Databases.DatabaseTestSettings;

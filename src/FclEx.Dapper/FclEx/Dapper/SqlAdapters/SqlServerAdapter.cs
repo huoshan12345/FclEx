@@ -5,6 +5,24 @@ namespace FclEx.Dapper.SqlAdapters;
 /// </summary>
 public class SqlServerAdapter : SqlAdapterBase
 {
+    /// <inheritdoc />
+    public override string BuildTruncateCommandText(string quotedTableName, bool? restartIdentity, bool cascade)
+    {
+        if (restartIdentity == false || cascade)
+            throw new NotSupportedException("SQL Server TRUNCATE requires restartIdentity=true and cascade=false.");
+        return $"TRUNCATE TABLE {quotedTableName};";
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Uses SQL Server's default-schema/dbo name resolution and metadata visibility rules. Temporary tables are excluded.</remarks>
+    public override string BuildTableExistsCommandText(string tableNameParameter, string? schemaParameter = null)
+    {
+        var table = $"QUOTENAME({tableNameParameter})";
+        if (schemaParameter is not null)
+            table = $"CASE WHEN {schemaParameter} IS NULL THEN {table} ELSE QUOTENAME({schemaParameter}) + '.' + {table} END";
+        return $"SELECT COUNT(*) FROM sys.tables WHERE object_id = OBJECT_ID({table}, 'U')";
+    }
+
     private const int MaxParametersPerCommand = 2100;
     private const int MaxRowsPerValuesClause = 1000;
 

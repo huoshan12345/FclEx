@@ -1,6 +1,8 @@
-namespace FclEx.Tests;
+using FclEx.Databases;
 
-public static class Extensions
+namespace Xunit;
+
+public static class DatabaseAssertExtensions
 {
     extension(Assert)
     {
@@ -13,7 +15,12 @@ public static class Extensions
 
         public static void SkipUnlessIncluded(DbDriver driver)
         {
-            Assert.SkipUnlessIncluded(driver, DbDrivers);
+            Assert.SkipUnlessIncluded(driver, SelectedDrivers);
+        }
+
+        public static void SkipMySql(DbDriver driver)
+        {
+            Assert.SkipWhen(driver == DbDriver.MySql, "MySql.Data asynchronous timeout cleanup can hang.");
         }
     }
 }

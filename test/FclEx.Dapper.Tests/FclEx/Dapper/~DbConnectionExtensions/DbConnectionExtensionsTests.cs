@@ -1,4 +1,4 @@
-// ReSharper disable AccessToDisposedClosure
+﻿// ReSharper disable AccessToDisposedClosure
 // ReSharper disable UseAwaitUsing
 namespace FclEx.Dapper;
 
@@ -30,7 +30,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
         Assert.SkipIfInGithubAction();
 
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
-        await FixAutoIncrement<EntityWithAutoKey>(con, dbDriver, schema);
+        await SynchronizeIdentitySequenceAsync<EntityWithAutoKey>(con, dbDriver, schema);
 
         var maxId = await GetMaxIdAsync<EntityWithAutoKey>(con, schema) + 1;
 
@@ -47,7 +47,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
         await using var _ = AsyncDisposable.Create(async () =>
         {
             await con.DeleteAsync<EntityWithAutoKey>(entity.Id, schema);
-            await FixAutoIncrement<EntityWithAutoKey>(con, dbDriver, schema);
+            await SynchronizeIdentitySequenceAsync<EntityWithAutoKey>(con, dbDriver, schema);
         });
 
         var e = await con.GetAsync<EntityWithAutoKey>(entity.Id, schema);
@@ -133,7 +133,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
         Assert.SkipIfInGithubAction();
 
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
-        await FixAutoIncrement<EntityWithAutoKey>(con, dbDriver, schema);
+        await SynchronizeIdentitySequenceAsync<EntityWithAutoKey>(con, dbDriver, schema);
 
         var adapter = DapperHelper.GetSqlAdapter(con);
         var parameterName = adapter.GetParameterPlaceholder(nameof(EntityWithAutoKey.Name));
@@ -162,7 +162,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
             var names = parameters.GetParameterPlaceholders(adapter).JoinWith(", ");
             var sql = $"delete from {tableName} where {DapperHelper.GetQuotedColumnName<EntityWithAutoKey>(con, m => m.Id)} in ({names})";
             await con.ExecuteAsync(sql, parameters);
-            await FixAutoIncrement<EntityWithAutoKey>(con, dbDriver, schema);
+            await SynchronizeIdentitySequenceAsync<EntityWithAutoKey>(con, dbDriver, schema);
         });
 
         var sql = $"select * from {tableName} where {DapperHelper.GetQuotedColumnName<EntityWithAutoKey>(con, m => m.Name)} = {parameterName}";
@@ -283,6 +283,27 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
 
         var e = await con.GetAsync<EntityWithGuidKey>(id, schema);
         Assert.Null(e);
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
+    public async Task QueryAsync_DateTimeOffsetParameter_RoundTripsInstant(DbDriver dbDriver)
+    {
+        using var connection = Fixture.CreateDbConnection(dbDriver, null);
+        var adapter = DapperHelper.GetSqlAdapter(connection);
+        var expected = new DateTimeOffset(2026, 10, 7, 12, 34, 56, TimeSpan.Zero).AddTicks(1234560);
+        var placeholder = adapter.GetParameterPlaceholder("Value");
+        var column = adapter.GetQuotedColumnName("Value");
+
+        var actual = await connection.QuerySingleAsync<TimestampRow>(
+            $"SELECT {placeholder} AS {column}", new { Value = expected });
+
+        Assert.Equal(expected.UtcDateTime.Ticks, actual.Value.UtcDateTime.Ticks);
+    }
+
+    private sealed class TimestampRow
+    {
+        public DateTimeOffset Value { get; set; }
     }
 
     private static Task<int> CountEntitiesAsync<T>(IDbConnection con, string? schema)
