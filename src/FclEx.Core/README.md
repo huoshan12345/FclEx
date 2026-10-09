@@ -20,6 +20,28 @@ The foundational package for FclEx.
 - Prefer using focused extension methods and small utility types directly rather than treating the package as an application framework.
 - Several APIs backfill newer .NET conveniences on older target frameworks.
 
+### Adjacent duplicate removal
+
+Use `DistinctAdjacent` to retain the first element of each consecutive run of equal
+elements, or `DistinctAdjacentBy` to compare keys while returning the original elements.
+Unlike LINQ's `Distinct` / `DistinctBy`, these methods retain equal values or keys when
+they are separated by a different value or key, and preserve source order.
+
+```csharp
+using FclEx.Extensions;
+
+new[] { 1, 1, 2, 2, 2, 1 }.DistinctAdjacent(); // [1, 2, 1]
+new[] { "one", "two", "four", "five", "six" }
+    .DistinctAdjacentBy(item => item.Length); // ["one", "four", "six"]
+new[] { "a", "A", "b", "a" }
+    .DistinctAdjacent(StringComparer.OrdinalIgnoreCase); // ["a", "b", "a"]
+```
+
+Both methods validate required arguments immediately, but enumerate lazily using
+constant additional space. Each enumeration makes one pass over the source;
+`DistinctAdjacentBy` selects a key exactly once per visited element. An omitted or null
+comparer uses the default equality comparer for the element or key type.
+
 ### String delimiters
 
 Use `IsSquareBracketed` / `TrimSquareBrackets`, `IsParenthesized` / `TrimParentheses`,
