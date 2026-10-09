@@ -24,6 +24,23 @@ public class SlackSink : IBatchedLogEventSink
         _client = CreateApiClient(token);
     }
 
+    /// <summary>
+    /// Creates a batched Slack sink using an existing API client.
+    /// </summary>
+    /// <param name="client">The client used to post messages. The sink does not dispose this client.</param>
+    /// <param name="channel">The destination Slack channel name or ID.</param>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="client"/> or <paramref name="channel"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="ArgumentException"><paramref name="channel"/> is empty.</exception>
+    public SlackSink(ISlackApiClient client, string channel)
+    {
+        Check.NotNull(client);
+        Check.NotEmpty(channel);
+        _client = client;
+        _channel = channel;
+    }
+
     internal static ISlackApiClient CreateApiClient(string token)
     {
         return new ServiceCollection()
