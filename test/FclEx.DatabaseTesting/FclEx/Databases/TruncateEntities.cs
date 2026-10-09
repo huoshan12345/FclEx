@@ -44,3 +44,10 @@ public sealed class TruncateChild
     public int Id { get; set; }
     public int ParentId { get; set; }
 }
+
+public sealed class TruncateIsolationRow
+{
+    [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int Id { get; set; }
+    public int Value { get; set; }
+}

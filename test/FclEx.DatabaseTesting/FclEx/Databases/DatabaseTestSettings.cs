@@ -51,9 +51,13 @@ public static class DatabaseTestSettings
                         DbDriver.SqlServer,
                     ]
                 : [
-                    DbDriver.MySqlConnector,
                     DbDriver.SqlServer,
                     DbDriver.Sqlite,
+                    DbDriver.Npgsql,
+                    DbDriver.MySqlConnector,
+#if SUPPORT_ORACLE
+                    DbDriver.Oracle,
+#endif
                 ];
         }
 

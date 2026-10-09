@@ -13,7 +13,6 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
          select (db, assembly, ver, os))
         .ToTheoryData();
 
-#if NET10_0
     /// <summary>
     /// Set up databases for all test cases.
     /// Run this only when test entities are changed.
@@ -22,6 +21,8 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [MemberData(nameof(SetupDatabaseCases))]
     public async Task SetupDatabase(DbDriver dbDriver, string assemblyName, int dotNetVersion, string os)
     {
+        Assert.SkipUnless(Environment.Version.Major == 10, "Only run this test on .NET 10");
+
         var defaultPassword = dbDriver is DbDriver.SqlServer
             ? SqlServerUserPassword
             : DefaultUserPassword;
@@ -175,5 +176,4 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         }
     }
 
-#endif
 }

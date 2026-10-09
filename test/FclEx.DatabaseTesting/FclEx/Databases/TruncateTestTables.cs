@@ -1,11 +1,13 @@
 namespace FclEx.Databases;
 
-/// <summary>Creates minimal isolated tables on demand; only Oracle cascade tables persist between runs.</summary>
+/// <summary>Creates minimal isolated tables on demand, or leases fixture-initialized persistent tables for Oracle.</summary>
 public sealed class TruncateTestTables(TestDatabaseEnvironment environment)
 {
     private readonly Dictionary<string, SemaphoreSlim> _oracleCascadeLocks = new();
+    private readonly Dictionary<string, (SemaphoreSlim Gate, ConcurrentQueue<string> Prefixes)> _oracleTables = new();
 
-    /// <summary>Idempotently creates the two Oracle cascade tables for each selected Oracle target.</summary>
+    /// <summary>Idempotently creates all dedicated Oracle tables for each selected target; other drivers create tables on demand.</summary>
+    /// <remarks>Called by fixture initialization before any sessions are acquired.</remarks>
     public async Task InitializeAsync(IEnumerable<string?> schemas, CancellationToken cancellationToken = default)
     {
         if (!SelectedDrivers.Contains(DbDriver.Oracle))
@@ -18,13 +20,32 @@ public sealed class TruncateTestTables(TestDatabaseEnvironment environment)
             using var session = new TruncateTestSession(connection, DbDriver.Oracle, schema, "TruncateCascade_");
             await CreateTableAsync(session, typeof(TruncateParent), false, true, cancellationToken);
             await CreateTableAsync(session, typeof(TruncateChild), false, true, cancellationToken);
+            var prefixes = new[] { "Truncate_1_", "Truncate_2_" };
+            foreach (var prefix in prefixes)
+            {
+                using var tableConnection = environment.Resolve(DbDriver.Oracle, schema).CreateConnection();
+                await tableConnection.OpenAsync(cancellationToken);
+                using var tableSession = new TruncateTestSession(tableConnection, DbDriver.Oracle, schema, prefix);
+                foreach (var type in new[]
+                         {
+                             typeof(TruncateRow), typeof(TruncateOtherRow), typeof(TruncateManualRow),
+                             typeof(TruncateKeylessRow), typeof(TruncateAttributedRow),
+                         })
+                    await CreateTableAsync(tableSession, type, false, true, cancellationToken);
+            }
             if (!_oracleCascadeLocks.ContainsKey(schema ?? ""))
                 _oracleCascadeLocks.Add(schema ?? "", new SemaphoreSlim(1, 1));
+            if (!_oracleTables.ContainsKey(schema ?? ""))
+                _oracleTables.Add(schema ?? "",
+                    (new SemaphoreSlim(prefixes.Length, prefixes.Length), new ConcurrentQueue<string>(prefixes)));
         }
     }
 
-    /// <summary>Creates only the requested tables. Ordinary tables are dropped when the session is disposed.</summary>
-    /// <remarks>Oracle cascade sessions exclusively lease the persistent parent and child tables.</remarks>
+    /// <summary>Creates the requested tables on other drivers, or leases persistent Oracle tables without executing DDL.</summary>
+    /// <remarks>
+    /// Oracle leases are exclusive and released on disposal; tables persist. Acquisition waits, with cancellation,
+    /// when both row-table groups or the single cascade pair are in use. Other ordinary tables are dropped on disposal.
+    /// </remarks>
     public async Task<TruncateTestSession> CreateSessionAsync(
         DbDriver driver,
         string? schema,
@@ -36,23 +57,41 @@ public sealed class TruncateTestTables(TestDatabaseEnvironment environment)
         var types = entityTypes.Distinct().ToArray();
         var oracleCascade = driver == DbDriver.Oracle && types.Contains(typeof(TruncateParent));
         Action? release = null;
+        string? oraclePrefix = null;
         if (oracleCascade)
         {
             var gate = _oracleCascadeLocks[schema ?? ""];
             await gate.WaitAsync(cancellationToken);
             release = () => gate.Release();
         }
+        else if (driver == DbDriver.Oracle)
+        {
+            var pool = _oracleTables[schema ?? ""];
+            await pool.Gate.WaitAsync(cancellationToken);
+            if (!pool.Prefixes.TryDequeue(out oraclePrefix))
+            {
+                pool.Gate.Release();
+                throw new InvalidOperationException("No Oracle table prefix is available after acquiring a lease.");
+            }
+            var leasedPrefix = oraclePrefix;
+            release = () =>
+            {
+                pool.Prefixes.Enqueue(leasedPrefix);
+                pool.Gate.Release();
+            };
+        }
 
         var temporary = !ordinary && driver != DbDriver.Oracle;
-        var prefix = oracleCascade ? "TruncateCascade_" : (temporary && driver == DbDriver.SqlServer ? "#" : "")
+        var prefix = oracleCascade ? "TruncateCascade_" : oraclePrefix ?? (temporary && driver == DbDriver.SqlServer ? "#" : "")
             + "Truncate_" + Guid.NewGuid().ToString("N").Substring(0, 12) + "_";
-        var session = new TruncateTestSession(connection ?? environment.Resolve(driver, schema).CreateConnection(), driver,
-            temporary ? driver switch { DbDriver.Npgsql => "pg_temp", DbDriver.SqlServer => null, _ => schema } : schema,
-            prefix, release);
+        TruncateTestSession? session = null;
         try
         {
+            session = new TruncateTestSession(connection ?? environment.Resolve(driver, schema).CreateConnection(), driver,
+                temporary ? driver switch { DbDriver.Npgsql => "pg_temp", DbDriver.SqlServer => null, _ => schema } : schema,
+                prefix, release);
             await session.Connection.OpenAsync(cancellationToken);
-            if (!oracleCascade)
+            if (driver != DbDriver.Oracle)
             {
                 foreach (var type in types)
                 {
@@ -65,7 +104,10 @@ public sealed class TruncateTestTables(TestDatabaseEnvironment environment)
         }
         catch
         {
-            session.Dispose();
+            if (session != null)
+                session.Dispose();
+            else
+                release?.Invoke();
             throw;
         }
     }

@@ -80,15 +80,16 @@ keeps its connection open until all contexts have finished. MySqlConnector conne
 retain the provider-required `AllowUserVariables=True;UseAffectedRows=False` settings.
 
 Initialization does nothing unless Oracle is selected. For Oracle it idempotently
-creates only the dedicated parent and child tables per schema, with an
-`ON DELETE CASCADE` foreign key. Those two tables persist between runs; cascade tests
-exclusively lease them and clean their rows, without a multi-table pool. The lease is
-process-local and does not isolate simultaneous runs of the same project/framework/OS/schema.
+creates all dedicated tables per schema: one parent/child pair with an
+`ON DELETE CASCADE` foreign key, plus two groups of the five minimal row tables.
+Oracle sessions exclusively lease these persistent tables and clean their rows;
+they never create or drop tables. Two row-table groups support the simultaneous-session
+isolation test. Other tests hold only one lease at a time. Leases are process-local
+and do not isolate simultaneous runs of the same project/framework/OS/schema.
 
-Other Oracle cases create uniquely named ordinary tables immediately before each test
-and drop them on session disposal. Oracle native identity behavior requires ordinary
-tables rather than connection-local temporary identity tables. Closed-connection and
-ordinary-schema cases on every driver also use uniquely named, on-demand ordinary
+Oracle native identity behavior requires ordinary tables rather than connection-local
+temporary identity tables. Closed-connection and ordinary-schema cases on other
+drivers use uniquely named, on-demand ordinary
 tables, which are dropped afterward. No truncate test modifies the common fixture tables.
 
 Cascade result tests on PostgreSQL and Oracle insert only a parent and a child and check
