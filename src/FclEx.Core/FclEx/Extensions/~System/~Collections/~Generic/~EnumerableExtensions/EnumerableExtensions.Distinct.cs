@@ -163,7 +163,7 @@ public static partial class EnumerableExtensions
                 var current = enumerator.Current;
                 if (comparer.Equals(runItem, current))
                 {
-                    count = checked(count + 1);
+                    count = IncrementAdjacentCount(count);
                 }
                 else
                 {
@@ -176,6 +176,8 @@ public static partial class EnumerableExtensions
             yield return (runItem, count);
         }
     }
+
+    private static int IncrementAdjacentCount(int count) => checked(count + 1);
 
     /// <summary>
     /// Counts consecutive elements with equal keys, retaining the first key of each run.

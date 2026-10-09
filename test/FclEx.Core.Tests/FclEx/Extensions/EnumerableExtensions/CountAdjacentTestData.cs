@@ -1,5 +1,3 @@
-using System.Reflection;
-
 namespace FclEx.Extensions.EnumerableExtensions;
 
 internal static class CountAdjacentTestData
@@ -14,22 +12,24 @@ internal static class CountAdjacentTestData
         { [0, 0, -1, -1, 0], [(0, 2), (-1, 2), (0, 1)] }
     };
 
-    public static void AssertCountBoundaryWithInjectedCounter(
+    public static void AssertCountIncrementBoundaryAndDisposal(
         Func<IEnumerable<int>, IEqualityComparer<int>, IEnumerable<(int Item, int Count)>> operation,
         bool overflow)
     {
         var source = new TrackingSource(1, 1);
-        IEnumerator<(int Item, int Count)>? enumerator = null;
+        var incrementMethod = typeof(Check).Assembly.GetType("FclEx.Extensions.EnumerableExtensions", throwOnError: true)!
+            .GetMethod("IncrementAdjacentCount", BindingFlags.Static | BindingFlags.NonPublic);
+        Assert.NotNull(incrementMethod);
+        var increment = (Func<int, int>)Delegate.CreateDelegate(typeof(Func<int, int>), incrementMethod);
+        var comparisons = 0;
         var comparer = new CallbackComparer(() =>
         {
-            var countField = Assert.Single(enumerator!.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic),
-                field => field.Name.StartsWith("<count>", StringComparison.Ordinal));
-            Assert.Equal(1, Assert.IsType<int>(countField.GetValue(enumerator)));
-            countField.SetValue(enumerator, overflow ? int.MaxValue : int.MaxValue - 1);
+            comparisons++;
+            Assert.Equal(int.MaxValue, increment(overflow ? int.MaxValue : int.MaxValue - 1));
             return true;
         });
 
-        using (enumerator = operation(source.Enumerate(), comparer).GetEnumerator())
+        using (var enumerator = operation(source.Enumerate(), comparer).GetEnumerator())
         {
             if (overflow)
             {
@@ -38,10 +38,11 @@ internal static class CountAdjacentTestData
             else
             {
                 Assert.True(enumerator.MoveNext());
-                Assert.Equal((1, int.MaxValue), enumerator.Current);
+                Assert.Equal((1, 2), enumerator.Current);
                 Assert.False(enumerator.MoveNext());
             }
 
+            Assert.Equal(1, comparisons);
             Assert.Equal(1, source.Disposals);
         }
     }

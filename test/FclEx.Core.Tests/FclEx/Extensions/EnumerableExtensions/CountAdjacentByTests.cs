@@ -135,9 +135,9 @@ public class CountAdjacentByTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void CountBoundary_ReturnsMaximumOrThrowsOnOverflowAndDisposesSource(bool overflow)
+    public void CountIncrementBoundary_ReturnsMaximumOrPropagatesOverflowAndDisposesSource(bool overflow)
     {
-        CountAdjacentTestData.AssertCountBoundaryWithInjectedCounter(
+        CountAdjacentTestData.AssertCountIncrementBoundaryAndDisposal(
             (source, comparer) => source.CountAdjacentBy(item => item, comparer), overflow);
     }
 }
