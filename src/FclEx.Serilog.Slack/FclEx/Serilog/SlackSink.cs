@@ -15,7 +15,7 @@ public class SlackSink : IBatchedLogEventSink
     private readonly string _channel;
     private const int MaxLength = 2950;
 
-    private static readonly JsonFormatterOptions _formatterOptions = new();
+    private static readonly JsonFormatterOptions _formatterOptions = new() { ExceptionFormatOptions = new() { MaxMessageLength = 2048 } };
     private static readonly JsonFormatter _formatter = new(_formatterOptions);
 
     public SlackSink(string token, string channel)

@@ -42,6 +42,26 @@ constant additional space. Each enumeration makes one pass over the source;
 `DistinctAdjacentBy` selects a key exactly once per visited element. An omitted or null
 comparer uses the default equality comparer for the element or key type.
 
+### Adjacent run counting
+
+`CountAdjacent` returns `(Item, Count)` for each consecutive run of equal elements,
+retaining the first original element. `CountAdjacentBy` selects keys and returns
+`(Key, Count)` for each consecutive run of equal keys, retaining the first selected key.
+Equal values or keys separated by a different value or key are counted separately.
+
+```csharp
+new[] { 1, 1, 2, 2, 2, 1 }.CountAdjacent(); // [(1, 2), (2, 3), (1, 1)]
+new[] { "one", "two", "four", "five", "six" }
+    .CountAdjacentBy(item => item.Length); // [(3, 2), (4, 2), (3, 1)]
+```
+
+These methods validate required arguments immediately and enumerate lazily in one pass
+using constant additional space. Each run is yielded only after its end is found, so
+enumeration reads the first element of the next run before returning the current run.
+Key selection occurs once per visited element. A run exceeding `int.MaxValue` throws
+`OverflowException`; an unbounded equal run cannot yield a completed result.
+Omitted or null comparers use the default element or key equality comparer.
+
 ### String delimiters
 
 Use `IsSquareBracketed` / `TrimSquareBrackets`, `IsParenthesized` / `TrimParentheses`,

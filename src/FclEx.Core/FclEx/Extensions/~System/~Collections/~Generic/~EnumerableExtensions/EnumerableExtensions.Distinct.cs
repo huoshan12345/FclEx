@@ -116,6 +116,28 @@ public static partial class EnumerableExtensions
         }
     }
 
+    /// <summary>
+    /// Counts consecutive equal elements, retaining the first element of each run.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the sequence.</typeparam>
+    /// <param name="source">The source sequence.</param>
+    /// <param name="comparer">
+    /// The element equality comparer, or <see langword="null"/> to use <see cref="EqualityComparer{T}.Default"/>.
+    /// </param>
+    /// <returns>
+    /// One tuple per consecutive run, in source order. <c>Item</c> is the first original element
+    /// of the run and <c>Count</c> is its length. Nonconsecutive equal elements form separate runs.
+    /// </returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="OverflowException">A run contains more than <see cref="int.MaxValue"/> elements.</exception>
+    /// <remarks>
+    /// Argument validation is immediate; enumeration is deferred. Each enumeration makes one source
+    /// pass using constant additional space. A run is returned only after its end is found, which
+    /// requires reading the first element of the next run or reaching the end of the source.
+    /// The source enumerator is disposed on completion, failure, or early disposal of the result enumerator.
+    /// The comparer must obey the equality comparer contract, including transitivity.
+    /// For example, <c>[1, 1, 2, 2, 2, 1]</c> produces <c>[(1, 2), (2, 3), (1, 1)]</c>.
+    /// </remarks>
     public static IEnumerable<(T Item, int Count)> CountAdjacent<T>(
         this IEnumerable<T> source,
         IEqualityComparer<T>? comparer = null)
@@ -127,28 +149,68 @@ public static partial class EnumerableExtensions
             IEnumerable<T> source,
             IEqualityComparer<T> comparer)
         {
-            using var e = source.GetEnumerator();
-            if (!e.MoveNext()) yield break;
+            using var enumerator = source.GetEnumerator();
+            if (!enumerator.MoveNext())
+            {
+                yield break;
+            }
 
-            var key = e.Current;
+            var runItem = enumerator.Current;
             var count = 1;
 
-            while (e.MoveNext())
+            while (enumerator.MoveNext())
             {
-                var current = e.Current;
-                if (comparer.Equals(key, current))
+                var current = enumerator.Current;
+                if (comparer.Equals(runItem, current))
                 {
-                    count++;
+                    count = checked(count + 1);
                 }
                 else
                 {
-                    yield return (key, count);
-                    key = current;
+                    yield return (runItem, count);
+                    runItem = current;
                     count = 1;
                 }
             }
 
-            yield return (key, count);
+            yield return (runItem, count);
         }
+    }
+
+    /// <summary>
+    /// Counts consecutive elements with equal keys, retaining the first key of each run.
+    /// </summary>
+    /// <typeparam name="TSource">The type of elements in the sequence.</typeparam>
+    /// <typeparam name="TKey">The type of keys used to compare elements.</typeparam>
+    /// <param name="source">The source sequence.</param>
+    /// <param name="keySelector">The function that extracts a key from each element.</param>
+    /// <param name="comparer">
+    /// The key equality comparer, or <see langword="null"/> to use <see cref="EqualityComparer{TKey}.Default"/>.
+    /// </param>
+    /// <returns>
+    /// One tuple per consecutive run of equal keys, in source order. <c>Key</c> is the first selected
+    /// key of the run and <c>Count</c> is its length. Nonconsecutive equal keys form separate runs.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="source"/> or <paramref name="keySelector"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="OverflowException">A run contains more than <see cref="int.MaxValue"/> elements.</exception>
+    /// <remarks>
+    /// Argument validation is immediate; enumeration and key selection are deferred. Each enumeration
+    /// makes one source pass using constant additional space and selects each visited element's key once.
+    /// A run is returned only after its end is found, which requires reading and selecting the key of
+    /// the first element of the next run or reaching the end of the source. Exceptions from the selector
+    /// or comparer propagate during enumeration. The source enumerator is disposed on completion,
+    /// failure, or early disposal of the result enumerator. The comparer must obey the equality comparer
+    /// contract, including transitivity. This method returns keys, not the original source elements.
+    /// </remarks>
+    public static IEnumerable<(TKey Key, int Count)> CountAdjacentBy<TSource, TKey>(
+        this IEnumerable<TSource> source,
+        Func<TSource, TKey> keySelector,
+        IEqualityComparer<TKey>? comparer = null)
+    {
+        Check.NotNull(source);
+        Check.NotNull(keySelector);
+        return source.Select(keySelector).CountAdjacent(comparer);
     }
 }
