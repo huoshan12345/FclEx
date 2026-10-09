@@ -68,15 +68,33 @@ Remote names isolate projects, frameworks, operating systems, and schema scenari
 
 ## Truncate test isolation
 
-Truncate tests run in parallel against isolated tables rather than disabling parallelization for their classes or theories. `TruncateTestSession` owns one open connection and maps the existing shared entities to the session's tables. EF tests still use `TestDbContext`, with an explicit model for that session; session models are not added to the global model cache.
+Truncate tests use the minimal [TruncateEntities](FclEx/Databases/TruncateEntities.cs)
+rather than the common fixture entities. Tables contain only an integer key, a value
+column when filtering or keyless behavior needs it, and a parent key for cascade tests.
+EF uses a dedicated `TruncateDbContext` model; these entities are never added to the
+shared `TestDbContext` schema. Dapper reuses the same simple entities and session mappings.
 
-SQL Server uses local `#` tables, PostgreSQL uses `pg_temp`, and MySQL and SQLite use connection-local temporary tables. Each case creates only the tables it needs. Connections must remain open until the test and any alternative metadata contexts have finished. MySqlConnector connection strings include `AllowUserVariables=True;UseAffectedRows=False`, as required by the EF providers when adopting an already-open connection.
+SQL Server uses local `#` tables, PostgreSQL uses `pg_temp`, and MySQL and SQLite use
+connection-local temporary tables. Each test creates only the tables it needs and
+keeps its connection open until all contexts have finished. MySqlConnector connections
+retain the provider-required `AllowUserVariables=True;UseAffectedRows=False` settings.
 
-Oracle uses four ordinary table groups per schema target, initialized by the fixture with `CREATE TABLE IF NOT EXISTS`. The tables persist between runs and are neither rebuilt nor structurally reconciled. Initialization visits only selected drivers, so it does not connect to Oracle unless Oracle is selected and compiled into the target. A test exclusively leases one group; only other tests waiting for a group on that Oracle target wait. Other schemas, drivers, and unrelated tests remain parallel. The groups are process-local leases and do not isolate simultaneous runs of the identical project/framework/OS/schema entry.
+Initialization does nothing unless Oracle is selected. For Oracle it idempotently
+creates only the dedicated parent and child tables per schema, with an
+`ON DELETE CASCADE` foreign key. Those two tables persist between runs; cascade tests
+exclusively lease them and clean their rows, without a multi-table pool. The lease is
+process-local and does not isolate simultaneous runs of the same project/framework/OS/schema.
 
-Cascade result tests cover PostgreSQL and Oracle. Both seed a real parent and child, truncate the parent with CASCADE, and verify both tables are empty. Oracle's pre-created foreign key uses `ON DELETE CASCADE`. Other databases do not create foreign keys solely to verify native rejection; the library's unsupported option combinations remain covered.
+Other Oracle cases create uniquely named ordinary tables immediately before each test
+and drop them on session disposal. Oracle native identity behavior requires ordinary
+tables rather than connection-local temporary identity tables. Closed-connection and
+ordinary-schema cases on every driver also use uniquely named, on-demand ordinary
+tables, which are dropped afterward. No truncate test modifies the common fixture tables.
 
-A dedicated ordinary `TruncateClosed_EntityWithAutoKey` table per selected target verifies successful Dapper calls from a closed connection, including explicit schema overrides. In the separate EF fixture it verifies every truncate entry point against the original default/explicit schema rather than the temporary namespace. Only one test case owns it per target and project. Other truncate cases never modify that table or the common fixture tables. Fixtures create this table idempotently, using each database's supported existence syntax. MySql.Data remains skipped in all truncate cases because of its asynchronous timeout cleanup issue; MySqlConnector stays covered.
+Cascade result tests on PostgreSQL and Oracle insert only a parent and a child and check
+that both row counts become zero. Unsupported option combinations retain their
+closed-connection validation coverage. MySql.Data retains its existing truncate-test
+skip for its asynchronous timeout cleanup issue; MySqlConnector remains covered.
 
 ### Coverage and execution cost
 

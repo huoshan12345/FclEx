@@ -10,7 +10,7 @@ public class DbSetExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     {
         Assert.SkipMySql(driver);
         using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema,
-            [typeof(EntityWithAutoKey), typeof(EntityWithIdAndIndex)], cancellationToken: CancellationToken);
+            [typeof(TruncateRow), typeof(TruncateOtherRow)], cancellationToken: CancellationToken);
         await using var context = session.CreateDbContext(Fixture, schema);
         await TruncateTests.VerifyNamedSharedTypeAsync(context, true);
     }
@@ -18,8 +18,8 @@ public class DbSetExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [Fact]
     public async Task TruncateAsync_ValidatesNullSet()
     {
-        await Assert.ThrowsAsync<ArgumentNullException>(() => ((DbSet<EntityWithAutoKey>)null!).TruncateAsync());
-        await Assert.ThrowsAsync<ArgumentNullException>(() => ((DbSet<EntityWithAutoKey>)null!).TruncateAsync(true, false));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => ((DbSet<TruncateRow>)null!).TruncateAsync());
+        await Assert.ThrowsAsync<ArgumentNullException>(() => ((DbSet<TruncateRow>)null!).TruncateAsync(true, false));
     }
 
     [Fact]

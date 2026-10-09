@@ -1,7 +1,6 @@
 namespace FclEx.Databases;
 
-/// <summary>Owns one connection and the isolated tables used by a truncate test.</summary>
-/// <remarks>Temporary tables stay on this open connection. Oracle tables are leased from a fixture-owned pool.</remarks>
+/// <summary>Owns a truncate test's connection and dedicated table mappings.</summary>
 public sealed class TruncateTestSession : IDisposable, IEntityMappingSource
 {
     private readonly Action? _release;
@@ -12,6 +11,7 @@ public sealed class TruncateTestSession : IDisposable, IEntityMappingSource
     public string? Schema { get; }
     public string TablePrefix { get; }
     public CommandOptions CommandOptions => new() { EntityMappingSource = this };
+    internal List<string> TablesToDrop { get; } = [];
 
     internal TruncateTestSession(DbConnection connection, DbDriver driver, string? schema, string prefix, Action? release = null)
     {
@@ -27,12 +27,7 @@ public sealed class TruncateTestSession : IDisposable, IEntityMappingSource
     public EntityMapping GetMapping(Type entityType)
     {
         var original = DapperHelper.GetEntityMapping(entityType);
-        var properties = original.Properties.Select(property => property.Property.Name == "Id"
-            && (entityType == typeof(EntityHasStates) || entityType == typeof(EntityWithNavigation)
-                || entityType == typeof(EntityWithIdAndIndex))
-            ? new PropertyMapping(property.Property, property.ColumnName, true, DatabaseValueGeneration.OnInsert)
-            : property);
-        return new(entityType, GetTableName(entityType), properties, Schema);
+        return new(entityType, GetTableName(entityType), original.Properties, Schema);
     }
 
     public string GetQualifiedTableName(Type entityType)
@@ -45,11 +40,19 @@ public sealed class TruncateTestSession : IDisposable, IEntityMappingSource
         _disposed = true;
         try
         {
-            Connection.Dispose();
+            foreach (var table in TablesToDrop.AsEnumerable().Reverse())
+                Connection.Execute($"DROP TABLE {table}");
         }
         finally
         {
-            _release?.Invoke();
+            try
+            {
+                Connection.Dispose();
+            }
+            finally
+            {
+                _release?.Invoke();
+            }
         }
     }
 }
