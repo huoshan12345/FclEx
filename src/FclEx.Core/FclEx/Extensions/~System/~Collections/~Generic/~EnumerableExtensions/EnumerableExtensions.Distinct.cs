@@ -115,4 +115,40 @@ public static partial class EnumerableExtensions
             }
         }
     }
+
+    public static IEnumerable<(T Item, int Count)> CountAdjacent<T>(
+        this IEnumerable<T> source,
+        IEqualityComparer<T>? comparer = null)
+    {
+        Check.NotNull(source);
+        return Iterator(source, comparer ?? EqualityComparer<T>.Default);
+
+        static IEnumerable<(T Item, int Count)> Iterator(
+            IEnumerable<T> source,
+            IEqualityComparer<T> comparer)
+        {
+            using var e = source.GetEnumerator();
+            if (!e.MoveNext()) yield break;
+
+            var key = e.Current;
+            var count = 1;
+
+            while (e.MoveNext())
+            {
+                var current = e.Current;
+                if (comparer.Equals(key, current))
+                {
+                    count++;
+                }
+                else
+                {
+                    yield return (key, count);
+                    key = current;
+                    count = 1;
+                }
+            }
+
+            yield return (key, count);
+        }
+    }
 }
