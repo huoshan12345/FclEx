@@ -197,7 +197,8 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         Assert.SkipUnless(Environment.Version.Major == 10, "Only run this test on .NET 10");
 
         var path = Environment.GetEnvironmentVariable("FCLEX_SQLITE_SCHEMA_OUTPUT")
-            ?? throw new InvalidOperationException("Set FCLEX_SQLITE_SCHEMA_OUTPUT to test/FclEx.DatabaseTesting/Schemas/Sqlite.sql.");
+                   ?? Directories.SolutionRoot.File("test", typeof(DbDriver).Assembly.GetName().Name!, "Schemas", "Sqlite.sql").FullName;
+        
         using var context = new TestDbContext(DbDriver.Sqlite, "Data Source=:memory:");
         var sql = Normalize(context.Database.GenerateCreateScript()).Replace("\n", Environment.NewLine);
         File.WriteAllText(path, sql + Environment.NewLine, new UTF8Encoding(false));
