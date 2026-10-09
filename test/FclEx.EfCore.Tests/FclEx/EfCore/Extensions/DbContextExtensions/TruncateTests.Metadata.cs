@@ -9,13 +9,13 @@ public partial class TruncateTests
     public async Task TruncateAsync_MetadataOverloadsUseNamedSharedTypeTableAndBypassQueryFilter(DbDriver driver, string? schema)
     {
         Assert.SkipMySql(driver);
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema,
+        using var session = await Fixture.TruncateSessions.CreateSessionAsync(driver, schema,
             [typeof(TruncateRow), typeof(TruncateOtherRow)], cancellationToken: CancellationToken);
-        await using var context = session.CreateDbContext(Fixture, schema);
+        await using var context = session.CreateDbContext(Fixture);
         await VerifyNamedSharedTypeAsync(context, false);
     }
 
-    internal static async Task VerifyNamedSharedTypeAsync(TruncateDbContext context, bool useDbSet)
+    internal static async Task VerifyNamedSharedTypeAsync(TestDbContext context, bool useDbSet)
     {
         await using var namedContext = CreateNamedSharedTypeContext(context);
         await using var cleanup = CleanupRows(context);
@@ -58,7 +58,7 @@ public partial class TruncateTests
     [Fact]
     public async Task TruncateAsync_ClrTypeOverloadsRejectNamedSharedTypes()
     {
-        await using var reference = new TruncateDbContext(DbDriver.SqlServer, Fixture.ResolveTarget(DbDriver.SqlServer).BuildConnectionString());
+        await using var reference = new TestDbContext(DbDriver.SqlServer, Fixture.ResolveTarget(DbDriver.SqlServer).BuildConnectionString());
         await using var namedContext = CreateNamedSharedTypeContext(reference);
         await Assert.ThrowsAsync<InvalidOperationException>(() => namedContext.TruncateAsync<TruncateRow>());
         await Assert.ThrowsAsync<InvalidOperationException>(() => namedContext.TruncateAsync<Dictionary<string, object>>());
@@ -66,7 +66,7 @@ public partial class TruncateTests
         await Assert.ThrowsAsync<InvalidOperationException>(() => namedContext.TruncateAsync(typeof(Dictionary<string, object>), true, false));
     }
 
-    private static DbContext CreateNamedSharedTypeContext(TruncateDbContext context)
+    private static DbContext CreateNamedSharedTypeContext(TestDbContext context)
         => CreateModelContext(context, builder =>
         {
             foreach (var (name, clrType) in new[]
@@ -90,7 +90,7 @@ public partial class TruncateTests
     [Fact]
     public async Task TruncateAsync_MetadataOverloadsValidateNullArguments()
     {
-        await using var context = new TruncateDbContext(DbDriver.SqlServer, Fixture.ResolveTarget(DbDriver.SqlServer).BuildConnectionString());
+        await using var context = new TestDbContext(DbDriver.SqlServer, Fixture.ResolveTarget(DbDriver.SqlServer).BuildConnectionString());
         var entityType = context.Model.FindEntityType(typeof(TruncateRow))!;
         await Assert.ThrowsAsync<ArgumentNullException>(() => context.TruncateAsync((IEntityType)null!));
         await Assert.ThrowsAsync<ArgumentNullException>(() => context.TruncateAsync((IEntityType)null!, true, false));
@@ -101,8 +101,8 @@ public partial class TruncateTests
     [Fact]
     public async Task TruncateAsync_MetadataOverloadsRejectMetadataFromAnotherModel()
     {
-        await using var context = new TruncateDbContext(DbDriver.SqlServer, Fixture.ResolveTarget(DbDriver.SqlServer).BuildConnectionString());
-        await using var other = new TruncateDbContext(DbDriver.SqlServer,
+        await using var context = new TestDbContext(DbDriver.SqlServer, Fixture.ResolveTarget(DbDriver.SqlServer).BuildConnectionString());
+        await using var other = new TestDbContext(DbDriver.SqlServer,
             Fixture.ResolveTarget(DbDriver.SqlServer, Schemas.Single(schema => schema is not null)).BuildConnectionString(),
             Schemas.Single(schema => schema is not null));
         var entityType = other.Model.FindEntityType(typeof(TruncateRow))!;
@@ -117,8 +117,8 @@ public partial class TruncateTests
     public async Task TruncateAsync_MetadataOverloadsAcceptMetadataFromSharedModel(DbDriver driver, string? schema)
     {
         Assert.SkipMySql(driver);
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(TruncateRow)], cancellationToken: CancellationToken);
-        await using var context = session.CreateDbContext(Fixture, schema);
+        using var session = await Fixture.TruncateSessions.CreateSessionAsync(driver, schema, [typeof(TruncateRow)], cancellationToken: CancellationToken);
+        await using var context = session.CreateDbContext(Fixture);
         await using var cleanup = CleanupRows(context);
         await using var other = context.CreateSharedModelContext();
         Assert.Same(context.Model, other.Model);

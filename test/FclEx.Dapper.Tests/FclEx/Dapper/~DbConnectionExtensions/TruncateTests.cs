@@ -4,7 +4,7 @@ namespace FclEx.Dapper;
 public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fixture)
 {
     private Task<TruncateTestSession> CreateSessionAsync(DbDriver driver, string? schema, params Type[] entityTypes)
-        => Fixture.TruncateTables.CreateSessionAsync(driver, schema,
+        => Fixture.TruncateSessions.CreateSessionAsync(driver, schema,
             entityTypes.Length == 0 ? [typeof(TruncateRow)] : entityTypes, cancellationToken: CancellationToken);
 
     public static TheoryData<DbDriver, string?, bool, bool> OptionCases => TruncateTestCases.GetOptionCases(Schemas);
@@ -19,9 +19,9 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
         var connection = session.Connection;
         schema = session.Schema;
         await VerifyTruncationAsync(session,
-            token => connection.TruncateAsync<TruncateRow>(schema, commandOptions: session.CommandOptions, cancellationToken: token));
+            token => connection.TruncateAsync<TruncateRow>(schema, cancellationToken: token));
         await VerifyTruncationAsync(session,
-            token => connection.TruncateAsync(session.GetTableName(typeof(TruncateRow)), schema, commandOptions: session.CommandOptions, cancellationToken: token));
+            token => connection.TruncateAsync(session.GetTableName(typeof(TruncateRow)), schema, cancellationToken: token));
     }
 
     [Theory]
@@ -29,13 +29,13 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
     public async Task TruncateAsync_PreservesClosedConnectionState(DbDriver driver, string? schema)
     {
         Assert.SkipMySql(driver);
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema,
-            [typeof(TruncateRow)], cancellationToken: CancellationToken, ordinary: true);
+        using var session = await Fixture.TruncateSessions.CreateSessionAsync(driver, schema,
+            [typeof(TruncateRow)], cancellationToken: CancellationToken);
         await using var cleanup = CleanupRows(session);
         using var closed = Fixture.CreateDbConnection(driver, schema);
         var restart = driver != DbDriver.Oracle;
         var table = session.GetTableName(typeof(TruncateRow));
-        var options = session.CommandOptions;
+        var options = new CommandOptions();
         Func<CancellationToken, Task>[] truncations =
         [
             token => closed.TruncateAsync<TruncateRow>(schema, options, token),
@@ -74,10 +74,10 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
         var connection = session.Connection;
         schema = session.Schema;
         await VerifyTruncationAsync(session,
-            token => connection.TruncateAsync<TruncateRow>(restartIdentity, cascade, schema, commandOptions: session.CommandOptions, cancellationToken: token),
+            token => connection.TruncateAsync<TruncateRow>(restartIdentity, cascade, schema, cancellationToken: token),
             restartIdentity);
         await VerifyTruncationAsync(session,
-            token => connection.TruncateAsync(session.GetTableName(typeof(TruncateRow)), restartIdentity, cascade, schema, commandOptions: session.CommandOptions, cancellationToken: token),
+            token => connection.TruncateAsync(session.GetTableName(typeof(TruncateRow)), restartIdentity, cascade, schema, cancellationToken: token),
             restartIdentity);
     }
 
@@ -113,9 +113,9 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
         var first = new TruncateRow { Value = 1 };
         var second = new TruncateRow { Value = -1 };
         first.Id = await session.Connection.InsertAsync<TruncateRow, int>(first, session.Schema,
-            commandOptions: session.CommandOptions, cancellationToken: CancellationToken);
+            cancellationToken: CancellationToken);
         second.Id = await session.Connection.InsertAsync<TruncateRow, int>(second, session.Schema,
-            commandOptions: session.CommandOptions, cancellationToken: CancellationToken);
+            cancellationToken: CancellationToken);
         Assert.True(second.Id > first.Id);
         Assert.Equal(2, await CountAsync<TruncateRow>(session));
         return second;
@@ -138,7 +138,7 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
         var entity = await VerifyRowsRemovedAsync(session, truncate);
         var nextId = await session.Connection.InsertAsync<TruncateRow, int>(
             new() { Value = 1 }, session.Schema,
-            commandOptions: session.CommandOptions, cancellationToken: CancellationToken);
+            cancellationToken: CancellationToken);
         if (restartIdentity ?? session.Driver is not (DbDriver.Npgsql or DbDriver.Oracle))
             Assert.Equal(1, nextId);
         else
@@ -159,13 +159,13 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
             await DeleteAllAsync<TruncateManualRow>(session);
             await DeleteAllAsync<TruncateKeylessRow>(session);
             await connection.InsertAsync(new TruncateManualRow { Id = 1 }, schema,
-                commandOptions: session.CommandOptions, cancellationToken: CancellationToken);
+                cancellationToken: CancellationToken);
             await connection.InsertAsync(new TruncateKeylessRow { Value = 1 }, schema,
-                returnGeneratedKey: false, commandOptions: session.CommandOptions, cancellationToken: CancellationToken);
+                returnGeneratedKey: false, cancellationToken: CancellationToken);
             Assert.Equal(1, await CountAsync<TruncateManualRow>(session));
             Assert.Equal(1, await CountAsync<TruncateKeylessRow>(session));
-            await connection.TruncateAsync<TruncateManualRow>(schema, commandOptions: session.CommandOptions, cancellationToken: CancellationToken);
-            await connection.TruncateAsync<TruncateKeylessRow>(schema, commandOptions: session.CommandOptions, cancellationToken: CancellationToken);
+            await connection.TruncateAsync<TruncateManualRow>(schema, cancellationToken: CancellationToken);
+            await connection.TruncateAsync<TruncateKeylessRow>(schema, cancellationToken: CancellationToken);
             Assert.Equal(0, await CountAsync<TruncateManualRow>(session));
             Assert.Equal(0, await CountAsync<TruncateKeylessRow>(session));
         }
@@ -187,20 +187,19 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
         try
         {
             await SeedAsync(session);
-            using var closed = Fixture.CreateDbConnection(driver, schema == "pg_temp" ? null : schema);
+            using var closed = Fixture.CreateDbConnection(driver, schema);
             var token = new CancellationToken(true);
             var restart = driver != DbDriver.Oracle;
-            // Temporary tables belong to this connection; verify cancellation where the seeded rows exist.
             var connection = session.Connection;
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.TruncateAsync<TruncateRow>(schema, commandOptions: session.CommandOptions, cancellationToken: token));
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.TruncateAsync<TruncateRow>(restart, false, schema, commandOptions: session.CommandOptions, cancellationToken: token));
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.TruncateAsync(session.GetTableName(typeof(TruncateRow)), schema, commandOptions: session.CommandOptions, cancellationToken: token));
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.TruncateAsync(session.GetTableName(typeof(TruncateRow)), restart, false, schema, commandOptions: session.CommandOptions, cancellationToken: token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.TruncateAsync<TruncateRow>(schema, cancellationToken: token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.TruncateAsync<TruncateRow>(restart, false, schema, cancellationToken: token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.TruncateAsync(session.GetTableName(typeof(TruncateRow)), schema, cancellationToken: token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.TruncateAsync(session.GetTableName(typeof(TruncateRow)), restart, false, schema, cancellationToken: token));
             Assert.Equal(ConnectionState.Open, connection.State);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => closed.TruncateAsync<TruncateRow>(schema, commandOptions: session.CommandOptions, cancellationToken: token));
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => closed.TruncateAsync<TruncateRow>(restart, false, schema, commandOptions: session.CommandOptions, cancellationToken: token));
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => closed.TruncateAsync(session.GetTableName(typeof(TruncateRow)), schema, commandOptions: session.CommandOptions, cancellationToken: token));
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => closed.TruncateAsync(session.GetTableName(typeof(TruncateRow)), restart, false, schema, commandOptions: session.CommandOptions, cancellationToken: token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => closed.TruncateAsync<TruncateRow>(schema, cancellationToken: token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => closed.TruncateAsync<TruncateRow>(restart, false, schema, cancellationToken: token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => closed.TruncateAsync(session.GetTableName(typeof(TruncateRow)), schema, cancellationToken: token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => closed.TruncateAsync(session.GetTableName(typeof(TruncateRow)), restart, false, schema, cancellationToken: token));
             Assert.Equal(ConnectionState.Closed, closed.State);
             Assert.Equal(2, await CountAsync<TruncateRow>(session));
         }
@@ -226,13 +225,13 @@ public partial class TruncateTests(DapperTestsFixture fixture) : DapperTests(fix
             await DeleteAllAsync<TruncateChild>(session);
             await DeleteAllAsync<TruncateParent>(session);
             var parentId = await connection.InsertAsync<TruncateParent, int>(new TruncateParent(), schema,
-                commandOptions: session.CommandOptions, cancellationToken: CancellationToken);
+                cancellationToken: CancellationToken);
             await connection.InsertAsync(new TruncateChild { ParentId = parentId }, schema,
-                commandOptions: session.CommandOptions, cancellationToken: CancellationToken);
+                cancellationToken: CancellationToken);
             Assert.Equal(1, await CountAsync<TruncateParent>(session));
             Assert.Equal(1, await CountAsync<TruncateChild>(session));
             await connection.TruncateAsync<TruncateParent>(driver == DbDriver.Npgsql, true, schema,
-                session.CommandOptions, CancellationToken);
+                cancellationToken: CancellationToken);
             Assert.Equal(0, await CountAsync<TruncateParent>(session));
             Assert.Equal(0, await CountAsync<TruncateChild>(session));
         }

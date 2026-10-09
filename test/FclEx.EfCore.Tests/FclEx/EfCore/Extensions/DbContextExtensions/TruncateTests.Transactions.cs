@@ -8,9 +8,9 @@ public partial class TruncateTests
     {
         Assert.SkipMySql(driver);
 
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, null, [typeof(TruncateRow)],
+        using var session = await Fixture.TruncateSessions.CreateSessionAsync(driver, null, [typeof(TruncateRow)],
             new DerivedSqliteConnection(Fixture.ResolveTarget(driver).BuildConnectionString()), CancellationToken);
-        await using var context = session.CreateDbContext(Fixture, null);
+        await using var context = session.CreateDbContext(Fixture);
         await using var cleanup = CleanupRows(context);
         await VerifyRowsRemovedAsync(context, token => context.TruncateAsync<TruncateRow>(token));
     }
@@ -20,7 +20,7 @@ public partial class TruncateTests
     [InlineData(true)]
     public async Task TruncateAsync_TemporarySqliteTableResetsItsOwnSequence(bool hasMainTable)
     {
-        await using var context = new TruncateDbContext(DbDriver.Sqlite, "Data Source=:memory:;Foreign Keys=True");
+        await using var context = new TestDbContext(DbDriver.Sqlite, "Data Source=:memory:;Foreign Keys=True");
         await context.Database.OpenConnectionAsync(CancellationToken);
         if (hasMainTable)
             await context.Database.ExecuteSqlRawAsync("""
@@ -53,8 +53,8 @@ public partial class TruncateTests
     {
         Assert.SkipMySql(driver);
 
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(TruncateRow)], cancellationToken: CancellationToken);
-        await using var context = session.CreateDbContext(Fixture, schema);
+        using var session = await Fixture.TruncateSessions.CreateSessionAsync(driver, schema, [typeof(TruncateRow)], cancellationToken: CancellationToken);
+        await using var context = session.CreateDbContext(Fixture);
         try
         {
             var tracked = await SeedAsync(context);

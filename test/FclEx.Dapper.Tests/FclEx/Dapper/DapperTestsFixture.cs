@@ -7,13 +7,13 @@ public class DapperTestsFixture : CoreTestsFixture
         .Select(schema => WithAssemblyInfo(schema, typeof(DapperTestsFixture).Assembly)).ToArray();
 
     public TestDatabaseEnvironment DatabaseEnvironment { get; }
-    public TruncateTestTables TruncateTables { get; }
+    public TruncateTestSessions TruncateSessions { get; }
 
     public DapperTestsFixture()
     {
         DatabaseEnvironment = new(Databases, WithAssemblyInfo(DatabaseName),
             new(WithAssemblyInfo(DefaultUserName), DefaultUserPassword, WithAssemblyInfo(UserSchema)));
-        TruncateTables = new(DatabaseEnvironment);
+        TruncateSessions = new(DatabaseEnvironment);
     }
 
     public DbConnection CreateDbConnection(DbDriver driver, string? schema, TestLogin login = TestLogin.Standard)
@@ -23,8 +23,6 @@ public class DapperTestsFixture : CoreTestsFixture
     {
         if (SelectedDrivers.Contains(DbDriver.Sqlite))
             await DatabaseEnvironment.InitializeSqliteAsync();
-
-        await TruncateTables.InitializeAsync(Schemas);
 
         foreach (var (driver, schema) in GetDriverSchemaCases(Schemas))
         {

@@ -9,9 +9,9 @@ public class DbSetExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     public async Task TruncateAsync_UsesNamedSharedTypeTableAndBypassesQueryFilter(DbDriver driver, string? schema)
     {
         Assert.SkipMySql(driver);
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema,
+        using var session = await Fixture.TruncateSessions.CreateSessionAsync(driver, schema,
             [typeof(TruncateRow), typeof(TruncateOtherRow)], cancellationToken: CancellationToken);
-        await using var context = session.CreateDbContext(Fixture, schema);
+        await using var context = session.CreateDbContext(Fixture);
         await TruncateTests.VerifyNamedSharedTypeAsync(context, true);
     }
 

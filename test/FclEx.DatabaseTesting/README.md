@@ -71,26 +71,22 @@ Remote names isolate projects, frameworks, operating systems, and schema scenari
 Truncate tests use the minimal [TruncateEntities](FclEx/Databases/TruncateEntities.cs)
 rather than the common fixture entities. Tables contain only an integer key, a value
 column when filtering or keyless behavior needs it, and a parent key for cascade tests.
-EF uses a dedicated `TruncateDbContext` model; these entities are never added to the
-shared `TestDbContext` schema. Dapper reuses the same simple entities and session mappings.
+These eight ordinary tables are part of `TestDbContext` and the shared SQLite schema.
+Remote tables are provisioned manually through `SetupDatabase`; SQLite tables are
+created by `InitializeSqliteAsync`. Normal truncate sessions execute no CREATE or
+DROP statements and use the entity's configured table name and schema directly.
 
-SQL Server uses local `#` tables, PostgreSQL uses `pg_temp`, and MySQL and SQLite use
-connection-local temporary tables. Each test creates only the tables it needs and
-keeps its connection open until all contexts have finished. MySqlConnector connections
-retain the provider-required `AllowUserVariables=True;UseAffectedRows=False` settings.
+[TruncateTestSessions](FclEx/Databases/TruncateTestSessions.cs) leases the requested
+tables exclusively per driver and schema, acquiring multiple tables in a stable order.
+Cancellation or connection-opening failure releases acquired leases. Tests clean rows
+before seeding and after completion; disposal preserves tables and rows. Leases are
+fixture-local, not cross-process locks. MySql.Data and MySqlConnector share leases
+because they access the same server. The isolation case uses `TruncateRow` and
+`TruncateIsolationRow`, rather than dynamically named copies of the same table.
 
-Initialization does nothing unless Oracle is selected. For Oracle it idempotently
-creates all dedicated tables per schema: one parent/child pair with an
-`ON DELETE CASCADE` foreign key, plus two groups of the five minimal row tables.
-Oracle sessions exclusively lease these persistent tables and clean their rows;
-they never create or drop tables. Two row-table groups support the simultaneous-session
-isolation test. Other tests hold only one lease at a time. Leases are process-local
-and do not isolate simultaneous runs of the same project/framework/OS/schema.
-
-Oracle native identity behavior requires ordinary tables rather than connection-local
-temporary identity tables. Closed-connection and ordinary-schema cases on other
-drivers use uniquely named, on-demand ordinary
-tables, which are dropped afterward. No truncate test modifies the common fixture tables.
+Only the standalone SQLite regression creates a temporary table in its own in-memory
+database. It verifies that truncation resets `temp.sqlite_sequence` without changing
+a same-named ordinary table or its `main.sqlite_sequence` entry.
 
 Cascade result tests on PostgreSQL and Oracle insert only a parent and a child and check
 that both row counts become zero. Unsupported option combinations retain their
@@ -103,7 +99,7 @@ skip for its asynchronous timeout cleanup issue; MySqlConnector remains covered.
 
 Dapper and EF implement truncation independently, so each retains its own result, cancellation, and rollback coverage. Shared session isolation is tested only in Dapper.Tests. Both projects use the same [DerivedSqliteConnection](FclEx/Databases/DerivedSqliteConnection.cs) for connection-subclass regressions. EF's four default entry points share one session, as do its four explicit entry points for each supported option combination; each still verifies identity behavior. Cancellation seeds once and exercises all eight EF overloads. Named shared-type, schema, and derived-connection tests focus on their own behavior instead of repeating identity checks. Tests own final row cleanup; seeding clears between calls without another cleanup after every assertion group. Rejection of CLR-type access to named shared entities is checked once without database commands.
 
-Dapper cancellation and malformed-name guards run on the connection holding the seeded temporary table, so the unchanged-row assertion checks the actual operation target. Separate closed-connection calls retain connection-state coverage.
+Dapper cancellation and malformed-name guards use the dedicated ordinary tables, so the unchanged-row assertion checks the actual operation target. Separate closed-connection calls retain connection-state coverage.
 
 ## Compatibility failures
 

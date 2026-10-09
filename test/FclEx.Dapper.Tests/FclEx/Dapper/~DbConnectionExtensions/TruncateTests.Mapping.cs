@@ -32,9 +32,9 @@ public partial class TruncateTests
         try
         {
             await DeleteAllAsync<TruncateAttributedRow>(session);
-            await connection.InsertAsync(new TruncateAttributedRow(), schema, commandOptions: session.CommandOptions, cancellationToken: CancellationToken);
+            await connection.InsertAsync(new TruncateAttributedRow(), schema, cancellationToken: CancellationToken);
             Assert.Equal(1, await CountAsync<TruncateAttributedRow>(session));
-            await connection.TruncateAsync<TruncateAttributedRow>(schema, commandOptions: session.CommandOptions, cancellationToken: CancellationToken);
+            await connection.TruncateAsync<TruncateAttributedRow>(schema, cancellationToken: CancellationToken);
             Assert.Equal(0, await CountAsync<TruncateAttributedRow>(session));
         }
         finally
@@ -56,7 +56,7 @@ public partial class TruncateTests
             await SeedAsync(session);
             await Assert.ThrowsAnyAsync<DbException>(() => session.Connection.TruncateAsync("missing.'\";--", schema,
                 cancellationToken: CancellationToken));
-            using var closed = Fixture.CreateDbConnection(driver, schema == "pg_temp" ? null : schema);
+            using var closed = Fixture.CreateDbConnection(driver, schema);
             await Assert.ThrowsAnyAsync<DbException>(() => closed.TruncateAsync("missing.'\";--", schema,
                 cancellationToken: CancellationToken));
             Assert.Equal(ConnectionState.Closed, closed.State);

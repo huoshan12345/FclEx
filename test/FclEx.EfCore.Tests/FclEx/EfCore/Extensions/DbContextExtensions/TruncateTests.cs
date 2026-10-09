@@ -11,8 +11,8 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     public async Task TruncateAsync_DefaultEntryPointsRemoveAllRowsAndPreserveTrackedEntities(DbDriver driver, string? schema)
     {
         Assert.SkipMySql(driver);
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(TruncateRow)], cancellationToken: CancellationToken);
-        await using var context = session.CreateDbContext(Fixture, schema);
+        using var session = await Fixture.TruncateSessions.CreateSessionAsync(driver, schema, [typeof(TruncateRow)], cancellationToken: CancellationToken);
+        await using var context = session.CreateDbContext(Fixture);
         await using var cleanup = CleanupRows(context);
         await VerifyTruncationAsync(context, token => context.TruncateAsync<TruncateRow>(token));
         await VerifyTruncationAsync(context, token => context.TruncateAsync(typeof(TruncateRow), token));
@@ -27,8 +27,8 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         DbDriver driver, string? schema, bool restartIdentity, bool cascade)
     {
         Assert.SkipMySql(driver);
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(TruncateRow)], cancellationToken: CancellationToken);
-        await using var context = session.CreateDbContext(Fixture, schema);
+        using var session = await Fixture.TruncateSessions.CreateSessionAsync(driver, schema, [typeof(TruncateRow)], cancellationToken: CancellationToken);
+        await using var context = session.CreateDbContext(Fixture);
         await using var cleanup = CleanupRows(context);
         await VerifyTruncationAsync(context,
             token => context.TruncateAsync<TruncateRow>(restartIdentity, cascade, token), restartIdentity);
@@ -46,9 +46,9 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     public async Task TruncateAsync_UsesConfiguredSchemaOnOrdinaryTable(DbDriver driver, string? schema)
     {
         Assert.SkipMySql(driver);
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema,
-            [typeof(TruncateRow)], cancellationToken: CancellationToken, ordinary: true);
-        await using var context = session.CreateDbContext(Fixture, schema);
+        using var session = await Fixture.TruncateSessions.CreateSessionAsync(driver, schema,
+            [typeof(TruncateRow)], cancellationToken: CancellationToken);
+        await using var context = session.CreateDbContext(Fixture);
         await using var cleanup = CleanupRows(context);
         var entityType = context.Model.FindEntityType(typeof(TruncateRow))!;
         Assert.Equal(schema, entityType.GetSchema());
@@ -64,14 +64,14 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     }
 
     // Cleanup belongs to the test; seeding clears between verification calls.
-    internal static IAsyncDisposable CleanupRows(TruncateDbContext context)
+    internal static IAsyncDisposable CleanupRows(TestDbContext context)
         => AsyncDisposable.Create(async () =>
         {
             context.ChangeTracker.Clear();
             await context.TruncateRow.ExecuteDeleteAsync();
         });
 
-    internal static async Task<TruncateRow> SeedAsync(TruncateDbContext context)
+    internal static async Task<TruncateRow> SeedAsync(TestDbContext context)
     {
         // A prior verification can reset identity values while leaving entities tracked.
         context.ChangeTracker.Clear();
@@ -86,7 +86,7 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     }
 
     internal static async Task<(TruncateRow Entity, int PreviousId)> VerifyRowsRemovedAsync(
-        TruncateDbContext context, Func<CancellationToken, Task> truncate)
+        TestDbContext context, Func<CancellationToken, Task> truncate)
     {
         var tracked = await SeedAsync(context);
         var previousId = tracked.Id;
@@ -97,7 +97,7 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 
     // Identity and tracking contracts are checked by the core result/option tests.
     internal static async Task VerifyTruncationAsync(
-        TruncateDbContext context, Func<CancellationToken, Task> truncate, bool? restartIdentity = null)
+        TestDbContext context, Func<CancellationToken, Task> truncate, bool? restartIdentity = null)
     {
         var (tracked, previousId) = await VerifyRowsRemovedAsync(context, truncate);
         Assert.Equal(EntityState.Unchanged, context.Entry(tracked).State);
@@ -118,7 +118,7 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         DbDriver driver, bool restartIdentity, bool cascade)
     {
         Assert.SkipMySql(driver);
-        await using var context = new TruncateDbContext(driver, Fixture.ResolveTarget(driver).BuildConnectionString());
+        await using var context = new TestDbContext(driver, Fixture.ResolveTarget(driver).BuildConnectionString());
         var entityType = context.Model.FindEntityType(typeof(TruncateRow))!;
         await Assert.ThrowsAsync<NotSupportedException>(() => context.TruncateAsync<TruncateRow>(restartIdentity, cascade));
         await Assert.ThrowsAsync<NotSupportedException>(() => context.TruncateAsync(typeof(TruncateRow), restartIdentity, cascade));
@@ -134,9 +134,9 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     public async Task TruncateAsync_CascadeRemovesReferencingRows(DbDriver driver, string? schema)
     {
         Assert.SkipMySql(driver);
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema,
+        using var session = await Fixture.TruncateSessions.CreateSessionAsync(driver, schema,
             [typeof(TruncateParent), typeof(TruncateChild)], cancellationToken: CancellationToken);
-        await using var context = session.CreateDbContext(Fixture, schema);
+        await using var context = session.CreateDbContext(Fixture);
         try
         {
             await context.TruncateChild.ExecuteDeleteAsync(CancellationToken);
@@ -167,8 +167,8 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     public async Task TruncateAsync_HandlesTablesWithoutIdentity(DbDriver driver, string? schema)
     {
         Assert.SkipMySql(driver);
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(TruncateManualRow)], cancellationToken: CancellationToken);
-        await using var context = session.CreateDbContext(Fixture, schema);
+        using var session = await Fixture.TruncateSessions.CreateSessionAsync(driver, schema, [typeof(TruncateManualRow)], cancellationToken: CancellationToken);
+        await using var context = session.CreateDbContext(Fixture);
         try
         {
             await context.TruncateManualRow.ExecuteDeleteAsync(CancellationToken);
@@ -191,8 +191,8 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     public async Task TruncateAsync_HandlesKeylessTables(DbDriver driver, string? schema)
     {
         Assert.SkipMySql(driver);
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(TruncateKeylessRow)], cancellationToken: CancellationToken);
-        await using var context = session.CreateDbContext(Fixture, schema);
+        using var session = await Fixture.TruncateSessions.CreateSessionAsync(driver, schema, [typeof(TruncateKeylessRow)], cancellationToken: CancellationToken);
+        await using var context = session.CreateDbContext(Fixture);
         var entityType = context.Model.FindEntityType(typeof(TruncateKeylessRow))!;
         var sqlHelper = context.GetService<ISqlGenerationHelper>();
         var table = sqlHelper.DelimitIdentifier(entityType.GetTableName()!, entityType.GetSchema());
@@ -217,8 +217,8 @@ public partial class TruncateTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     public async Task TruncateAsync_AllEntryPointsObserveCancellationWithoutRemovingRows(DbDriver driver, string? schema)
     {
         Assert.SkipMySql(driver);
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, schema, [typeof(TruncateRow)], cancellationToken: CancellationToken);
-        await using var context = session.CreateDbContext(Fixture, schema);
+        using var session = await Fixture.TruncateSessions.CreateSessionAsync(driver, schema, [typeof(TruncateRow)], cancellationToken: CancellationToken);
+        await using var context = session.CreateDbContext(Fixture);
         await using var cleanup = CleanupRows(context);
         var tracked = await SeedAsync(context);
         var entityType = context.Model.FindEntityType(typeof(TruncateRow))!;
