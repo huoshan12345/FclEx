@@ -235,6 +235,45 @@ public class SlackSinkUnitTests
         Assert.True(text.Length <= 2950);
     }
 
+    public static TheoryData<string[], string[]> RepeatedStackTraceCases => new()
+    {
+        { ["first frame", "first frame", "last frame"], ["last frame", "first frame (x2)"] },
+        { ["first frame", "middle frame", "middle frame", "last frame"], ["last frame", "middle frame (x2)", "first frame"] },
+        { ["first frame", "last frame", "last frame", "last frame"], ["last frame (x3)", "first frame"] },
+        { ["recursive frame", "recursive frame", "recursive frame"], ["recursive frame (x3)"] },
+        {
+            ["first frame", "first frame", "middle frame", "last frame", "last frame", "last frame"],
+            ["last frame (x3)", "middle frame", "first frame (x2)"]
+        },
+        { ["same frame", "different frame", "same frame"], ["same frame", "different frame", "same frame"] },
+        {
+            ["same frame", "same frame", "different frame", "same frame", "same frame", "same frame"],
+            ["same frame (x3)", "different frame", "same frame (x2)"]
+        },
+        { ["single frame"], ["single frame"] },
+        { ["first frame", "middle frame", "last frame"], ["last frame", "middle frame", "first frame"] }
+    };
+
+    [Theory]
+    [MemberData(nameof(RepeatedStackTraceCases))]
+    public async Task EmitBatchAsync_RepeatedStackFrames_CollapseOnlyConsecutiveRuns(
+        string[] stackFrames,
+        string[] expectedFrames)
+    {
+        var api = new CapturingSlackApi();
+        var sink = new SlackSink(api.Client.Object, Channel);
+        var exception = new InvalidOperationException("boom").SetStackTrace(string.Join("\n", stackFrames));
+
+        await sink.EmitBatchAsync([CreateEvent("operation failed", exception: exception)]);
+
+        api.VerifyPosts(1);
+        var text = GetText(Assert.Single(api.Messages));
+        var expected = $"@t: {StartTime:O}\n@l: Information\n@m: operation failed\n"
+            + "@x: InvalidOperationException: boom\n"
+            + string.Join("\n", expectedFrames) + "\n";
+        Assert.Equal(expected, text);
+    }
+
     [Fact]
     public async Task EmitBatchAsync_EmptyBatch_DoesNotPost()
     {
