@@ -127,8 +127,13 @@ public class SlackSink : IBatchedLogEventSink
         var lines = json.GetProperty(_formatterOptions.ExceptionName).Deserialize<string[]>() ?? [];
 
         builder.Append("@x: ");
-        foreach (var line in lines)
+        foreach (var group in lines.GroupBy(m => m))
         {
+            var count = group.Count();
+            var line = count > 1
+                ? $"{group.Key} (x{count})"
+                : group.Key;
+
             if (builder.AppendLimited(line, MaxLength) == false)
                 return;
 

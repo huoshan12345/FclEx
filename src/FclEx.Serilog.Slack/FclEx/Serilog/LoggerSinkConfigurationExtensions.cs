@@ -24,7 +24,7 @@ public static class LoggerSinkConfigurationExtensions
             BatchSizeLimit = batchSizeLimit,
             BufferingTimeLimit = period.Value,
             EagerlyEmitFirstEvent = true,
-            QueueLimit = 10000,
+            QueueLimit = 1000,
         };
 
         return configuration.Sink(sink, batchingOptions, restrictedToMinimumLevel);
