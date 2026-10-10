@@ -6,17 +6,17 @@ namespace FclEx.Dapper.SqlAdapters;
 public class SqliteAdapter : SqlAdapterBase
 {
     /// <inheritdoc />
-    public override async Task<bool> SynchronizeIdentitySequenceAsync(DbCommand command, string tableName, string columnName,
+    public override async Task<bool> ReseedIdentityAsync(DbCommand command, string tableName, string columnName,
         string? schema, CancellationToken cancellationToken = default)
     {
         if (command.Transaction is not null)
-            return await SynchronizeSequenceCoreAsync(command, tableName, columnName, cancellationToken);
+            return await ReseedSequenceCoreAsync(command, tableName, columnName, cancellationToken);
         return await command.Connection!.ExecuteInTransactionAsync(async (transaction, token) =>
         {
             command.Transaction = transaction;
             try
             {
-                return await SynchronizeSequenceCoreAsync(command, tableName, columnName, token);
+                return await ReseedSequenceCoreAsync(command, tableName, columnName, token);
             }
             finally
             {
@@ -25,7 +25,7 @@ public class SqliteAdapter : SqlAdapterBase
         }, IsolationLevel.Serializable, cancellationToken);
     }
 
-    private async Task<bool> SynchronizeSequenceCoreAsync(DbCommand command, string tableName, string columnName,
+    private async Task<bool> ReseedSequenceCoreAsync(DbCommand command, string tableName, string columnName,
         CancellationToken cancellationToken)
     {
         PrepareIdentityCommand(command, tableName, columnName, null);

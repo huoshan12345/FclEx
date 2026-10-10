@@ -30,7 +30,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
         Assert.SkipIfInGithubAction();
 
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
-        await con.SynchronizeIdentitySequenceAsync<EntityWithAutoKey>(schema);
+        await con.ReseedIdentityAsync<EntityWithAutoKey>(schema);
 
         var maxId = await GetMaxIdAsync<EntityWithAutoKey>(con, schema) + 1;
 
@@ -47,7 +47,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
         await using var _ = AsyncDisposable.Create(async () =>
         {
             await con.DeleteAsync<EntityWithAutoKey>(entity.Id, schema);
-            await con.SynchronizeIdentitySequenceAsync<EntityWithAutoKey>(schema);
+            await con.ReseedIdentityAsync<EntityWithAutoKey>(schema);
         });
 
         var e = await con.GetAsync<EntityWithAutoKey>(entity.Id, schema);
@@ -133,7 +133,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
         Assert.SkipIfInGithubAction();
 
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
-        await con.SynchronizeIdentitySequenceAsync<EntityWithAutoKey>(schema);
+        await con.ReseedIdentityAsync<EntityWithAutoKey>(schema);
 
         var adapter = DapperHelper.GetSqlAdapter(con);
         var parameterName = adapter.GetParameterPlaceholder(nameof(EntityWithAutoKey.Name));
@@ -162,7 +162,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
             var names = parameters.GetParameterPlaceholders(adapter).JoinWith(", ");
             var sql = $"delete from {tableName} where {DapperHelper.GetQuotedColumnName<EntityWithAutoKey>(con, m => m.Id)} in ({names})";
             await con.ExecuteAsync(sql, parameters);
-            await con.SynchronizeIdentitySequenceAsync<EntityWithAutoKey>(schema);
+            await con.ReseedIdentityAsync<EntityWithAutoKey>(schema);
         });
 
         var sql = $"select * from {tableName} where {DapperHelper.GetQuotedColumnName<EntityWithAutoKey>(con, m => m.Name)} = {parameterName}";

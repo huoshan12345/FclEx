@@ -41,7 +41,7 @@ public abstract class SqlAdapterBase : ISqlAdapter
     public virtual bool SupportsSchemas { get; } = true;
 
     /// <inheritdoc />
-    public virtual Task<bool> SynchronizeIdentitySequenceAsync(DbCommand command, string tableName, string columnName,
+    public virtual Task<bool> ReseedIdentityAsync(DbCommand command, string tableName, string columnName,
         string? schema, CancellationToken cancellationToken = default)
         => throw new NotSupportedException($"'{GetType().FullName}' does not support identity synchronization.");
 

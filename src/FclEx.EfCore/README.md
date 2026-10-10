@@ -77,9 +77,9 @@ clear tracking or use a fresh context before inserting rows that may reuse old k
 ### Synchronizing an identity sequence
 
 ```csharp
-bool synchronized = await context.SynchronizeIdentitySequenceAsync<Customer>(cancellationToken);
-await context.SynchronizeIdentitySequenceAsync(typeof(Customer), cancellationToken);
-await context.SynchronizeIdentitySequenceAsync(context.Model.FindEntityType(typeof(Customer))!, cancellationToken);
+bool synchronized = await context.ReseedIdentityAsync<Customer>(cancellationToken);
+await context.ReseedIdentityAsync(typeof(Customer), cancellationToken);
+await context.ReseedIdentityAsync(context.Model.FindEntityType(typeof(Customer))!, cancellationToken);
 ```
 
 The model must identify one generated integer primary-key property and exactly one exclusively owned physical

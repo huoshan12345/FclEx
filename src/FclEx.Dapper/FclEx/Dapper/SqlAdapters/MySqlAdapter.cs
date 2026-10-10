@@ -6,7 +6,7 @@ namespace FclEx.Dapper.SqlAdapters;
 public class MySqlAdapter : SqlAdapterBase
 {
     /// <inheritdoc />
-    public override async Task<bool> SynchronizeIdentitySequenceAsync(DbCommand command, string tableName, string columnName,
+    public override async Task<bool> ReseedIdentityAsync(DbCommand command, string tableName, string columnName,
         string? schema, CancellationToken cancellationToken = default)
     {
         var table = PrepareIdentityCommand(command, tableName, columnName, schema);

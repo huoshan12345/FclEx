@@ -26,7 +26,7 @@ public interface ISqlAdapter
     /// <returns>True when synchronized; false when no supported generator belongs to the column.</returns>
     /// <remarks>The caller checks table existence and excludes concurrent writes. Native commit and rollback rules apply.</remarks>
     /// <exception cref="NotSupportedException">This adapter or the identity configuration is unsupported.</exception>
-    Task<bool> SynchronizeIdentitySequenceAsync(DbCommand command, string tableName, string columnName,
+    Task<bool> ReseedIdentityAsync(DbCommand command, string tableName, string columnName,
         string? schema, CancellationToken cancellationToken = default);
 
     /// <summary>

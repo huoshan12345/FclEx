@@ -5,7 +5,7 @@ namespace FclEx.EfCore.Extensions.DbContextExtensions;
 public partial class IdentitySequenceTests
 {
     [Fact]
-    public async Task SynchronizeIdentitySequenceAsync_FluentMappingInt64KeyAndFilter_UsesAllPhysicalRows()
+    public async Task ReseedIdentityAsync_FluentMappingInt64KeyAndFilter_UsesAllPhysicalRows()
     {
         await using var reference = new TestDbContext(DbDriver.Sqlite, "Data Source=:memory:");
         await reference.Database.OpenConnectionAsync();
@@ -27,7 +27,7 @@ public partial class IdentitySequenceTests
         await context.Database.ExecuteSqlRawAsync($"CREATE TABLE {table} ({column} INTEGER PRIMARY KEY AUTOINCREMENT)".Replace("{", "{{").Replace("}", "}}"));
         await context.Database.ExecuteSqlRawAsync($"INSERT INTO {table} VALUES ({maximum})".Replace("{", "{{").Replace("}", "}}"));
         Assert.Empty(await context.Set<LongIdentity>().ToListAsync());
-        Assert.True(await context.SynchronizeIdentitySequenceAsync<LongIdentity>());
+        Assert.True(await context.ReseedIdentityAsync<LongIdentity>());
         var next = new LongIdentity();
         context.Add(next);
         await context.SaveChangesAsync();
@@ -35,7 +35,7 @@ public partial class IdentitySequenceTests
     }
 
     [Fact]
-    public async Task SynchronizeIdentitySequenceAsync_ShadowKeyNamedSharedType_UsesMetadata()
+    public async Task ReseedIdentityAsync_ShadowKeyNamedSharedType_UsesMetadata()
     {
         await using var reference = new TestDbContext(DbDriver.Sqlite, "Data Source=:memory:");
         await reference.Database.OpenConnectionAsync();
@@ -55,8 +55,8 @@ public partial class IdentitySequenceTests
             INSERT INTO ShadowIdentity VALUES (10);
             """);
         var entityType = context.Model.FindEntityType("NamedIdentity")!;
-        Assert.True(await context.SynchronizeIdentitySequenceAsync(entityType));
-        await Assert.ThrowsAsync<InvalidOperationException>(() => context.SynchronizeIdentitySequenceAsync<Dictionary<string, object>>());
+        Assert.True(await context.ReseedIdentityAsync(entityType));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => context.ReseedIdentityAsync<Dictionary<string, object>>());
         var row = new Dictionary<string, object>();
         context.Set<Dictionary<string, object>>("NamedIdentity").Add(row);
         await context.SaveChangesAsync();
@@ -64,7 +64,7 @@ public partial class IdentitySequenceTests
     }
 
     [Fact]
-    public async Task SynchronizeIdentitySequenceAsync_TemporaryTableAndCurrentTransaction_PreserveMainAndRollback()
+    public async Task ReseedIdentityAsync_TemporaryTableAndCurrentTransaction_PreserveMainAndRollback()
     {
         await using var context = new TestDbContext(DbDriver.Sqlite, "Data Source=:memory:");
         await context.Database.OpenConnectionAsync();
@@ -78,21 +78,21 @@ public partial class IdentitySequenceTests
             """);
         await using (var transaction = await context.Database.BeginTransactionAsync())
         {
-            Assert.True(await context.SynchronizeIdentitySequenceAsync<TruncateRow>());
+            Assert.True(await context.ReseedIdentityAsync<TruncateRow>());
             Assert.Same(transaction, context.Database.CurrentTransaction);
             Assert.Equal(10, await context.Database.SqlQueryRaw<int>("SELECT seq AS Value FROM temp.sqlite_sequence WHERE name = 'TruncateRow'").SingleAsync());
             await transaction.RollbackAsync();
         }
         Assert.Equal(200, await context.Database.SqlQueryRaw<int>("SELECT seq AS Value FROM temp.sqlite_sequence WHERE name = 'TruncateRow'").SingleAsync());
         Assert.Equal(100, await context.Database.SqlQueryRaw<int>("SELECT seq AS Value FROM main.sqlite_sequence WHERE name = 'TruncateRow'").SingleAsync());
-        Assert.True(await context.SynchronizeIdentitySequenceAsync<TruncateRow>());
+        Assert.True(await context.ReseedIdentityAsync<TruncateRow>());
         context.Add(new TruncateRow { Value = 2 });
         await context.SaveChangesAsync();
         Assert.Equal(11, await context.TruncateRow.MaxAsync(row => row.Id));
     }
 
     [Fact]
-    public async Task SynchronizeIdentitySequenceAsync_CommandsUseEfInterceptorsTimeoutAndLocalTransaction()
+    public async Task ReseedIdentityAsync_CommandsUseEfInterceptorsTimeoutAndLocalTransaction()
     {
         var interceptor = new IdentityCommandInterceptor();
         var options = new DbContextOptionsBuilder<TestDbContext>().AddInterceptors(interceptor).Options;
@@ -101,7 +101,7 @@ public partial class IdentitySequenceTests
         await context.Database.ExecuteSqlRawAsync("CREATE TABLE TruncateRow (Id INTEGER PRIMARY KEY AUTOINCREMENT, Value INTEGER NOT NULL)");
         context.Database.SetCommandTimeout(37);
         interceptor.Commands.Clear();
-        Assert.True(await context.SynchronizeIdentitySequenceAsync<TruncateRow>());
+        Assert.True(await context.ReseedIdentityAsync<TruncateRow>());
         Assert.NotEmpty(interceptor.Commands);
         Assert.All(interceptor.Commands, command =>
         {
@@ -114,7 +114,7 @@ public partial class IdentitySequenceTests
     }
 
     [Fact]
-    public async Task SynchronizeIdentitySequenceAsync_MidOperationFailure_RollsBackLocalTransactionAndKeepsConnectionUsable()
+    public async Task ReseedIdentityAsync_MidOperationFailure_RollsBackLocalTransactionAndKeepsConnectionUsable()
     {
         var interceptor = new IdentityCommandInterceptor();
         var options = new DbContextOptionsBuilder<TestDbContext>().AddInterceptors(interceptor).Options;
@@ -127,11 +127,11 @@ public partial class IdentitySequenceTests
             INSERT INTO TruncateRow VALUES (10, 1);
             """);
         interceptor.FailInsert = true;
-        await Assert.ThrowsAsync<InvalidOperationException>(() => context.SynchronizeIdentitySequenceAsync<TruncateRow>());
+        await Assert.ThrowsAsync<InvalidOperationException>(() => context.ReseedIdentityAsync<TruncateRow>());
         interceptor.FailInsert = false;
         Assert.Equal(100, await context.Database.SqlQueryRaw<int>("SELECT seq AS Value FROM sqlite_sequence WHERE name = 'TruncateRow'").SingleAsync());
         Assert.Null(context.Database.CurrentTransaction);
-        Assert.True(await context.SynchronizeIdentitySequenceAsync<TruncateRow>());
+        Assert.True(await context.ReseedIdentityAsync<TruncateRow>());
     }
 
     private sealed class LongIdentity

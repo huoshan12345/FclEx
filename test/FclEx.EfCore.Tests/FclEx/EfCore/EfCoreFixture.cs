@@ -31,7 +31,7 @@ public class EfCoreFixture : CoreTestsFixture
         foreach (var (driver, schema) in GetDriverSchemaCases(Schemas))
         {
             await using var connection = ResolveTarget(driver, schema: schema).CreateConnection();
-            await connection.SynchronizeIdentitySequenceAsync<EntityWithAutoKey>(schema);
+            await connection.ReseedIdentityAsync<EntityWithAutoKey>(schema);
         }
     }
 

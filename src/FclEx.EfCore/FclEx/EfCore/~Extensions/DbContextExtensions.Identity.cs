@@ -14,9 +14,9 @@ partial class DbContextExtensions
     /// <exception cref="InvalidOperationException">The CLR type does not identify a non-shared model entity.</exception>
     /// <exception cref="NotSupportedException">The connection, entity mapping, or identity configuration is unsupported.</exception>
     /// <exception cref="OperationCanceledException">The operation is canceled.</exception>
-    public static Task<bool> SynchronizeIdentitySequenceAsync<TEntity>(
+    public static Task<bool> ReseedIdentityAsync<TEntity>(
         this DbContext context, CancellationToken cancellationToken = default) where TEntity : class
-        => context.SynchronizeIdentitySequenceAsync(typeof(TEntity), cancellationToken);
+        => context.ReseedIdentityAsync(typeof(TEntity), cancellationToken);
 
     /// <summary>Synchronizes the native identity generator for a specified mapped CLR entity type.</summary>
     /// <param name="context">The context supplying the model and relational command settings; its connection state is preserved.</param>
@@ -44,14 +44,14 @@ partial class DbContextExtensions
     /// <exception cref="InvalidOperationException">The CLR type does not identify a non-shared entity in the model.</exception>
     /// <exception cref="NotSupportedException">The connection, mapping, or identity configuration is unsupported.</exception>
     /// <exception cref="OperationCanceledException">The operation is canceled.</exception>
-    public static Task<bool> SynchronizeIdentitySequenceAsync(
+    public static Task<bool> ReseedIdentityAsync(
         this DbContext context, Type entityClrType, CancellationToken cancellationToken = default)
     {
         Check.NotNull(context);
         Check.NotNull(entityClrType);
         var entityType = context.Model.FindEntityType(entityClrType)
             ?? throw new InvalidOperationException($"{entityClrType.Name} does not identify a non-shared entity in this DbContext.");
-        return context.SynchronizeIdentitySequenceAsync(entityType, cancellationToken);
+        return context.ReseedIdentityAsync(entityType, cancellationToken);
     }
 
     /// <summary>Synchronizes the identity generator identified by metadata from the context's runtime model.</summary>
@@ -64,7 +64,7 @@ partial class DbContextExtensions
     /// <exception cref="ArgumentException">The metadata belongs to another runtime model.</exception>
     /// <exception cref="NotSupportedException">The connection, mapping, or identity configuration is unsupported.</exception>
     /// <exception cref="OperationCanceledException">The operation is canceled.</exception>
-    public static Task<bool> SynchronizeIdentitySequenceAsync(
+    public static Task<bool> ReseedIdentityAsync(
         this DbContext context, IEntityType entityType, CancellationToken cancellationToken = default)
     {
         var table = GetExclusiveEntityTable(context, entityType);
@@ -81,10 +81,10 @@ partial class DbContextExtensions
             ?? throw new NotSupportedException("The generated key is not mapped to the entity's physical table.");
         var dialect = GetRelationalDialect(context.Database.GetDbConnection().GetType());
         cancellationToken.ThrowIfCancellationRequested();
-        return SynchronizeIdentityCoreAsync(context, table.Name, table.Schema, column, dialect, cancellationToken);
+        return ReseedIdentityCoreAsync(context, table.Name, table.Schema, column, dialect, cancellationToken);
     }
 
-    private static async Task<bool> SynchronizeIdentityCoreAsync(
+    private static async Task<bool> ReseedIdentityCoreAsync(
         DbContext context, string tableName, string? schema, string columnName,
         RelationalDialect dialect, CancellationToken cancellationToken)
     {
@@ -95,7 +95,7 @@ partial class DbContextExtensions
             await using var transaction = dialect == RelationalDialect.Sqlite && context.Database.CurrentTransaction is null
                 ? await context.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false) : null;
             var commands = new IdentitySequenceCommands(context, dialect, tableName, schema, columnName);
-            var result = await commands.SynchronizeAsync(cancellationToken).ConfigureAwait(false);
+            var result = await commands.ReseedAsync(cancellationToken).ConfigureAwait(false);
             if (transaction is not null)
                 await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             return result;

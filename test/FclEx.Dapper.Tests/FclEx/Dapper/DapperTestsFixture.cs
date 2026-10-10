@@ -28,7 +28,7 @@ public class DapperTestsFixture : CoreTestsFixture
         {
             // ReSharper disable once UseAwaitUsing
             using var connection = CreateDbConnection(driver, schema);
-            await connection.SynchronizeIdentitySequenceAsync<EntityWithAutoKey>(schema);
+            await connection.ReseedIdentityAsync<EntityWithAutoKey>(schema);
         }
     }
 

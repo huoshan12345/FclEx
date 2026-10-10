@@ -18,7 +18,7 @@ partial class DbContextExtensions
         private static bool IsNull(object? value) => value is null or DBNull;
         private static string Number(decimal value) => value.ToString(CultureInfo.InvariantCulture);
 
-        public async Task<bool> SynchronizeAsync(CancellationToken cancellationToken)
+        public async Task<bool> ReseedAsync(CancellationToken cancellationToken)
         {
             var exists = dialect switch
             {
@@ -39,16 +39,16 @@ partial class DbContextExtensions
                 return false;
             return dialect switch
             {
-                RelationalDialect.SqlServer => await SynchronizeSqlServerAsync(cancellationToken).ConfigureAwait(false),
-                RelationalDialect.PostgreSql => await SynchronizePostgreSqlAsync(cancellationToken).ConfigureAwait(false),
-                RelationalDialect.MySql => await SynchronizeMySqlAsync(cancellationToken).ConfigureAwait(false),
-                RelationalDialect.Oracle => await SynchronizeOracleAsync(cancellationToken).ConfigureAwait(false),
-                RelationalDialect.Sqlite => await SynchronizeSqliteAsync(cancellationToken).ConfigureAwait(false),
+                RelationalDialect.SqlServer => await ReseedSqlServerAsync(cancellationToken).ConfigureAwait(false),
+                RelationalDialect.PostgreSql => await ReseedPostgreSqlAsync(cancellationToken).ConfigureAwait(false),
+                RelationalDialect.MySql => await ReseedMySqlAsync(cancellationToken).ConfigureAwait(false),
+                RelationalDialect.Oracle => await ReseedOracleAsync(cancellationToken).ConfigureAwait(false),
+                RelationalDialect.Sqlite => await ReseedSqliteAsync(cancellationToken).ConfigureAwait(false),
                 _ => throw new NotSupportedException($"Unsupported relational dialect '{dialect}'."),
             };
         }
 
-        private async Task<bool> SynchronizePostgreSqlAsync(CancellationToken cancellationToken)
+        private async Task<bool> ReseedPostgreSqlAsync(CancellationToken cancellationToken)
         {
             var sequence = await ReadAsync(
                 $"SELECT pg_get_serial_sequence({P("table")}, {P("column")}) FROM pg_attribute " +
@@ -71,7 +71,7 @@ partial class DbContextExtensions
             return true;
         }
 
-        private async Task<bool> SynchronizeSqlServerAsync(CancellationToken cancellationToken)
+        private async Task<bool> ReseedSqlServerAsync(CancellationToken cancellationToken)
         {
             var predicate = $"FROM sys.identity_columns WHERE object_id = OBJECT_ID({P("table")}, 'U') AND name = {P("column")}";
             var seed = await ReadAsync("SELECT seed_value " + predicate, cancellationToken,
@@ -96,7 +96,7 @@ partial class DbContextExtensions
             return true;
         }
 
-        private async Task<bool> SynchronizeMySqlAsync(CancellationToken cancellationToken)
+        private async Task<bool> ReseedMySqlAsync(CancellationToken cancellationToken)
         {
             var count = await ReadAsync(
                 $"SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = COALESCE({P("schema")}, DATABASE()) " +
@@ -110,7 +110,7 @@ partial class DbContextExtensions
             return true;
         }
 
-        private async Task<bool> SynchronizeOracleAsync(CancellationToken cancellationToken)
+        private async Task<bool> ReseedOracleAsync(CancellationToken cancellationToken)
         {
             var generation = await ReadAsync(
                 $"SELECT generation_type FROM all_tab_identity_cols WHERE table_name = TO_CHAR({P("name")}) " +
@@ -125,7 +125,7 @@ partial class DbContextExtensions
             return true;
         }
 
-        private async Task<bool> SynchronizeSqliteAsync(CancellationToken cancellationToken)
+        private async Task<bool> ReseedSqliteAsync(CancellationToken cancellationToken)
         {
             var temp = await ReadAsync($"SELECT COUNT(*) FROM temp.sqlite_master WHERE type = 'table' AND name = {P("name")} COLLATE NOCASE",
                 cancellationToken, ("name", tableName)).ConfigureAwait(false);

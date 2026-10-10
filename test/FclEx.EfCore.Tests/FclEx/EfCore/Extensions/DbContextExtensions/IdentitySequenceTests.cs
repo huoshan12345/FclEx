@@ -7,7 +7,7 @@ public partial class IdentitySequenceTests(EfCoreFixture fixture) : EfCoreTests(
 {
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task SynchronizeIdentitySequenceAsync_AllEntryPoints_AdvancePastExplicitKeysAndPreserveTracking(DbDriver driver, string? schema)
+    public async Task ReseedIdentityAsync_AllEntryPoints_AdvancePastExplicitKeysAndPreserveTracking(DbDriver driver, string? schema)
     {
         using var session = await Fixture.TruncateSessions.CreateSessionAsync(driver, schema, [typeof(TruncateRow)]);
         await using var context = session.CreateDbContext(Fixture);
@@ -25,9 +25,9 @@ public partial class IdentitySequenceTests(EfCoreFixture fixture) : EfCoreTests(
         var entityType = context.Model.FindEntityType(typeof(TruncateRow))!;
         Func<Task<bool>>[] operations =
         [
-            () => context.SynchronizeIdentitySequenceAsync<TruncateRow>(),
-            () => context.SynchronizeIdentitySequenceAsync(typeof(TruncateRow)),
-            () => context.SynchronizeIdentitySequenceAsync(entityType),
+            () => context.ReseedIdentityAsync<TruncateRow>(),
+            () => context.ReseedIdentityAsync(typeof(TruncateRow)),
+            () => context.ReseedIdentityAsync(entityType),
         ];
         foreach (var synchronize in operations)
             Assert.True(await synchronize());
@@ -46,13 +46,13 @@ public partial class IdentitySequenceTests(EfCoreFixture fixture) : EfCoreTests(
             Assert.Equal(maximum + 1, next.Id);
 
         await using var closed = Fixture.CreateDbContext(driver, schema);
-        Assert.True(await closed.SynchronizeIdentitySequenceAsync<TruncateRow>());
+        Assert.True(await closed.ReseedIdentityAsync<TruncateRow>());
         Assert.Equal(ConnectionState.Closed, closed.Database.GetDbConnection().State);
     }
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task SynchronizeIdentitySequenceAsync_UsedEmptyTable_AllowsGeneratedInsert(DbDriver driver, string? schema)
+    public async Task ReseedIdentityAsync_UsedEmptyTable_AllowsGeneratedInsert(DbDriver driver, string? schema)
     {
         using var session = await Fixture.TruncateSessions.CreateSessionAsync(driver, schema, [typeof(TruncateRow)]);
         await using var context = session.CreateDbContext(Fixture);
@@ -62,7 +62,7 @@ public partial class IdentitySequenceTests(EfCoreFixture fixture) : EfCoreTests(
         await context.SaveChangesAsync();
         context.ChangeTracker.Clear();
         await context.TruncateRow.ExecuteDeleteAsync();
-        Assert.True(await context.SynchronizeIdentitySequenceAsync<TruncateRow>());
+        Assert.True(await context.ReseedIdentityAsync<TruncateRow>());
         var next = new TruncateRow { Value = 2 };
         context.Add(next);
         await context.SaveChangesAsync();
@@ -73,7 +73,7 @@ public partial class IdentitySequenceTests(EfCoreFixture fixture) : EfCoreTests(
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task SynchronizeIdentitySequenceAsync_MissingTableOrNativeGenerator_ReturnsFalse(DbDriver driver, string? schema)
+    public async Task ReseedIdentityAsync_MissingTableOrNativeGenerator_ReturnsFalse(DbDriver driver, string? schema)
     {
         await using var reference = Fixture.CreateDbContext(driver, schema);
         await using var context = TruncateTests.CreateModelContext(reference, builder =>
@@ -82,40 +82,40 @@ public partial class IdentitySequenceTests(EfCoreFixture fixture) : EfCoreTests(
             builder.Entity<PhysicalManualIdentity>().ToTable(nameof(TruncateManualRow), schema);
             builder.Entity<PhysicalManualIdentity>().Property(row => row.Id).ValueGeneratedOnAdd();
         });
-        Assert.False(await context.SynchronizeIdentitySequenceAsync<ModelIdentity>());
-        Assert.False(await context.SynchronizeIdentitySequenceAsync<PhysicalManualIdentity>());
+        Assert.False(await context.ReseedIdentityAsync<ModelIdentity>());
+        Assert.False(await context.ReseedIdentityAsync<PhysicalManualIdentity>());
         Assert.Equal(ConnectionState.Closed, context.Database.GetDbConnection().State);
     }
 
     [Theory]
     [MemberData(nameof(TruncateTests.UnsupportedMappingCases), MemberType = typeof(TruncateTests))]
-    public async Task SynchronizeIdentitySequenceAsync_RejectsUnsupportedMappingsBeforeOpening(string shape)
+    public async Task ReseedIdentityAsync_RejectsUnsupportedMappingsBeforeOpening(string shape)
     {
         await using var context = TruncateTests.CreateMappingContext(Fixture, shape);
         var entityType = context.Model.FindEntityType(typeof(TruncateTests.MappingEntity))!;
-        await Assert.ThrowsAsync<NotSupportedException>(() => context.SynchronizeIdentitySequenceAsync<TruncateTests.MappingEntity>());
-        await Assert.ThrowsAsync<NotSupportedException>(() => context.SynchronizeIdentitySequenceAsync(entityType));
+        await Assert.ThrowsAsync<NotSupportedException>(() => context.ReseedIdentityAsync<TruncateTests.MappingEntity>());
+        await Assert.ThrowsAsync<NotSupportedException>(() => context.ReseedIdentityAsync(entityType));
         Assert.Equal(ConnectionState.Closed, context.Database.GetDbConnection().State);
     }
 
     [Fact]
-    public async Task SynchronizeIdentitySequenceAsync_ValidatesArgumentsMappingsAndCancellationBeforeOpening()
+    public async Task ReseedIdentityAsync_ValidatesArgumentsMappingsAndCancellationBeforeOpening()
     {
         await using var context = Fixture.CreateDbContext(DbDriver.Sqlite);
         var entityType = context.Model.FindEntityType(typeof(TruncateRow))!;
-        await Assert.ThrowsAsync<ArgumentNullException>(() => ((DbContext)null!).SynchronizeIdentitySequenceAsync<TruncateRow>());
-        await Assert.ThrowsAsync<ArgumentNullException>(() => context.SynchronizeIdentitySequenceAsync((Type)null!));
-        await Assert.ThrowsAsync<ArgumentNullException>(() => context.SynchronizeIdentitySequenceAsync((IEntityType)null!));
-        await Assert.ThrowsAsync<InvalidOperationException>(() => context.SynchronizeIdentitySequenceAsync<string>());
-        await Assert.ThrowsAsync<NotSupportedException>(() => context.SynchronizeIdentitySequenceAsync<TruncateManualRow>());
-        await Assert.ThrowsAsync<NotSupportedException>(() => context.SynchronizeIdentitySequenceAsync<TruncateKeylessRow>());
-        await Assert.ThrowsAsync<NotSupportedException>(() => context.SynchronizeIdentitySequenceAsync<EntityWithGuidKey>());
+        await Assert.ThrowsAsync<ArgumentNullException>(() => ((DbContext)null!).ReseedIdentityAsync<TruncateRow>());
+        await Assert.ThrowsAsync<ArgumentNullException>(() => context.ReseedIdentityAsync((Type)null!));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => context.ReseedIdentityAsync((IEntityType)null!));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => context.ReseedIdentityAsync<string>());
+        await Assert.ThrowsAsync<NotSupportedException>(() => context.ReseedIdentityAsync<TruncateManualRow>());
+        await Assert.ThrowsAsync<NotSupportedException>(() => context.ReseedIdentityAsync<TruncateKeylessRow>());
+        await Assert.ThrowsAsync<NotSupportedException>(() => context.ReseedIdentityAsync<EntityWithGuidKey>());
         var canceled = new CancellationToken(true);
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => context.SynchronizeIdentitySequenceAsync<TruncateRow>(canceled));
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => context.SynchronizeIdentitySequenceAsync(typeof(TruncateRow), canceled));
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => context.SynchronizeIdentitySequenceAsync(entityType, canceled));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => context.ReseedIdentityAsync<TruncateRow>(canceled));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => context.ReseedIdentityAsync(typeof(TruncateRow), canceled));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => context.ReseedIdentityAsync(entityType, canceled));
         await using var other = Fixture.CreateDbContext(DbDriver.SqlServer);
-        await Assert.ThrowsAsync<ArgumentException>(() => context.SynchronizeIdentitySequenceAsync(other.Model.FindEntityType(typeof(TruncateRow))!, cancellationToken: canceled));
+        await Assert.ThrowsAsync<ArgumentException>(() => context.ReseedIdentityAsync(other.Model.FindEntityType(typeof(TruncateRow))!, cancellationToken: canceled));
         Assert.Equal(ConnectionState.Closed, context.Database.GetDbConnection().State);
     }
 

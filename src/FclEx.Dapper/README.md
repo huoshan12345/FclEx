@@ -165,9 +165,9 @@ SQL Server and PostgreSQL use native unqualified-name resolution when no schema 
 Use this maintenance operation after importing explicit keys or deleting high keys:
 
 ```csharp
-bool synchronized = await connection.SynchronizeIdentitySequenceAsync<Order>(
+bool synchronized = await connection.ReseedIdentityAsync<Order>(
     schema: "Sales", commandOptions: options, cancellationToken: cancellationToken);
-await connection.SynchronizeIdentitySequenceAsync("Orders", "OrderId", schema: "Sales");
+await connection.ReseedIdentityAsync("Orders", "OrderId", schema: "Sales");
 ```
 
 The entity overload requires exactly one mapped database-generated integer key and uses its physical column
@@ -185,7 +185,7 @@ access errors throw. A connection opened by this operation is closed before retu
 Pause concurrent writes and other users of the sequence during synchronization. This API does not coordinate
 writers, and resetting a counter may reuse deleted values. PostgreSQL sequence changes survive rollback;
 MySQL and Oracle DDL implicitly commit. Namespace rules match CRUD, including MySql.Data and SQLite ignoring
-schema arguments. Custom `ISqlAdapter` implementations must implement `SynchronizeIdentitySequenceAsync`;
+schema arguments. Custom `ISqlAdapter` implementations must implement `ReseedIdentityAsync`;
 `SqlAdapterBase` throws `NotSupportedException` by default. This is a source-breaking interface addition.
 
 ## Table Truncation
