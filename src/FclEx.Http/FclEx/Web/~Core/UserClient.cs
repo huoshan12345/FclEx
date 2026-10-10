@@ -111,10 +111,10 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
         ];
     }
 
-    protected Task<OperationResult> LoginActionWrapperAsync(CancellationToken token)
+    protected Task<OperationResult> LoginActionWrapperAsync(CancellationToken cancellationToken)
     {
         Logger.LogDebug("Start to login...");
-        return LoginActionAsync(token)
+        return LoginActionAsync(cancellationToken)
             .OnValue(o => Logger.LogDebug("Login successfully"))
             .OnException(ex => Logger.LogWarning(ex, "Failed to login: {Error}", ex.Message));
     }
@@ -122,16 +122,16 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
     /// <summary>
     /// Runs the implementation-specific real login action.
     /// </summary>
-    /// <param name="token">A cancellation token for the login operation.</param>
+    /// <param name="cancellationToken">A cancellation token for the login operation.</param>
     /// <returns>The login result.</returns>
-    protected abstract Task<OperationResult> LoginActionAsync(CancellationToken token);
+    protected abstract Task<OperationResult> LoginActionAsync(CancellationToken cancellationToken);
 
     /// <summary>
     /// Runs the implementation-specific fake-login action.
     /// </summary>
-    /// <param name="token">A cancellation token for the fake-login operation.</param>
+    /// <param name="cancellationToken">A cancellation token for the fake-login operation.</param>
     /// <returns>The fake-login result. The default implementation succeeds without doing work.</returns>
-    protected virtual Task<OperationResult> FakeLoginActionAsync(CancellationToken token)
+    protected virtual Task<OperationResult> FakeLoginActionAsync(CancellationToken cancellationToken)
     {
         return Operation.Success();
     }
@@ -145,7 +145,9 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
         _httpService?.Dispose();
     }
 
-    protected async Task<OperationResult> DoLoginAsync(Func<CancellationToken, Task<OperationResult>> loginAction, CancellationToken token)
+    protected async Task<OperationResult> DoLoginAsync(
+        Func<CancellationToken, Task<OperationResult>> loginAction,
+        CancellationToken cancellationToken)
     {
         if (this.IsOnline)
         {
@@ -153,7 +155,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
             return Operation.Success();
         }
 
-        using var _ = await LoginLocker.AcquireAsync(token);
+        using var _ = await LoginLocker.AcquireAsync(cancellationToken);
 
         if (this.IsOnline)
         {
@@ -161,7 +163,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
             return Operation.Success();
         }
 
-        if (token.IsCancellationRequested)
+        if (cancellationToken.IsCancellationRequested)
             return Operation.Cancel();
 
         var time = ValueStopwatch.StartNew();
@@ -169,7 +171,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
         {
             State.LoggingIn();
 
-            var response = await loginAction(token)
+            var response = await loginAction(cancellationToken)
                 .OnValue(_ => State.Online())
                 .OnException(_ =>
                 {
@@ -191,19 +193,19 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
     }
 
     /// <inheritdoc />
-    public Task<OperationResult> LoginAsync(CancellationToken token = default)
+    public Task<OperationResult> LoginAsync(CancellationToken cancellationToken = default)
     {
-        return DoLoginAsync(LoginActionWrapperAsync, token);
+        return DoLoginAsync(LoginActionWrapperAsync, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task WaitLoginAsync(CancellationToken token = default)
+    public async Task WaitLoginAsync(CancellationToken cancellationToken = default)
     {
-        using (await LoginLocker.AcquireAsync(token)) { }
+        using (await LoginLocker.AcquireAsync(cancellationToken)) { }
     }
 
     /// <inheritdoc />
-    public Task<OperationResult> LogoutAsync(CancellationToken token = default)
+    public Task<OperationResult> LogoutAsync(CancellationToken cancellationToken = default)
     {
         HttpService.ClearAllCookies();
         State.Offline();
@@ -211,7 +213,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
     }
 
     /// <inheritdoc />
-    public Task<OperationResult> FakeLoginAsync(bool loginIfFail = true, CancellationToken token = default)
+    public Task<OperationResult> FakeLoginAsync(bool loginIfFail = true, CancellationToken cancellationToken = default)
     {
         return DoLoginAsync(async t =>
         {
@@ -225,7 +227,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
                 result = await LoginActionWrapperAsync(t);
             }
             return result;
-        }, token);
+        }, cancellationToken);
     }
 
     /// <inheritdoc />

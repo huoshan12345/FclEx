@@ -178,12 +178,12 @@ public class SendAsyncTests : HttpServerTests
     {
         public CancellationToken ObservedToken { get; private set; }
         public IWebProxy? Proxy { get; set; }
-        public ILogger Logger { get; set; } = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+        public ILogger Logger { get; set; } = NullLogger.Instance;
 
-        public async Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default)
+        public async Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken cancellationToken = default)
         {
-            ObservedToken = token;
-            await Task.Delay(TimeSpan.FromSeconds(5), token);
+            ObservedToken = cancellationToken;
+            await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
             return new HttpResponse(request);
         }
 

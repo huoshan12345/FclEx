@@ -43,7 +43,7 @@ public class UserClientHttpActionTests : WebTests
         var client = new TestUserClient(ServiceProvider.GetRequiredService<ILoggerFactory>());
         var action = new NonEnforcingUserClientHttpAction(client);
 
-        var result = await ((Actions.IAction<string>)action).ExecuteAsync();
+        var result = await ((IAction<string>)action).ExecuteAsync();
 
         Assert.True(result.IsSuccess, result.Exception?.ToString());
         Assert.Equal("accepted", result.Value);
@@ -129,10 +129,10 @@ public class UserClientHttpActionTests : WebTests
 
         public List<CancellationToken> Tokens { get; } = [];
 
-        public Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default)
+        public Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken cancellationToken = default)
         {
             Requests.Add(request);
-            Tokens.Add(token);
+            Tokens.Add(cancellationToken);
             return Task.FromResult(response);
         }
 
@@ -189,7 +189,7 @@ public class UserClientHttpActionTests : WebTests
             return Operation.Success("accepted");
         }
 
-        public override Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken token = default)
+        public override Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken cancellationToken = default)
         {
             var response = new HttpResponse(request);
             typeof(HttpResponse)

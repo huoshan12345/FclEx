@@ -367,7 +367,7 @@ public class HttpServiceExtensionsTests
         public Uri? LastGetCookiesUri { get; private set; }
         public Func<HttpRequest, HttpResponse>? ResponseFactory { get; init; }
 
-        public Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default)
+        public Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken cancellationToken = default)
         {
             Request = request;
             if (ResponseFactory is not null)
@@ -398,7 +398,7 @@ public class HttpServiceExtensionsTests
 
         public IWebProxy? Proxy { get; set; }
 
-        public ILogger Logger { get; set; } = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+        public ILogger Logger { get; set; } = NullLogger.Instance;
 
         public void Dispose() { }
 

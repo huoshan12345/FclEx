@@ -70,7 +70,7 @@ public class LoginAndRetryClient(ILoggerFactory loggerFactory) : UserClient(logg
             : Operation.Error("");
     }
 
-    protected override Task<OperationResult> LoginActionAsync(CancellationToken token)
+    protected override Task<OperationResult> LoginActionAsync(CancellationToken cancellationToken)
     {
         return Operation.Success();
     }

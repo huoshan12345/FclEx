@@ -169,16 +169,16 @@ partial class DbContextExtensions
             => new(context.GetService<IRelationalConnection>(), raw.ParameterValues, null, context,
                 context.GetService<IRelationalCommandDiagnosticsLogger>(), CommandSource.ExecuteSqlRaw);
 
-        private Task<object?> ReadAsync(string sql, CancellationToken token, params (string Name, object? Value)[] parameters)
+        private Task<object?> ReadAsync(string sql, CancellationToken cancellationToken, params (string Name, object? Value)[] parameters)
         {
             var raw = Build(sql, parameters);
-            return raw.RelationalCommand.ExecuteScalarAsync(Settings(raw), token);
+            return raw.RelationalCommand.ExecuteScalarAsync(Settings(raw), cancellationToken);
         }
 
-        private Task<int> ExecuteAsync(string sql, CancellationToken token, params (string Name, object? Value)[] parameters)
+        private Task<int> ExecuteAsync(string sql, CancellationToken cancellationToken, params (string Name, object? Value)[] parameters)
         {
             var raw = Build(sql, parameters);
-            return raw.RelationalCommand.ExecuteNonQueryAsync(Settings(raw), token);
+            return raw.RelationalCommand.ExecuteNonQueryAsync(Settings(raw), cancellationToken);
         }
     }
 }

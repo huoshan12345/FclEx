@@ -39,22 +39,22 @@ public interface IUserClient<TAccount> where TAccount : IUserAccount
     /// <summary>
     /// Runs the real login flow when the client is not already online.
     /// </summary>
-    Task<OperationResult> LoginAsync(CancellationToken token = default);
+    Task<OperationResult> LoginAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Runs the fake-login flow and optionally falls back to real login when fake login fails.
     /// </summary>
-    Task<OperationResult> FakeLoginAsync(bool loginIfFail = true, CancellationToken token = default);
+    Task<OperationResult> FakeLoginAsync(bool loginIfFail = true, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Clears client session state and cookies.
     /// </summary>
-    Task<OperationResult> LogoutAsync(CancellationToken token = default);
+    Task<OperationResult> LogoutAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Waits until the current login attempt, if any, releases the login lock.
     /// </summary>
-    Task WaitLoginAsync(CancellationToken token = default);
+    Task WaitLoginAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>

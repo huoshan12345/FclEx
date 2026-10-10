@@ -51,11 +51,11 @@ internal sealed class StubHttpService : IHttpService
 
     public ILogger Logger { get; set; } = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
 
-    public Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default)
+    public Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken cancellationToken = default)
     {
         Requests.Add(request);
-        Tokens.Add(token);
-        return _sendAsync(request, token);
+        Tokens.Add(cancellationToken);
+        return _sendAsync(request, cancellationToken);
     }
 
     public void AddCookie(Cookie cookie, Uri? uri = null, bool overrideDomain = false)
@@ -99,9 +99,9 @@ internal class PipelineHttpAction<T>(HttpResponse httpResponse) : HttpAction<T>
 
     public override bool EnsureSuccessStatusCode => EnsureSuccessStatusCodeValue;
 
-    public override Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken token = default)
+    public override Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken cancellationToken = default)
     {
-        LastToken = token;
+        LastToken = cancellationToken;
         return GetResponseException is null
             ? Task.FromResult(httpResponse)
             : Task.FromException<HttpResponse>(GetResponseException);
@@ -154,7 +154,7 @@ internal sealed class PipelineJsonAction<T>(HttpResponse response) : HttpJsonAct
 
     public override HttpMethod Method { get; } = HttpMethod.Get;
 
-    public override Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken token = default)
+    public override Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(response);
     }
@@ -186,7 +186,7 @@ internal sealed class PipelineXmlAction<T>(HttpResponse response) : HttpXmlActio
 
     public override HttpMethod Method { get; } = HttpMethod.Get;
 
-    public override Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken token = default)
+    public override Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(response);
     }
@@ -234,7 +234,7 @@ internal sealed class TestJsonpAction(HttpResponse? response = null) : JsonpActi
 
     public override string CallbackName => CallbackNameValue;
 
-    public override Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken token = default)
+    public override Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(response ?? HttpActionTestFixtures.CreateResponse());
     }

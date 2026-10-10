@@ -91,9 +91,9 @@ public class PipelineActionTests
 
         public int HandleCancellationCount { get; private set; }
 
-        public override Task<OperationResult<int>> ExecuteCoreAsync(CancellationToken token = default)
+        public override Task<OperationResult<int>> ExecuteCoreAsync(CancellationToken cancellationToken = default)
         {
-            return execute(token);
+            return execute(cancellationToken);
         }
 
         public override Task<OperationResult<int>> HandleErrorAsync(Exception ex)

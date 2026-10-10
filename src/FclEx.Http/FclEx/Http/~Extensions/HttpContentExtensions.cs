@@ -13,7 +13,7 @@ public static class HttpContentExtensions
     /// </summary>
     public static async Task<Stream> ReadAsStreamAsync(this HttpContent content, CancellationToken cancellationToken)
     {
-        // NOTE: do not call ReadAsStreamAsync(this HttpContent content, int bufferSize, TimeSpan? bufferTransferTimeout, CancellationToken token)
+        // NOTE: do not call ReadAsStreamAsync(this HttpContent content, int bufferSize, TimeSpan? bufferTransferTimeout, CancellationToken cancellationToken)
         // to avoid circular call.
         return await content.ReadAsStreamAsync();
     }
@@ -97,9 +97,13 @@ public static class HttpContentExtensions
     /// Wraps content so it is Brotli-compressed while being serialized.
     /// Disposing the returned wrapper also disposes the original content.
     /// </summary>
-    public static BrotliContent ToBrotli(this HttpContent content, CompressionLevel compressionLevel = CompressionLevel.Optimal,
-        TimeSpan? timeout = null, int? bufferSize = 256 * 1024, CancellationToken token = default)
-        => new(content, compressionLevel, timeout, bufferSize, token);
+    public static BrotliContent ToBrotli(
+        this HttpContent content, 
+        CompressionLevel compressionLevel = CompressionLevel.Optimal,
+        TimeSpan? timeout = null, 
+        int? bufferSize = 256 * 1024, 
+        CancellationToken cancellationToken = default)
+        => new(content, compressionLevel, timeout, bufferSize, cancellationToken);
 #endif
 
     /// <summary>

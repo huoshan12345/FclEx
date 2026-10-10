@@ -115,7 +115,7 @@ public partial class IdentitySequenceTests(EfCoreFixture fixture) : EfCoreTests(
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => context.SynchronizeIdentitySequenceAsync(typeof(TruncateRow), canceled));
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => context.SynchronizeIdentitySequenceAsync(entityType, canceled));
         await using var other = Fixture.CreateDbContext(DbDriver.SqlServer);
-        await Assert.ThrowsAsync<ArgumentException>(() => context.SynchronizeIdentitySequenceAsync(other.Model.FindEntityType(typeof(TruncateRow))!));
+        await Assert.ThrowsAsync<ArgumentException>(() => context.SynchronizeIdentitySequenceAsync(other.Model.FindEntityType(typeof(TruncateRow))!, cancellationToken: canceled));
         Assert.Equal(ConnectionState.Closed, context.Database.GetDbConnection().State);
     }
 

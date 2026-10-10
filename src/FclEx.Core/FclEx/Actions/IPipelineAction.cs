@@ -128,10 +128,10 @@ public abstract class PipelineAction<T> : IPipelineAction<T>
     /// <summary>
     /// Executes the action with pipeline handling.
     /// </summary>
-    /// <param name="token">The cancellation token passed to the action.</param>
+    /// <param name="cancellationToken">The cancellation token passed to the action.</param>
     /// <returns>The handled operation result.</returns>
-    public virtual Task<OperationResult<T>> ExecuteAsync(CancellationToken token = default)
-        => DefaultPipelineAction.ExecuteAsync(this, token);
+    public virtual Task<OperationResult<T>> ExecuteAsync(CancellationToken cancellationToken = default)
+        => DefaultPipelineAction.ExecuteAsync(this, cancellationToken);
 
     /// <summary>
     /// Handles a cancellation result from the core action.

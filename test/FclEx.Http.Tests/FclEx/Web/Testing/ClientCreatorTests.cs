@@ -268,13 +268,13 @@ public class ClientCreatorTests
 
         public int FakeLoginCount { get; private set; }
 
-        protected override Task<OperationResult> LoginActionAsync(CancellationToken token)
+        protected override Task<OperationResult> LoginActionAsync(CancellationToken cancellationToken)
         {
             LoginCount++;
             return Operation.Success();
         }
 
-        protected override Task<OperationResult> FakeLoginActionAsync(CancellationToken token)
+        protected override Task<OperationResult> FakeLoginActionAsync(CancellationToken cancellationToken)
         {
             FakeLoginCount++;
             return Operation.Success();
@@ -285,7 +285,7 @@ public class ClientCreatorTests
     {
         private readonly List<Cookie> _cookies = cookies.ToList();
 
-        public Task<FclEx.Http.HttpResponse> SendAsync(FclEx.Http.HttpRequest request, CancellationToken token = default)
+        public Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(HttpResponse.FromError(request, new NotSupportedException()));
         }

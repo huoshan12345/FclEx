@@ -92,16 +92,16 @@ public class UserClientJsonActionTests : WebTests
         Assert.IsType<JsonException>(result.Exception, false);
     }
 
-    private static FclEx.Http.HttpResponse CreateResponse(
+    private static HttpResponse CreateResponse(
         string responseString = "",
         HttpStatusCode statusCode = HttpStatusCode.OK)
     {
         var request = HttpRequest.Get("https://example.com/json");
-        var response = new FclEx.Http.HttpResponse(request);
-        typeof(FclEx.Http.HttpResponse)
+        var response = new HttpResponse(request);
+        typeof(HttpResponse)
             .GetProperty(nameof(HttpResponse.ResponseString))!
             .SetValue(response, responseString);
-        typeof(FclEx.Http.HttpResponse)
+        typeof(HttpResponse)
             .GetProperty(nameof(HttpResponse.StatusCode))!
             .SetValue(response, statusCode);
         return response;
@@ -119,9 +119,9 @@ public class UserClientJsonActionTests : WebTests
         public override HttpMethod Method { get; } = HttpMethod.Get;
     }
 
-    private sealed class CaptureHttpService(FclEx.Http.HttpResponse response) : IHttpService
+    private sealed class CaptureHttpService(HttpResponse response) : IHttpService
     {
-        public Task<FclEx.Http.HttpResponse> SendAsync(FclEx.Http.HttpRequest request, CancellationToken token = default)
+        public Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(response);
         }

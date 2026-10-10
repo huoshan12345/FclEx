@@ -12,10 +12,14 @@ public class GZipContent : CompressedContent
     /// <param name="compressionLevel">Compression level used by <see cref="GZipStream"/>.</param>
     /// <param name="timeout">Optional timeout while copying the inner content stream.</param>
     /// <param name="bufferSize">Optional copy buffer size.</param>
-    /// <param name="token">Cancellation token used while reading and copying the inner content.</param>
-    public GZipContent(HttpContent content, CompressionLevel compressionLevel,
-        TimeSpan? timeout = null, int? bufferSize = null, CancellationToken token = default)
-        : base(content, "gzip", compressionLevel, timeout, bufferSize, token)
+    /// <param name="cancellationToken">Cancellation token used while reading and copying the inner content.</param>
+    public GZipContent(
+        HttpContent content,
+        CompressionLevel compressionLevel,
+        TimeSpan? timeout = null,
+        int? bufferSize = null,
+        CancellationToken cancellationToken = default)
+        : base(content, "gzip", compressionLevel, timeout, bufferSize, cancellationToken)
     {
     }
 
