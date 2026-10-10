@@ -101,7 +101,8 @@ public partial class IdentitySequenceTests(EfCoreFixture fixture) : EfCoreTests(
     [Fact]
     public async Task ReseedIdentityAsync_ValidatesArgumentsMappingsAndCancellationBeforeOpening()
     {
-        await using var context = Fixture.CreateDbContext(DbDriver.Sqlite);
+        // Validation never opens the connection, so it needs no fixture database or selected SQLite driver.
+        await using var context = new TestDbContext(DbDriver.Sqlite, "Data Source=:memory:");
         var entityType = context.Model.FindEntityType(typeof(TruncateRow))!;
         await Assert.ThrowsAsync<ArgumentNullException>(() => ((DbContext)null!).ReseedIdentityAsync<TruncateRow>());
         await Assert.ThrowsAsync<ArgumentNullException>(() => context.ReseedIdentityAsync((Type)null!));
