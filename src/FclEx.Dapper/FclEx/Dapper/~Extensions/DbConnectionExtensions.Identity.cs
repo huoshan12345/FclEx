@@ -30,20 +30,24 @@ partial class DbConnectionExtensions
     /// <exception cref="InvalidOperationException">The supplied transaction is no longer associated with a connection.</exception>
     /// <exception cref="OperationCanceledException">The operation is canceled.</exception>
     public static async Task<bool> ReseedIdentityAsync(
-        this DbConnection connection, string tableName, string columnName, string? schema = null,
-        CommandOptions commandOptions = default, CancellationToken cancellationToken = default)
+        this DbConnection connection,
+        string tableName,
+        string columnName,
+        string? schema = null,
+        CommandOptions commandOptions = default,
+        CancellationToken cancellationToken = default)
     {
         commandOptions.ValidateFor(connection);
         ValidateIdentityIdentifier(tableName, nameof(tableName));
         ValidateIdentityIdentifier(columnName, nameof(columnName));
         if (schema is not null)
             ValidateIdentityIdentifier(schema, nameof(schema));
-        cancellationToken.ThrowIfCancellationRequested();
+
         if (!await connection.TableExistsAsync(tableName, schema, commandOptions, cancellationToken))
             return false;
 
         return await connection.ExecuteAsync(commandOptions,
-            _ => new SqlInfo("", Array.Empty<DbParameter>()),
+            _ => new SqlInfo("", []),
             (adapter, command) => adapter.ReseedIdentityAsync(
                 command, tableName, columnName, schema, cancellationToken), cancellationToken);
     }
@@ -64,8 +68,10 @@ partial class DbConnectionExtensions
     /// <exception cref="InvalidOperationException">The supplied transaction has no connection.</exception>
     /// <exception cref="OperationCanceledException">The operation is canceled.</exception>
     public static Task<bool> ReseedIdentityAsync<T>(
-        this DbConnection connection, string? schema = null,
-        CommandOptions commandOptions = default, CancellationToken cancellationToken = default)
+        this DbConnection connection,
+        string? schema = null,
+        CommandOptions commandOptions = default,
+        CancellationToken cancellationToken = default)
     {
         commandOptions.ValidateFor(connection);
         var mapping = DapperHelper.GetEntityMapping(typeof(T), commandOptions.EntityMappingSource);
