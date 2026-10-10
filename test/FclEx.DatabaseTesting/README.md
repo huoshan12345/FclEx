@@ -62,21 +62,36 @@ The exporter generates SQL without opening a database. Rebuild the shared librar
 
 Remote resources keep the existing project/framework/OS names and schema/default-login cases. Fixtures own their `DatabaseEnvironment`. `TestDatabaseEnvironment.Resolve` maps MySQL's schema scenario to the selected database and Oracle's owner scenario to the actual login. `TestDatabaseTarget` builds the appropriate native connection string without global credential caching. `TestDbContext` consumes the resolved string without rewriting it.
 
-Normal startup does not rebuild shared remote schemas or users. `SynchronizeIdentitySequenceAsync` first checks the mapped table through the production TableExistsAsync extension and returns zero when it is absent; otherwise it retains the existing PostgreSQL identity-sequence repair. `SelectedDrivers` identifies this process's normal run selection. The explicitly enabled `TestDbContextTests.SetupDatabase` remains the destructive provisioning operation; its engine matrix is independent of the normal provider override and excludes SQLite and the duplicate MySql.Data engine.
+Normal startup does not rebuild shared remote schemas or users. The production `FclEx.Dapper.ReseedIdentityAsync` extension checks the mapped table and returns false when the table or native identity is absent; fixtures use it to synchronize generated keys on every selected provider. PostgreSQL sequence changes survive rollback, and MySQL and Oracle synchronization DDL can implicitly commit. `SelectedDrivers` identifies this process's normal run selection. The explicitly enabled `TestDbContextTests.SetupDatabase` remains the destructive provisioning operation; its engine matrix is independent of the normal provider override and excludes SQLite and the duplicate MySql.Data engine.
 
 Remote names isolate projects, frameworks, operating systems, and schema scenarios. Common cases are designed for parallel execution using independent rows. Environment naming does not provide a cross-process lock for two runs of the same matrix entry.
 
 ## Truncate test isolation
 
-Truncate tests run in parallel against isolated tables rather than disabling parallelization for their classes or theories. `TruncateTestSession` owns one open connection and maps the existing shared entities to the session's tables. EF tests still use `TestDbContext`, with an explicit model for that session; session models are not added to the global model cache.
+Truncate tests use the minimal [TruncateEntities](FclEx/Databases/TruncateEntities.cs)
+rather than the common fixture entities. Tables contain only an integer key, a value
+column when filtering or keyless behavior needs it, and a parent key for cascade tests.
+These eight ordinary tables are part of `TestDbContext` and the shared SQLite schema.
+Remote tables are provisioned manually through `SetupDatabase`; SQLite tables are
+created by `InitializeSqliteAsync`. Normal truncate sessions execute no CREATE or
+DROP statements and use the entity's configured table name and schema directly.
 
-SQL Server uses local `#` tables, PostgreSQL uses `pg_temp`, and MySQL and SQLite use connection-local temporary tables. Each case creates only the tables it needs. Connections must remain open until the test and any alternative metadata contexts have finished. MySqlConnector connection strings include `AllowUserVariables=True;UseAffectedRows=False`, as required by the EF providers when adopting an already-open connection.
+[TruncateTestSessions](FclEx/Databases/TruncateTestSessions.cs) leases the requested
+tables exclusively per driver and schema, acquiring multiple tables in a stable order.
+Cancellation or connection-opening failure releases acquired leases. Tests clean rows
+before seeding and after completion; disposal preserves tables and rows. Leases are
+fixture-local, not cross-process locks. MySql.Data and MySqlConnector share leases
+because they access the same server. The isolation case uses `TruncateRow` and
+`TruncateIsolationRow`, rather than dynamically named copies of the same table.
 
-Oracle uses four ordinary table groups per schema target, initialized by the fixture with `CREATE TABLE IF NOT EXISTS`. The tables persist between runs and are neither rebuilt nor structurally reconciled. Initialization visits only selected drivers, so it does not connect to Oracle unless Oracle is selected and compiled into the target. A test exclusively leases one group; only other tests waiting for a group on that Oracle target wait. Other schemas, drivers, and unrelated tests remain parallel. The groups are process-local leases and do not isolate simultaneous runs of the identical project/framework/OS/schema entry.
+Only the standalone SQLite regression creates a temporary table in its own in-memory
+database. It verifies that truncation resets `temp.sqlite_sequence` without changing
+a same-named ordinary table or its `main.sqlite_sequence` entry.
 
-Cascade result tests cover PostgreSQL and Oracle. Both seed a real parent and child, truncate the parent with CASCADE, and verify both tables are empty. Oracle's pre-created foreign key uses `ON DELETE CASCADE`. Other databases do not create foreign keys solely to verify native rejection; the library's unsupported option combinations remain covered.
-
-A dedicated ordinary `TruncateClosed_EntityWithAutoKey` table per selected target verifies successful Dapper calls from a closed connection, including explicit schema overrides. In the separate EF fixture it verifies every truncate entry point against the original default/explicit schema rather than the temporary namespace. Only one test case owns it per target and project. Other truncate cases never modify that table or the common fixture tables. Fixtures create this table idempotently, using each database's supported existence syntax. MySql.Data remains skipped in all truncate cases because of its asynchronous timeout cleanup issue; MySqlConnector stays covered.
+Cascade result tests on PostgreSQL and Oracle insert only a parent and a child and check
+that both row counts become zero. Unsupported option combinations retain their
+closed-connection validation coverage. MySql.Data retains its existing truncate-test
+skip for its asynchronous timeout cleanup issue; MySqlConnector remains covered.
 
 ### Coverage and execution cost
 
@@ -84,7 +99,7 @@ A dedicated ordinary `TruncateClosed_EntityWithAutoKey` table per selected targe
 
 Dapper and EF implement truncation independently, so each retains its own result, cancellation, and rollback coverage. Shared session isolation is tested only in Dapper.Tests. Both projects use the same [DerivedSqliteConnection](FclEx/Databases/DerivedSqliteConnection.cs) for connection-subclass regressions. EF's four default entry points share one session, as do its four explicit entry points for each supported option combination; each still verifies identity behavior. Cancellation seeds once and exercises all eight EF overloads. Named shared-type, schema, and derived-connection tests focus on their own behavior instead of repeating identity checks. Tests own final row cleanup; seeding clears between calls without another cleanup after every assertion group. Rejection of CLR-type access to named shared entities is checked once without database commands.
 
-Dapper cancellation and malformed-name guards run on the connection holding the seeded temporary table, so the unchanged-row assertion checks the actual operation target. Separate closed-connection calls retain connection-state coverage.
+Dapper cancellation and malformed-name guards use the dedicated ordinary tables, so the unchanged-row assertion checks the actual operation target. Separate closed-connection calls retain connection-state coverage.
 
 ## Compatibility failures
 

@@ -23,8 +23,8 @@ public abstract class HtmlFileAction<T> : HttpAction<T>, IHtmlFileAction<T>
     public override HttpMethod Method { get; } = HttpMethod.Get;
 
     /// <inheritdoc />
-    public override Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken token = default)
-        => DefaultHtmlFileAction.GetResponseAsync(this, request, token);
+    public override Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken cancellationToken = default)
+        => DefaultHtmlFileAction.GetResponseAsync(this, request, cancellationToken);
 
     /// <inheritdoc />
     public override OperationResult<T> GetResult(HttpResponse response)

@@ -19,21 +19,21 @@ public partial class TruncateTests
             var entity = await SeedAsync(session);
             using (var transaction = await connection.BeginTransactionAsync(IsolationLevel.Serializable, CancellationToken))
             {
-                var options = session.CommandOptions with { Transaction = transaction, TimeoutSeconds = 10 };
-                await connection.TruncateAsync<EntityWithAutoKey>(restartIdentity, false, schema, options, CancellationToken);
-                Assert.Equal(0, await CountAsync<EntityWithAutoKey>(session, transaction));
+                var options = new CommandOptions { Transaction = transaction, TimeoutSeconds = 10 };
+                await connection.TruncateAsync<TruncateRow>(restartIdentity, false, schema, options, CancellationToken);
+                Assert.Equal(0, await CountAsync<TruncateRow>(session, transaction));
                 Assert.Same(connection, transaction.Connection);
                 await transaction.RollbackAsync(CancellationToken);
             }
             Assert.Equal(ConnectionState.Open, connection.State);
-            Assert.Equal(2, await CountAsync<EntityWithAutoKey>(session));
-            var nextId = await connection.InsertAsync<EntityWithAutoKey, int>(new() { Name = Guid.NewGuid().ToString(), Value = 1 },
-                schema, commandOptions: session.CommandOptions, cancellationToken: CancellationToken);
+            Assert.Equal(2, await CountAsync<TruncateRow>(session));
+            var nextId = await connection.InsertAsync<TruncateRow, int>(new() { Value = 1 },
+                schema, cancellationToken: CancellationToken);
             Assert.True(nextId > entity.Id);
         }
         finally
         {
-            await DeleteAllAsync<EntityWithAutoKey>(session);
+            await DeleteAllAsync<TruncateRow>(session);
         }
     }
 
@@ -43,11 +43,11 @@ public partial class TruncateTests
     {
         Assert.SkipMySql(driver);
 
-        using var session = await Fixture.TruncateTables.CreateSessionAsync(driver, null, [typeof(EntityWithAutoKey)],
+        using var session = await Fixture.TruncateSessions.CreateSessionAsync(driver, null, [typeof(TruncateRow)],
             new DerivedSqliteConnection(Fixture.DatabaseEnvironment.Resolve(driver).BuildConnectionString()), CancellationToken);
         await using var cleanup = CleanupRows(session);
         var connection = session.Connection;
         await VerifyRowsRemovedAsync(session,
-            token => connection.TruncateAsync<EntityWithAutoKey>(commandOptions: session.CommandOptions, cancellationToken: token));
+            token => connection.TruncateAsync<TruncateRow>(cancellationToken: token));
     }
 }

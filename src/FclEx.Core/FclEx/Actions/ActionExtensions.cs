@@ -346,14 +346,14 @@ public static partial class ActionExtensions
 
         var effectiveTimeout = timeout > TimeSpan.Zero ? timeout : null;
 
-        return Operation.Action<T>(async callerToken =>
+        return Operation.Action<T>(async token =>
         {
-            using var cancellation = callerToken.WithTimeout(effectiveTimeout);
+            using var cancellation = token.WithTimeout(effectiveTimeout);
 
             OperationResult<T> CreateTerminationResult()
             {
-                return callerToken.IsCancellationRequested
-                    ? Operation.Cancel<T>(new OperationCanceledException(callerToken))
+                return token.IsCancellationRequested
+                    ? Operation.Cancel<T>(new OperationCanceledException(token))
                     : Operation.Error<T>(new TimeoutException($"The repeated action did not complete within {effectiveTimeout}."));
             }
 
@@ -398,7 +398,11 @@ public static partial class ActionExtensions
     /// <param name="delayInSeconds">The delay between attempts, in seconds.</param>
     /// <param name="timeoutInSeconds">The optional total timeout, in seconds.</param>
     /// <returns>An action that repeats until success satisfies the condition, failure, cancellation, or timeout.</returns>
-    public static IAction<T> RepeatUntil<T>(this IAction<T> action, Func<T, bool> until, int delayInSeconds = default, int? timeoutInSeconds = null)
+    public static IAction<T> RepeatUntil<T>(
+        this IAction<T> action,
+        Func<T, bool> until, 
+        int delayInSeconds = default,
+        int? timeoutInSeconds = null)
     {
         return action.RepeatUntil(until, TimeSpan.FromSeconds(delayInSeconds), timeoutInSeconds.HasValue ? TimeSpan.FromSeconds(timeoutInSeconds.Value) : null);
     }
@@ -429,11 +433,11 @@ public static partial class ActionExtensions
     /// </summary>
     /// <typeparam name="T">The action value type.</typeparam>
     /// <param name="action">The action to execute.</param>
-    /// <param name="token">The cancellation token passed to the action.</param>
+    /// <param name="cancellationToken">The cancellation token passed to the action.</param>
     /// <returns>The operation result without the successful value.</returns>
-    public static Task<OperationResult> RunAsync<T>(this IAction<T> action, CancellationToken token = default)
+    public static Task<OperationResult> RunAsync<T>(this IAction<T> action, CancellationToken cancellationToken = default)
     {
-        return action.ExecuteAsync(token).WithoutValue();
+        return action.ExecuteAsync(cancellationToken).WithoutValue();
     }
 
     // NOTE: help value type cast to interface.
@@ -442,38 +446,11 @@ public static partial class ActionExtensions
     /// </summary>
     /// <typeparam name="T">The action value type.</typeparam>
     /// <param name="action">The action to execute.</param>
-    /// <param name="token">The cancellation token passed to the action.</param>
+    /// <param name="cancellationToken">The cancellation token passed to the action.</param>
     /// <returns>The action result.</returns>
-    public static Task<OperationResult<T>> ExecuteAsync<T>(this IAction<T> action, CancellationToken token = default)
+    public static Task<OperationResult<T>> ExecuteAsync<T>(this IAction<T> action, CancellationToken cancellationToken = default)
     {
-        return action.ExecuteAsync(token);
-    }
-
-    /// <summary>
-    /// Executes the action with retries.
-    /// </summary>
-    /// <typeparam name="T">The action value type.</typeparam>
-    /// <param name="action">The action to execute.</param>
-    /// <param name="retryCount">The number of retries after the first attempt.</param>
-    /// <param name="token">The cancellation token passed to each attempt.</param>
-    /// <returns>The first successful result, or the last failed result.</returns>
-    public static Task<OperationResult<T>> ExecuteAsync<T>(this IAction<T> action, int retryCount, CancellationToken token)
-    {
-        return action.ExecuteAsync(retryCount, null, null, token);
-    }
-
-    /// <summary>
-    /// Executes the action with retries controlled by a result condition.
-    /// </summary>
-    /// <typeparam name="T">The action value type.</typeparam>
-    /// <param name="action">The action to execute.</param>
-    /// <param name="retryCount">The number of retries after the first attempt.</param>
-    /// <param name="retryCondition">Returns <see langword="true"/> to retry a failed result; any other value stops retrying.</param>
-    /// <param name="token">The cancellation token passed to each attempt.</param>
-    /// <returns>The first successful result, or the last failed result.</returns>
-    public static Task<OperationResult<T>> ExecuteAsync<T>(this IAction<T> action, int retryCount, Func<OperationResult<T>, bool?>? retryCondition, CancellationToken token)
-    {
-        return action.ExecuteAsync(retryCount, retryCondition, null, token);
+        return action.ExecuteAsync(cancellationToken);
     }
 
     /// <summary>
@@ -484,29 +461,26 @@ public static partial class ActionExtensions
     /// <param name="retryCount">The number of retries after the first attempt.</param>
     /// <param name="retryCondition">Returns <see langword="true"/> to retry a failed result; any other value stops retrying.</param>
     /// <param name="sleepDurationProvider">Provides the delay before each retry attempt.</param>
-    /// <param name="token">The cancellation token passed to each attempt and delay.</param>
+    /// <param name="cancellationToken">The cancellation token passed to each attempt and delay.</param>
     /// <returns>The first successful result, or the last failed result.</returns>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="retryCount"/> is negative.</exception>
-    public static async Task<OperationResult<T>> ExecuteAsync<T>(this IAction<T> action,
+    public static async Task<OperationResult<T>> ExecuteAsync<T>(
+        this IAction<T> action,
         int retryCount,
         Func<OperationResult<T>, bool?>? retryCondition = null,
         Func<int, TimeSpan>? sleepDurationProvider = null,
-        CancellationToken token = default)
+        CancellationToken cancellationToken = default)
     {
         if (retryCount < 0)
             throw new ArgumentOutOfRangeException(nameof(retryCount), retryCount, "Retry count cannot be negative.");
 
-        var result = Operation.Error<T>("not started");
         var watch = ValueStopwatch.StartNew();
         for (var attempt = 0; ; attempt++)
         {
-            result = await action.ExecuteAsync(token)
+            var result = await action.ExecuteAsync(cancellationToken)
                 .ThenResult(m => m.Elapsed(watch.GetElapsedTime()));
 
-            if (result.IsSuccess)
-                return result;
-
-            if (attempt == retryCount)
+            if (result.IsSuccess || attempt == retryCount)
                 return result;
 
             if (retryCondition is not null)
@@ -521,7 +495,7 @@ public static partial class ActionExtensions
 
             var sleepDuration = sleepDurationProvider.Invoke(attempt + 1);
             if (sleepDuration > TimeSpan.Zero)
-                await Task.Delay(sleepDuration, token);
+                await Task.Delay(sleepDuration, cancellationToken);
         }
     }
 

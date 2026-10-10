@@ -174,39 +174,24 @@ public static partial class DbContextExtensions
         bool cascade,
         CancellationToken cancellationToken)
     {
-        Check.NotNull(context);
-        Check.NotNull(entityType);
-        if (ReferenceEquals(entityType.Model, context.Model) == false)
-            throw new ArgumentException("The entity metadata must belong to this DbContext's runtime model.", nameof(entityType));
-
-        var dialect = GetTruncateDialect(context.Database.GetDbConnection().GetType());
-        if ((dialect is TruncateDialect.SqlServer or TruncateDialect.MySql) && restartIdentity == false)
+        var table = GetExclusiveEntityTable(context, entityType);
+        var dialect = GetRelationalDialect(context.Database.GetDbConnection().GetType());
+        if ((dialect is RelationalDialect.SqlServer or RelationalDialect.MySql) && restartIdentity == false)
             throw new NotSupportedException("SQL Server and MySQL TRUNCATE always reset identity values.");
-        if (dialect == TruncateDialect.Oracle && restartIdentity == true)
+        if (dialect == RelationalDialect.Oracle && restartIdentity == true)
             throw new NotSupportedException("Oracle TRUNCATE does not restart identity sequences.");
-        if (cascade && dialect is not (TruncateDialect.PostgreSql or TruncateDialect.Oracle))
+        if (cascade && dialect is not (RelationalDialect.PostgreSql or RelationalDialect.Oracle))
             throw new NotSupportedException("TRUNCATE CASCADE is supported only for PostgreSQL and Oracle connections.");
-
-        if (entityType.BaseType is not null || entityType.GetDerivedTypes().Any())
-            throw new NotSupportedException("TRUNCATE does not support entity inheritance mappings.");
-
-        var mappings = entityType.GetTableMappings().ToArray();
-        if (mappings.Length != 1)
-            throw new NotSupportedException("TRUNCATE requires an entity mapped to exactly one physical table.");
-
-        var table = mappings[0].Table;
-        if (table.EntityTypeMappings.Any(mapping => mapping.TypeBase != entityType))
-            throw new NotSupportedException("TRUNCATE does not support tables shared by multiple entity types.");
 
         var sqlHelper = context.GetService<ISqlGenerationHelper>();
         var qualifiedTableName = sqlHelper.DelimitIdentifier(table.Name, table.Schema);
         cancellationToken.ThrowIfCancellationRequested();
-        if (dialect == TruncateDialect.Sqlite)
+        if (dialect == RelationalDialect.Sqlite)
             return DeleteSqliteTableAsync(context, table.Name, restartIdentity != false, cancellationToken);
 
         // Identifiers come from the model and are escaped by the active provider.
         var sql = $"TRUNCATE TABLE {qualifiedTableName}";
-        if (dialect == TruncateDialect.PostgreSql)
+        if (dialect == RelationalDialect.PostgreSql)
         {
             if (restartIdentity is { } restart)
                 sql += restart ? " RESTART IDENTITY" : " CONTINUE IDENTITY";
@@ -214,39 +199,9 @@ public static partial class DbContextExtensions
         if (cascade)
             sql += " CASCADE";
         // Oracle commands must not include a SQL*Plus statement terminator.
-        if (dialect != TruncateDialect.Oracle)
+        if (dialect != RelationalDialect.Oracle)
             sql += ";";
         return context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
-    }
-
-    internal enum TruncateDialect
-    {
-        SqlServer,
-        PostgreSql,
-        MySql,
-        Oracle,
-        Sqlite,
-    }
-
-    internal static TruncateDialect GetTruncateDialect(Type connectionType)
-    {
-        for (var type = connectionType; type is not null; type = type.BaseType)
-        {
-            var dialect = (type.Assembly.GetName().Name, type.FullName) switch
-            {
-                ("Microsoft.Data.SqlClient", "Microsoft.Data.SqlClient.SqlConnection") => TruncateDialect.SqlServer,
-                ("System.Data.SqlClient", "System.Data.SqlClient.SqlConnection") => TruncateDialect.SqlServer,
-                ("Npgsql", "Npgsql.NpgsqlConnection") => TruncateDialect.PostgreSql,
-                ("MySql.Data", "MySql.Data.MySqlClient.MySqlConnection") => TruncateDialect.MySql,
-                ("MySqlConnector", "MySqlConnector.MySqlConnection") => TruncateDialect.MySql,
-                ("Oracle.ManagedDataAccess", "Oracle.ManagedDataAccess.Client.OracleConnection") => TruncateDialect.Oracle,
-                ("Microsoft.Data.Sqlite", "Microsoft.Data.Sqlite.SqliteConnection") => TruncateDialect.Sqlite,
-                _ => (TruncateDialect?)null,
-            };
-            if (dialect is { } supported)
-                return supported;
-        }
-        throw new NotSupportedException($"TRUNCATE is not supported for connection type '{connectionType.FullName}'.");
     }
 
     private static async Task DeleteSqliteTableAsync(

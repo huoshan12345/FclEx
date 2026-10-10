@@ -6,6 +6,58 @@ namespace FclEx.Dapper.SqlAdapters;
 public class SqliteAdapter : SqlAdapterBase
 {
     /// <inheritdoc />
+    public override async Task<bool> ReseedIdentityAsync(DbCommand command, string tableName, string columnName,
+        string? schema, CancellationToken cancellationToken = default)
+    {
+        if (command.Transaction is not null)
+            return await ReseedSequenceCoreAsync(command, tableName, columnName, cancellationToken);
+        return await command.Connection!.ExecuteInTransactionAsync(async (transaction, token) =>
+        {
+            command.Transaction = transaction;
+            try
+            {
+                return await ReseedSequenceCoreAsync(command, tableName, columnName, token);
+            }
+            finally
+            {
+                command.Transaction = null;
+            }
+        }, IsolationLevel.Serializable, cancellationToken);
+    }
+
+    private async Task<bool> ReseedSequenceCoreAsync(DbCommand command, string tableName, string columnName,
+        CancellationToken cancellationToken)
+    {
+        PrepareIdentityCommand(command, tableName, columnName, null);
+        command.Parameters.Clear();
+        command.Parameters.Add(CreateParameter("tableName", tableName));
+        command.Parameters.Add(CreateParameter("columnName", columnName));
+        var temp = await ReadIdentityScalarAsync(command,
+            "SELECT COUNT(*) FROM temp.sqlite_master WHERE type = 'table' AND name = @tableName COLLATE NOCASE", cancellationToken);
+        var database = Convert.ToInt64(temp) > 0 ? "temp" : "main";
+        var definition = await ReadIdentityScalarAsync(command,
+            $"SELECT sql FROM {database}.sqlite_master WHERE type = 'table' AND name = @tableName COLLATE NOCASE", cancellationToken);
+        // Ignore comments, string literals, and delimited identifiers when looking for the SQLite keyword.
+        var tokens = Regex.Replace(Convert.ToString(definition) ?? "",
+            "--[^\\r\\n]*|/\\*[\\s\\S]*?\\*/|'(?:''|[^'])*'|\"(?:\"\"|[^\"])*\"|`(?:``|[^`])*`|\\[[^\\]]*\\]", " ");
+        if (!Regex.IsMatch(tokens, @"\bAUTOINCREMENT\b", RegexOptions.IgnoreCase))
+            return false;
+        var key = await ReadIdentityScalarAsync(command,
+            $"SELECT COUNT(*) FROM pragma_table_info(@tableName, '{database}') WHERE name = @columnName COLLATE NOCASE AND pk = 1 AND upper(type) = 'INTEGER'",
+            cancellationToken);
+        if (Convert.ToInt64(key) == 0)
+            return false;
+        // DELETE restores the empty-table default too. SQLite derives the next ROWID from MAX when no entry exists.
+        command.CommandText = $"DELETE FROM {database}.sqlite_sequence WHERE name = @tableName COLLATE NOCASE";
+        await command.ExecuteNonQueryAsync(cancellationToken);
+        command.CommandText = $"INSERT INTO {database}.sqlite_sequence(name, seq) SELECT name, " +
+            $"MAX(0, COALESCE((SELECT MAX({GetQuotedColumnName(columnName)}) FROM {database}.{GetQuotedTableName(tableName)}), 0)) " +
+            $"FROM {database}.sqlite_master WHERE type = 'table' AND name = @tableName COLLATE NOCASE";
+        await command.ExecuteNonQueryAsync(cancellationToken);
+        return true;
+    }
+
+    /// <inheritdoc />
     public override string BuildTruncateCommandText(string quotedTableName, bool? restartIdentity, bool cascade)
     {
         if (cascade)
@@ -34,23 +86,23 @@ public class SqliteAdapter : SqlAdapterBase
         }, IsolationLevel.Serializable, cancellationToken);
     }
 
-    private async Task<int> DeleteTableAsync(DbCommand command, string tableName, bool restartIdentity, CancellationToken token)
+    private async Task<int> DeleteTableAsync(DbCommand command, string tableName, bool restartIdentity, CancellationToken cancellationToken)
     {
         // Unqualified SQLite names resolve to temp before main. Use that same namespace for
         // both deletion and sequence maintenance; attached databases are outside this API.
         command.Parameters.Add(CreateParameter("tableName", tableName));
         var parameter = GetParameterPlaceholder("tableName");
         command.CommandText = $"SELECT COUNT(*) FROM temp.sqlite_master WHERE type = 'table' AND name = {parameter} COLLATE NOCASE";
-        var database = Convert.ToInt64(await command.ExecuteScalarAsync(token)) != 0 ? "temp" : "main";
+        var database = Convert.ToInt64(await command.ExecuteScalarAsync(cancellationToken)) != 0 ? "temp" : "main";
         command.CommandText = $"DELETE FROM {database}.{GetQuotedTableName(tableName)};";
-        var deleted = await command.ExecuteNonQueryAsync(token);
+        var deleted = await command.ExecuteNonQueryAsync(cancellationToken);
         if (restartIdentity)
         {
             command.CommandText = $"SELECT COUNT(*) FROM {database}.sqlite_master WHERE type = 'table' AND name = 'sqlite_sequence'";
-            if (Convert.ToInt64(await command.ExecuteScalarAsync(token)) != 0)
+            if (Convert.ToInt64(await command.ExecuteScalarAsync(cancellationToken)) != 0)
             {
                 command.CommandText = $"DELETE FROM {database}.sqlite_sequence WHERE name = {parameter} COLLATE NOCASE;";
-                await command.ExecuteNonQueryAsync(token);
+                await command.ExecuteNonQueryAsync(cancellationToken);
             }
         }
         return deleted;

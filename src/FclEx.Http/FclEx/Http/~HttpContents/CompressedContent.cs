@@ -30,7 +30,7 @@ public abstract class CompressedContent : HttpContent
     /// <summary>
     /// Cancellation token used when reading and copying the inner content stream.
     /// </summary>
-    public CancellationToken Token { get; }
+    public CancellationToken CancellationToken { get; }
 
     /// <summary>
     /// Compression level passed to the concrete compression stream.
@@ -42,11 +42,11 @@ public abstract class CompressedContent : HttpContent
     /// Content-Length and any existing Content-Encoding header from the inner content are intentionally not copied.
     /// </summary>
     protected CompressedContent(HttpContent content, string encoding, CompressionLevel compressionLevel,
-        TimeSpan? timeout = null, int? bufferSize = null, CancellationToken token = default)
+        TimeSpan? timeout = null, int? bufferSize = null, CancellationToken cancellationToken = default)
     {
         Content = content;
         Timeout = timeout;
-        Token = token;
+        CancellationToken = cancellationToken;
         BufferSize = bufferSize ?? DefaultBufferSize;
         CompressionLevel = compressionLevel;
         content.Headers.CopyTo(Headers, HttpHeaderNames.ContentLength, HttpHeaderNames.ContentEncoding);
@@ -63,12 +63,12 @@ public abstract class CompressedContent : HttpContent
 #if NET6_0_OR_GREATER
         await
 #endif
-        using var contentStream = await Content.ReadAsStreamAsync(Token);
+        using var contentStream = await Content.ReadAsStreamAsync(CancellationToken);
 #if NET6_0_OR_GREATER
         await
 #endif
         using var compressedStream = CreateCompressedStream(stream);
-        await contentStream.CopyToAsync(compressedStream, BufferSize, Timeout, Token);
+        await contentStream.CopyToAsync(compressedStream, BufferSize, Timeout, CancellationToken);
     }
 
     protected override bool TryComputeLength(out long length)

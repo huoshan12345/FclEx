@@ -8,7 +8,7 @@ Entity Framework Core helpers for FclEx.
 - Update and change-application helpers.
 - Context service-registration helpers.
 - Soft-delete helpers and entity-state utilities.
-- Relational schema and physical-table truncation helpers.
+- Relational schema, physical-table truncation, and identity-sequence synchronization helpers.
 - SSH tunnel helpers for database access during local or integration workflows.
 - Test-model and test-data conveniences used by EF-oriented tests.
 
@@ -73,6 +73,37 @@ none exists so row deletion and sequence reset are atomic. Native transaction se
 follow the database: MySQL and Oracle TRUNCATE cause implicit commits. The helper does
 not retry through an execution strategy. Existing tracked entities remain unchanged;
 clear tracking or use a fresh context before inserting rows that may reuse old keys.
+
+### Synchronizing an identity sequence
+
+```csharp
+bool synchronized = await context.ReseedIdentityAsync<Customer>(cancellationToken);
+await context.ReseedIdentityAsync(typeof(Customer), cancellationToken);
+await context.ReseedIdentityAsync(context.Model.FindEntityType(typeof(Customer))!, cancellationToken);
+```
+
+The model must identify one generated integer primary-key property and exactly one exclusively owned physical
+table, without inheritance or multi-table mapping. Table, schema, and key-column names come from EF metadata,
+including Fluent API mappings and shadow keys. Use the metadata overload for named shared-type entities.
+Returns `false` when the physical table or native identity generator is absent; invalid mappings and database
+errors throw. Query filters and soft-delete rules are bypassed. Pending changes are not saved and tracked
+entities are not updated.
+
+| Database | Synchronization behavior |
+| --- | --- |
+| PostgreSQL 10+ | Sets the owned sequence's next key to MAX + its positive increment; empty tables restart at the sequence start. |
+| SQL Server | Reseeds an ascending identity to MAX; a previously used empty identity restarts at its seed. |
+| MySQL / MariaDB | Requests AUTO_INCREMENT = MAX + 1, or 1 when empty. The engine may retain a higher counter and native increment/offset settings still apply. |
+| SQLite | Resets AUTOINCREMENT to MAX, or zero when empty. Ordinary ROWID returns false; temp shadows main and attached databases are excluded. |
+| Oracle 12.2+ | Uses START WITH LIMIT VALUE, retaining generation mode and identity options; native limit calculation determines the next key. |
+
+The helper uses EF's relational command pipeline, including command interceptors, configured command timeout,
+and the current transaction. An initially closed connection is closed on completion. SQLite starts and commits
+its own transaction when none exists, rolling back both sequence commands on failure. Other providers use native
+rollback rules: PostgreSQL sequence changes survive rollback, and MySQL/Oracle DDL implicitly commit. Maintenance
+commands do not run through an execution-strategy retry. Pause concurrent writes and sequence use during this
+operation; resetting a generator may reuse deleted keys. Client-generated, HiLo, trigger-managed, and unrelated
+standalone sequences are outside the operation's scope.
 
 ### Keywords with LIKE wildcards
 

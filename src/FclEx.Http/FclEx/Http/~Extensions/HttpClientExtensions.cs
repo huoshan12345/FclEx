@@ -68,7 +68,7 @@ public static class HttpClientExtensions
         }
     }
 
-    internal static async Task<IPAddress[]> GetIPAddressesAsync(string host, IPVersionPolicy policy, CancellationToken token)
+    internal static async Task<IPAddress[]> GetIPAddressesAsync(string host, IPVersionPolicy policy, CancellationToken cancellationToken)
     {
 #if NET5_0_OR_GREATER
         var family = policy switch
@@ -90,7 +90,7 @@ public static class HttpClientExtensions
 #if !NET5_0_OR_GREATER
             : (await Dns.GetHostEntryAsync(host)).AddressList;
 #else
-            : (await Dns.GetHostEntryAsync(host, family, token)).AddressList;
+            : (await Dns.GetHostEntryAsync(host, family, cancellationToken)).AddressList;
 #endif
 
         var orderedIps = FilterAndOrderIPAddresses(ips, policy);
@@ -112,7 +112,7 @@ public static class HttpClientExtensions
         return filtered.OrderBy(address => address.AddressFamily, preferIPv6).ToArray();
     }
 
-    internal static async Task<NetworkStream> ConnectAsync(DnsEndPoint endpoint, IEnumerable<IPAddress> addresses, CancellationToken token)
+    internal static async Task<NetworkStream> ConnectAsync(DnsEndPoint endpoint, IEnumerable<IPAddress> addresses, CancellationToken cancellationToken)
     {
         Exception? lastEx = null;
         foreach (var address in addresses)
@@ -125,7 +125,7 @@ public static class HttpClientExtensions
 
             try
             {
-                await socket.ConnectAsync(address, endpoint.Port, token);
+                await socket.ConnectAsync(address, endpoint.Port, cancellationToken);
                 return new NetworkStream(socket, ownsSocket: true);
             }
             catch (Exception ex)
@@ -134,8 +134,8 @@ public static class HttpClientExtensions
                 lastEx = ex;
 
                 if (ex is OperationCanceledException canceledException
-                    && canceledException.CancellationToken == token
-                    && token.IsCancellationRequested)
+                    && canceledException.CancellationToken == cancellationToken
+                    && cancellationToken.IsCancellationRequested)
                 {
                     break;
                 }

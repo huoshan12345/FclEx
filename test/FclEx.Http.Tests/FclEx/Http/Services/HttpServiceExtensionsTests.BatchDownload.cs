@@ -199,10 +199,10 @@ public class HttpServiceExtensionsBatchDownloadTests
 
         public Exception? Exception { get; init; }
 
-        public Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default)
+        public Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken cancellationToken = default)
         {
             Requests.Add(request);
-            Tokens.Add(token);
+            Tokens.Add(cancellationToken);
 
             if (Exception is not null)
                 return Task.FromResult(HttpResponse.FromError(request, Exception));
@@ -227,7 +227,7 @@ public class HttpServiceExtensionsBatchDownloadTests
 
         public IWebProxy? Proxy { get; set; }
 
-        public ILogger Logger { get; set; } = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+        public ILogger Logger { get; set; } = NullLogger.Instance;
 
         public void Dispose() { }
     }

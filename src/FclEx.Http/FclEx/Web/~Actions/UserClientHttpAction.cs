@@ -24,8 +24,8 @@ public abstract class UserClientHttpAction<TClient, TAccount, T>(TClient client)
     public abstract OperationResult<T> GetResult(HttpResponse response);
 
     /// <inheritdoc />
-    public virtual Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken token = default)
-        => DefaultHttpAction.GetResponseAsync(this, request, token);
+    public virtual Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken cancellationToken = default)
+        => DefaultHttpAction.GetResponseAsync(this, request, cancellationToken);
 
     /// <inheritdoc />
     public virtual Task<OperationResult<HttpResponse>> HandleResponseAsync(HttpResponse response)
@@ -42,8 +42,8 @@ public abstract class UserClientHttpAction<TClient, TAccount, T>(TClient client)
         => DefaultHttpResponseHandler.GetResultAsync(this, response);
 
     /// <inheritdoc />
-    public override Task<OperationResult<T>> ExecuteCoreAsync(CancellationToken token = default)
-        => DefaultHttpAction.ExecuteCoreAsync(this, token);
+    public override Task<OperationResult<T>> ExecuteCoreAsync(CancellationToken cancellationToken = default)
+        => DefaultHttpAction.ExecuteCoreAsync(this, cancellationToken);
 }
 
 /// <summary>

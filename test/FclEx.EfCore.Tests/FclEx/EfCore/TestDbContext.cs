@@ -1,5 +1,3 @@
-using System.Collections.Concurrent;
-
 #if NET10_0_OR_GREATER
 using Microting.EntityFrameworkCore.MySql.Infrastructure.Internal;
 using Microting.EntityFrameworkCore.MySql.Storage.Internal;
@@ -31,13 +29,20 @@ public class TestDbContext(
     public DbSet<EntityWithAutoKey> EntityWithAutoKey { get; set; }
     public DbSet<EntityWithGuidKey> EntityWithGuidKey { get; set; }
     public DbSet<EntityWithoutKey> EntityWithoutKey { get; set; }
-
     public DbSet<HasPostfixEntity> HasPostfix { get; set; }
     public DbSet<HasTableAttributeEntity> HasTableAttribute { get; set; }
     public DbSet<EntityWithIdAndIndex> EntityWithIdAndIndex { get; set; }
-
     public DbSet<EntityHasStates> EntityHasStates { get; set; }
     public DbSet<EntityWithNavigation> EntityWithNavigation { get; set; }
+
+    public DbSet<TruncateRow> TruncateRow { get; set; }
+    public DbSet<TruncateOtherRow> TruncateOtherRow { get; set; }
+    public DbSet<TruncateManualRow> TruncateManualRow { get; set; }
+    public DbSet<TruncateKeylessRow> TruncateKeylessRow { get; set; }
+    public DbSet<TruncateAttributedRow> TruncateAttributedRow { get; set; }
+    public DbSet<TruncateParent> TruncateParent { get; set; }
+    public DbSet<TruncateChild> TruncateChild { get; set; }
+    public DbSet<TruncateIsolationRow> TruncateIsolationRow { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder builder)
     {
@@ -95,6 +100,8 @@ public class TestDbContext(
 
         modelBuilder.Entity<EntityWithoutKey>().HasNoKey();
 
+        modelBuilder.Entity<TruncateKeylessRow>().HasNoKey();
+
         modelBuilder.Entity<EntityWithIdAndIndex>(e =>
         {
             e.HasIndex(m => m.Name).IsUnique();
@@ -105,6 +112,12 @@ public class TestDbContext(
             .HasOne(m => m.Navigation)
             .WithMany()
             .HasForeignKey(m => m.NavigationId);
+
+        modelBuilder.Entity<TruncateChild>()
+            .HasOne<TruncateParent>()
+            .WithMany()
+            .HasForeignKey(row => row.ParentId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)

@@ -15,13 +15,30 @@ public class SlackSink : IBatchedLogEventSink
     private readonly string _channel;
     private const int MaxLength = 2950;
 
-    private static readonly JsonFormatterOptions _formatterOptions = new();
+    private static readonly JsonFormatterOptions _formatterOptions = new() { ExceptionFormatOptions = new() { MaxMessageLength = 2048 } };
     private static readonly JsonFormatter _formatter = new(_formatterOptions);
 
     public SlackSink(string token, string channel)
     {
         _channel = channel;
         _client = CreateApiClient(token);
+    }
+
+    /// <summary>
+    /// Creates a batched Slack sink using an existing API client.
+    /// </summary>
+    /// <param name="client">The client used to post messages. The sink does not dispose this client.</param>
+    /// <param name="channel">The destination Slack channel name or ID.</param>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="client"/> or <paramref name="channel"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="ArgumentException"><paramref name="channel"/> is empty.</exception>
+    public SlackSink(ISlackApiClient client, string channel)
+    {
+        Check.NotNull(client);
+        Check.NotEmpty(channel);
+        _client = client;
+        _channel = channel;
     }
 
     internal static ISlackApiClient CreateApiClient(string token)
@@ -127,8 +144,13 @@ public class SlackSink : IBatchedLogEventSink
         var lines = json.GetProperty(_formatterOptions.ExceptionName).Deserialize<string[]>() ?? [];
 
         builder.Append("@x: ");
-        foreach (var line in lines)
+
+        foreach (var (item, count) in lines.CountAdjacent())
         {
+            var line = count > 1
+                ? $"{item} (x{count})"
+                : item;
+
             if (builder.AppendLimited(line, MaxLength) == false)
                 return;
 

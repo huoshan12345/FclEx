@@ -14,10 +14,10 @@ public static class StreamExtensions
     public static async Task<byte[]> ReadAllBytesAsync(this Stream stream,
         int? bufferSize = null,
         TimeSpan? bufferTransferTimeout = null,
-        CancellationToken token = default)
+        CancellationToken cancellationToken = default)
     {
         using var memoryStream = new MemoryStream();
-        await stream.CopyToAsync(memoryStream, bufferSize ?? DefaultBufferSize, bufferTransferTimeout, token);
+        await stream.CopyToAsync(memoryStream, bufferSize ?? DefaultBufferSize, bufferTransferTimeout, cancellationToken);
         return memoryStream.ToArray();
     }
 
@@ -27,17 +27,17 @@ public static class StreamExtensions
     /// <param name="detectEncodingFromByteOrderMarks">Whether a byte-order mark can override <paramref name="encoding"/>.</param>
     /// <param name="bufferSize">The reader buffer size, or the library default when <see langword="null"/>.</param>
     /// <param name="leaveOpen">Whether to leave <paramref name="stream"/> open after reading. The default is <see langword="true"/>.</param>
-    /// <param name="token">The cancellation token for the read operation.</param>
+    /// <param name="cancellationToken">The cancellation token for the read operation.</param>
     /// <returns>The text read from the stream's current position to its end.</returns>
     public static async Task<string> ReadAllTextAsync(this Stream stream,
         Encoding? encoding = null,
         bool detectEncodingFromByteOrderMarks = true,
         int? bufferSize = null,
         bool leaveOpen = true,
-        CancellationToken token = default)
+        CancellationToken cancellationToken = default)
     {
         using var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, detectEncodingFromByteOrderMarks, bufferSize ?? DefaultBufferSize, leaveOpen);
-        var text = await reader.ReadToEndAsync(token);
+        var text = await reader.ReadToEndAsync(cancellationToken);
         return text;
     }
 
@@ -56,14 +56,14 @@ public static class StreamExtensions
         Stream dest,
         int? bufferSize = null,
         TimeSpan? bufferTransferTimeout = null,
-        CancellationToken token = default)
+        CancellationToken cancellationToken = default)
     {
         using var disposable = ArrayPool<byte>.Shared.GetPooled(bufferSize ?? DefaultBufferSize);
         var buffer = disposable.Value;
 
         while (true)
         {
-            using var cts = token.WithTimeout(bufferTransferTimeout);
+            using var cts = cancellationToken.WithTimeout(bufferTransferTimeout);
             var bytesCopied = await source.ReadAsync(buffer, 0, buffer.Length, cts.Token);
             if (bytesCopied <= 0)
                 break;

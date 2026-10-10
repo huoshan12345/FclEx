@@ -45,7 +45,7 @@ public abstract class HttpClientServiceBase : HttpServiceBase
         }
     }
 
-    protected virtual async Task ReadContentAsync(HttpResponseMessage responseMessage, HttpResponse response, CancellationToken token)
+    protected virtual async Task ReadContentAsync(HttpResponseMessage responseMessage, HttpResponse response, CancellationToken cancellationToken)
     {
         var request = response.Request;
         foreach (var (key, value) in responseMessage.Content.Headers)
@@ -57,18 +57,18 @@ public abstract class HttpClientServiceBase : HttpServiceBase
         {
             case HttpContentType.Stream:
             {
-                var stream = await responseMessage.Content.ReadAsStreamAsync(token);
+                var stream = await responseMessage.Content.ReadAsStreamAsync(cancellationToken);
                 response.ResponseStream = new HttpResponseStream(responseMessage, stream);
                 break;
             }
             case HttpContentType.Bytes:
             {
-                response.ResponseBytes = await responseMessage.Content.ReadAsByteArrayAsync(request.BufferSize, request.ReadBufferTimeout, token);
+                response.ResponseBytes = await responseMessage.Content.ReadAsByteArrayAsync(request.BufferSize, request.ReadBufferTimeout, cancellationToken);
                 break;
             }
             case HttpContentType.String:
             {
-                var bytes = await responseMessage.Content.ReadAsByteArrayAsync(request.BufferSize, request.ReadBufferTimeout, token);
+                var bytes = await responseMessage.Content.ReadAsByteArrayAsync(request.BufferSize, request.ReadBufferTimeout, cancellationToken);
                 (response.ResponseString, response.Encoding) = ReadBufferAsString(
                     buffer: bytes,
                     headers: responseMessage.Content.Headers,
@@ -110,8 +110,13 @@ public abstract class HttpClientServiceBase : HttpServiceBase
         };
     }
 
-    protected virtual (string, Encoding) ReadBufferAsString(Span<byte> buffer, HttpContentHeaders headers,
-        string? charSet, bool detectCharSet, string? defaultCharSet, bool ignoreInvalidCharSet)
+    protected virtual (string, Encoding) ReadBufferAsString(
+        Span<byte> buffer,
+        HttpContentHeaders headers,
+        string? charSet,
+        bool detectCharSet,
+        string? defaultCharSet,
+        bool ignoreInvalidCharSet)
     {
         charSet = (charSet, headers.ContentType?.CharSet).FirstNotEmpty();
         // We don't validate the Content-Encoding header: If the content was encoded, it's the caller's
@@ -174,7 +179,12 @@ public abstract class HttpClientServiceBase : HttpServiceBase
         return GetEncodingFromCharSet(charSet, ignoreInvalidCharSet);
     }
 
-    protected internal static HttpRequestMessage BuildHttpRequest(HttpRequest request, BufferedContent? content, Uri? baseAddress, CookieContainer cc, CancellationToken token)
+    protected internal static HttpRequestMessage BuildHttpRequest(
+        HttpRequest request,
+        BufferedContent? content,
+        Uri? baseAddress,
+        CookieContainer cc, 
+        CancellationToken cancellationToken)
     {
         var uri = request.GetUri();
         var requestMessage = new HttpRequestMessage(request.Method, uri)
@@ -198,7 +208,7 @@ public abstract class HttpClientServiceBase : HttpServiceBase
 
             if (requestMessage.Content is { } requestContent)
             {
-                requestMessage.Content = requestContent.ToCompressed(request.CompressionMethod, request.CompressionLevel, request.ReadBufferTimeout, request.BufferSize, token);
+                requestMessage.Content = requestContent.ToCompressed(request.CompressionMethod, request.CompressionLevel, request.ReadBufferTimeout, request.BufferSize, cancellationToken);
             }
 
             if (requestMessage.Content?.Headers is { ContentType: { } contentType })
@@ -253,7 +263,11 @@ public abstract class HttpClientServiceBase : HttpServiceBase
         return requestMessage;
     }
 
-    protected virtual async Task<HttpResponseMessage> SendAsync(HttpClientContext context, HttpRequest request, BufferedContent? bufferedContent, CancellationToken token)
+    protected virtual async Task<HttpResponseMessage> SendAsync(
+        HttpClientContext context,
+        HttpRequest request,
+        BufferedContent? bufferedContent, 
+        CancellationToken cancellationToken)
     {
         var (client, policy, _) = context;
         var response = await policy.ExecuteAsync(async t =>
@@ -263,7 +277,7 @@ public abstract class HttpClientServiceBase : HttpServiceBase
             using var cts = t.WithTimeout(request.ReadHeadersTimeout);
             using var httpRequest = BuildHttpRequest(request, bufferedContent, client.BaseAddress, _cookieContainer, cts.Token);
             return await client.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cts.Token);
-        }, token);
+        }, cancellationToken);
         return response;
     }
 
@@ -334,9 +348,9 @@ public abstract class HttpClientServiceBase : HttpServiceBase
     // ReSharper disable once MemberCanBeProtected.Global
     protected internal abstract HttpClientContext CreateHttpClientContext();
 
-    protected override async Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken token)
+    protected override async Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken cancellationToken)
     {
-        var cts = token.WithTimeout(request.TotalTimeout);
+        var cts = cancellationToken.WithTimeout(request.TotalTimeout);
         var context = CreateHttpClientContext();
         var bufferedContent = await request.CreateBufferedContentAsync(cts.Token);
         var responses = new List<HttpResponseMessage>();

@@ -40,7 +40,7 @@ public abstract class UserClientAction<TClient, TAccount, T> :
     public ILogger Logger { get; }
 #if NET6_0_OR_GREATER
     /// <inheritdoc />
-    public abstract Task<OperationResult<T>> ExecuteCoreAsync(CancellationToken token = default);
+    public abstract Task<OperationResult<T>> ExecuteCoreAsync(CancellationToken cancellationToken = default);
 #endif
 }
 

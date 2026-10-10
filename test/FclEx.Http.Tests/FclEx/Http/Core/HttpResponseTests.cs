@@ -334,7 +334,7 @@ public class HttpResponseTests : HttpServerTests
         Assert.Equal(options.ReadHeadersTimeout, service.Request.ReadHeadersTimeout);
         Assert.Equal(options.ReadBufferTimeout, service.Request.ReadBufferTimeout);
         Assert.Contains("gzip", service.Request.Headers.Get(HttpHeaderNames.AcceptEncoding)!);
-        Assert.Equal(cts.Token, service.Token);
+        Assert.Equal(cts.Token, service.CancellationToken);
         Assert.True(content.IsDisposed);
     }
 
@@ -420,14 +420,14 @@ public class HttpResponseTests : HttpServerTests
     private sealed class CaptureHttpService(Func<HttpRequest, HttpResponse> responseFactory) : IHttpService
     {
         public HttpRequest? Request { get; private set; }
-        public CancellationToken Token { get; private set; }
+        public CancellationToken CancellationToken { get; private set; }
         public IWebProxy? Proxy { get; set; }
-        public ILogger Logger { get; set; } = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+        public ILogger Logger { get; set; } = NullLogger.Instance;
 
-        public Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default)
+        public Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken cancellationToken = default)
         {
             Request = request;
-            Token = token;
+            CancellationToken = cancellationToken;
             return Task.FromResult(responseFactory(request));
         }
 

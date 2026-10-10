@@ -25,20 +25,9 @@ partial class DbContextExtensions
     /// </summary>
     /// <param name="context">The context used for both save operations.</param>
     /// <param name="types">Entity CLR types with public parameterless constructors.</param>
-    /// <returns>A task that completes after the inserted entities have been removed and both changes have been saved.</returns>
-    public static async Task TestEntities(this DbContext context, params Type[] types)
-    {
-        await context.TestEntities(default, types);
-    }
-
-    /// <summary>
-    /// Verifies that default instances of the supplied entity types can be inserted and then deleted.
-    /// </summary>
-    /// <param name="context">The context used for both save operations.</param>
     /// <param name="cancellationToken">A token observed by both save operations.</param>
-    /// <param name="types">Entity CLR types with public parameterless constructors.</param>
     /// <returns>A task that completes after the inserted entities have been removed and both changes have been saved.</returns>
-    public static async Task TestEntities(this DbContext context, CancellationToken cancellationToken, params Type[] types)
+    public static async Task TestEntities(this DbContext context, Type[] types, CancellationToken cancellationToken = default)
     {
         var disposable = types.Select(m => _methodTestEntity.MakeGenericMethod(m).Invoke(null, [context]))
             .Cast<IDisposable>()

@@ -129,8 +129,8 @@ partial class HttpRequestExtensions
     /// Buffers the current request content so it can be reused for retries or redirects.
     /// The request's read-buffer timeout and buffer size are used while copying.
     /// </summary>
-    public static Task<BufferedContent?> CreateBufferedContentAsync(this HttpRequest request, CancellationToken token = default)
+    public static Task<BufferedContent?> CreateBufferedContentAsync(this HttpRequest request, CancellationToken cancellationToken = default)
     {
-        return request.Content.ToBufferedContentAsync(request.ReadBufferTimeout, request.BufferSize, token);
+        return request.Content.ToBufferedContentAsync(request.ReadBufferTimeout, request.BufferSize, cancellationToken);
     }
 }

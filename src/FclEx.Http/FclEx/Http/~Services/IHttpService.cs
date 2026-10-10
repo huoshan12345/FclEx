@@ -9,9 +9,9 @@ public interface IHttpService : IDisposable
     /// Sends a request and returns an <see cref="HttpResponse"/> that represents the transport outcome.
     /// </summary>
     /// <param name="request">The request to send.</param>
-    /// <param name="token">A cancellation token for the send operation.</param>
+    /// <param name="cancellationToken">A cancellation token for the send operation.</param>
     /// <returns>The response object. Implementations may store non-cancellation failures in <see cref="HttpResponse.Exception"/>.</returns>
-    Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default);
+    Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Adds a cookie to the service cookie store.

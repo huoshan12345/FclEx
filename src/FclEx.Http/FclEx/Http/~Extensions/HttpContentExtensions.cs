@@ -11,9 +11,9 @@ public static class HttpContentExtensions
     /// Compatibility overload that accepts a cancellation token on target frameworks where <see cref="HttpContent.ReadAsStreamAsync()"/> has no token overload.
     /// The token can cancel the returned task before or during the async operation only where the underlying framework cooperates.
     /// </summary>
-    public static async Task<Stream> ReadAsStreamAsync(this HttpContent content, CancellationToken token)
+    public static async Task<Stream> ReadAsStreamAsync(this HttpContent content, CancellationToken cancellationToken)
     {
-        // NOTE: do not call ReadAsStreamAsync(this HttpContent content, int bufferSize, TimeSpan? bufferTransferTimeout, CancellationToken token)
+        // NOTE: do not call ReadAsStreamAsync(this HttpContent content, int bufferSize, TimeSpan? bufferTransferTimeout, CancellationToken cancellationToken)
         // to avoid circular call.
         return await content.ReadAsStreamAsync();
     }
@@ -22,9 +22,9 @@ public static class HttpContentExtensions
     /// Compatibility overload that reads content as a string with a cancellation token.
     /// The content is first read through the timeout-aware stream helper used by this package.
     /// </summary>
-    public static async Task<string> ReadAsStringAsync(this HttpContent content, CancellationToken token)
+    public static async Task<string> ReadAsStringAsync(this HttpContent content, CancellationToken cancellationToken)
     {
-        using var stream = await content.ReadAsStreamAsync(null, null, token);
+        using var stream = await content.ReadAsStreamAsync(null, null, cancellationToken);
         using var sr = new StreamReader(stream, true);
         return await sr.ReadToEndAsync();
     }
@@ -32,9 +32,9 @@ public static class HttpContentExtensions
     /// <summary>
     /// Compatibility overload that reads content as bytes with a cancellation token.
     /// </summary>
-    public static Task<byte[]> ReadAsByteArrayAsync(this HttpContent content, CancellationToken token)
+    public static Task<byte[]> ReadAsByteArrayAsync(this HttpContent content, CancellationToken cancellationToken)
     {
-        return content.ReadAsByteArrayAsync(null, null, token);
+        return content.ReadAsByteArrayAsync(null, null, cancellationToken);
     }
 #endif
 
@@ -42,7 +42,11 @@ public static class HttpContentExtensions
     /// Reads content into a seekable <see cref="MemoryStream"/>.
     /// The method pre-allocates from Content-Length when available and throws when that length exceeds <see cref="int.MaxValue"/>.
     /// </summary>
-    public static async Task<MemoryStream> ReadAsStreamAsync(this HttpContent content, int? bufferSize, TimeSpan? bufferTransferTimeout, CancellationToken token)
+    public static async Task<MemoryStream> ReadAsStreamAsync(
+        this HttpContent content,
+        int? bufferSize,
+        TimeSpan? bufferTransferTimeout,
+        CancellationToken cancellationToken = default)
     {
         var len = content.Headers.ContentLength ?? 0;
         if (len > int.MaxValue)
@@ -52,9 +56,9 @@ public static class HttpContentExtensions
 #if NET5_0_OR_GREATER
         await
 #endif
-        using (var stream = await content.ReadAsStreamAsync(token))
+        using (var stream = await content.ReadAsStreamAsync(cancellationToken))
         {
-            await stream.CopyToAsync(ms, bufferSize, bufferTransferTimeout, token);
+            await stream.CopyToAsync(ms, bufferSize, bufferTransferTimeout, cancellationToken);
         }
         ms.Seek(0, SeekOrigin.Begin);
         return ms;
@@ -63,12 +67,16 @@ public static class HttpContentExtensions
     /// <summary>
     /// Reads content into a byte array using the optional copy buffer size and per-buffer transfer timeout.
     /// </summary>
-    public static async Task<byte[]> ReadAsByteArrayAsync(this HttpContent content, int? bufferSize, TimeSpan? bufferTransferTimeout, CancellationToken token)
+    public static async Task<byte[]> ReadAsByteArrayAsync(
+        this HttpContent content,
+        int? bufferSize,
+        TimeSpan? bufferTransferTimeout,
+        CancellationToken cancellationToken = default)
     {
 #if NET5_0_OR_GREATER
         await
 #endif
-        using var ms = await content.ReadAsStreamAsync(bufferSize, bufferTransferTimeout, token);
+        using var ms = await content.ReadAsStreamAsync(bufferSize, bufferTransferTimeout, cancellationToken);
         return ms.ToArray();
     }
 
@@ -76,42 +84,59 @@ public static class HttpContentExtensions
     /// Wraps content so it is GZip-compressed while being serialized.
     /// Disposing the returned wrapper also disposes the original content.
     /// </summary>
-    public static GZipContent ToGZip(this HttpContent content, CompressionLevel compressionLevel = CompressionLevel.Optimal,
-        TimeSpan? timeout = null, int? bufferSize = null, CancellationToken token = default)
-        => new(content, compressionLevel, timeout, bufferSize, token);
+    public static GZipContent ToGZip(
+        this HttpContent content,
+        CompressionLevel compressionLevel = CompressionLevel.Optimal,
+        TimeSpan? timeout = null,
+        int? bufferSize = null,
+        CancellationToken cancellationToken = default)
+        => new(content, compressionLevel, timeout, bufferSize, cancellationToken);
 
 #if NET5_0_OR_GREATER
     /// <summary>
     /// Wraps content so it is Brotli-compressed while being serialized.
     /// Disposing the returned wrapper also disposes the original content.
     /// </summary>
-    public static BrotliContent ToBrotli(this HttpContent content, CompressionLevel compressionLevel = CompressionLevel.Optimal,
-        TimeSpan? timeout = null, int? bufferSize = 256 * 1024, CancellationToken token = default)
-        => new(content, compressionLevel, timeout, bufferSize, token);
+    public static BrotliContent ToBrotli(
+        this HttpContent content, 
+        CompressionLevel compressionLevel = CompressionLevel.Optimal,
+        TimeSpan? timeout = null, 
+        int? bufferSize = 256 * 1024, 
+        CancellationToken cancellationToken = default)
+        => new(content, compressionLevel, timeout, bufferSize, cancellationToken);
 #endif
 
     /// <summary>
     /// Wraps content so it is deflate-compressed while being serialized.
     /// Disposing the returned wrapper also disposes the original content.
     /// </summary>
-    public static DeflateContent ToDeflate(this HttpContent content, CompressionLevel compressionLevel = CompressionLevel.Optimal,
-        TimeSpan? timeout = null, int? bufferSize = null, CancellationToken token = default)
-        => new(content, compressionLevel, timeout, bufferSize, token);
+    public static DeflateContent ToDeflate(
+        this HttpContent content,
+        CompressionLevel compressionLevel = CompressionLevel.Optimal,
+        TimeSpan? timeout = null,
+        int? bufferSize = null,
+        CancellationToken cancellationToken = default)
+        => new(content, compressionLevel, timeout, bufferSize, cancellationToken);
 
     /// <summary>
     /// Applies the selected compression wrapper to content.
     /// <see cref="CompressionMethod.None"/> returns the original content instance unchanged.
     /// </summary>
-    public static HttpContent ToCompressed(this HttpContent content, CompressionMethod compressionMethod, CompressionLevel compressionLevel = CompressionLevel.Optimal,
-        TimeSpan? timeout = null, int? bufferSize = null, CancellationToken token = default)
+    public static HttpContent ToCompressed(
+        this HttpContent content,
+        CompressionMethod compressionMethod,
+        CompressionLevel compressionLevel = CompressionLevel.Optimal,
+        TimeSpan? timeout = null,
+        int? bufferSize = null,
+        CancellationToken cancellationToken = default)
     {
         return compressionMethod switch
         {
             CompressionMethod.None => content,
-            CompressionMethod.GZip => content.ToGZip(compressionLevel, timeout, bufferSize, token),
-            CompressionMethod.Deflate => content.ToDeflate(compressionLevel, timeout, bufferSize, token),
+            CompressionMethod.GZip => content.ToGZip(compressionLevel, timeout, bufferSize, cancellationToken),
+            CompressionMethod.Deflate => content.ToDeflate(compressionLevel, timeout, bufferSize, cancellationToken),
 #if NET6_0_OR_GREATER
-            CompressionMethod.Brotli => content.ToBrotli(compressionLevel, timeout, bufferSize, token),
+            CompressionMethod.Brotli => content.ToBrotli(compressionLevel, timeout, bufferSize, cancellationToken),
 #endif
             _ => throw new ArgumentOutOfRangeException(nameof(compressionMethod), compressionMethod, null)
         };
@@ -121,14 +146,17 @@ public static class HttpContentExtensions
     /// Converts content to reusable in-memory <see cref="BufferedContent"/>.
     /// Existing <see cref="BufferedContent"/> is returned unchanged; <see langword="null"/> content remains <see langword="null"/>.
     /// </summary>
-    public static async Task<BufferedContent?> ToBufferedContentAsync(this HttpContent? content,
-        TimeSpan? timeout = null, int? bufferSize = null, CancellationToken token = default)
+    public static async Task<BufferedContent?> ToBufferedContentAsync(
+        this HttpContent? content,
+        TimeSpan? timeout = null,
+        int? bufferSize = null,
+        CancellationToken cancellationToken = default)
     {
         return content switch
         {
             null => null,
             BufferedContent bufferedContent => bufferedContent,
-            _ => await BufferedContent.CreateAsync(content, timeout, bufferSize, token),
+            _ => await BufferedContent.CreateAsync(content, timeout, bufferSize, cancellationToken),
         };
     }
 

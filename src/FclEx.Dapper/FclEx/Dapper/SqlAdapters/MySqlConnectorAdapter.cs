@@ -6,6 +6,25 @@ namespace FclEx.Dapper.SqlAdapters;
 public class MySqlConnectorAdapter : SqlAdapterBase
 {
     /// <inheritdoc />
+    public override async Task<bool> ReseedIdentityAsync(DbCommand command, string tableName, string columnName,
+        string? schema, CancellationToken cancellationToken = default)
+    {
+        var table = PrepareIdentityCommand(command, tableName, columnName, schema);
+        var count = await ReadIdentityScalarAsync(command,
+            "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = COALESCE(@schema, DATABASE()) " +
+            "AND table_name = @tableName AND column_name = @columnName AND extra LIKE '%auto_increment%'", cancellationToken);
+        if (Convert.ToInt64(count) == 0)
+            return false;
+        var maximum = await ReadIdentityScalarAsync(command,
+            $"SELECT MAX({GetQuotedColumnName(columnName)}) FROM {table}", cancellationToken);
+        var next = maximum is null or DBNull ? 1m : Math.Max(1m, checked(Convert.ToDecimal(maximum) + 1m));
+        command.Parameters.Clear();
+        command.CommandText = $"ALTER TABLE {table} AUTO_INCREMENT = {next.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+        await command.ExecuteNonQueryAsync(cancellationToken);
+        return true;
+    }
+
+    /// <inheritdoc />
     public override string BuildTruncateCommandText(string quotedTableName, bool? restartIdentity, bool cascade)
     {
         if (restartIdentity == false || cascade)

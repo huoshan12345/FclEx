@@ -8,9 +8,9 @@ public class ExceptionFormatOptions
 {
     /// <summary>
     /// The maximum length of the exception message.
-    /// Defaults to 100 if not set.
+    /// Defaults to <see langword="null" /> if not set.
     /// </summary>
-    public int? MaxMessageLength { get; set; } = 100;
+    public int? MaxMessageLength { get; set; } = null;
 
     /// <summary>
     /// Determines whether parameters are omitted in the stack trace output.

@@ -7,14 +7,14 @@ public class EfCoreFixture : CoreTestsFixture
         .Select(schema => WithAssemblyInfo(schema, typeof(EfCoreFixture).Assembly)).ToArray();
 
     public TestDatabaseEnvironment DatabaseEnvironment { get; }
-    public TruncateTestTables TruncateTables { get; }
+    public TruncateTestSessions TruncateSessions { get; }
     public DatabaseUser DefaultUser => DatabaseEnvironment.DefaultUser;
 
     public EfCoreFixture()
     {
         DatabaseEnvironment = new(Databases, WithAssemblyInfo(DatabaseName),
             new(WithAssemblyInfo(DefaultUserName), DefaultUserPassword, WithAssemblyInfo(UserSchema)));
-        TruncateTables = new(DatabaseEnvironment);
+        TruncateSessions = new(DatabaseEnvironment);
     }
 
     public TestDatabaseTarget ResolveTarget(DbDriver driver, string? schema = null, TestLogin login = TestLogin.Standard)
@@ -28,12 +28,10 @@ public class EfCoreFixture : CoreTestsFixture
         if (SelectedDrivers.Contains(DbDriver.Sqlite))
             await DatabaseEnvironment.InitializeSqliteAsync();
 
-        await TruncateTables.InitializeAsync(Schemas);
-
         foreach (var (driver, schema) in GetDriverSchemaCases(Schemas))
         {
             await using var connection = ResolveTarget(driver, schema: schema).CreateConnection();
-            await SynchronizeIdentitySequenceAsync<EntityWithAutoKey>(connection, driver, schema);
+            await connection.ReseedIdentityAsync<EntityWithAutoKey>(schema);
         }
     }
 

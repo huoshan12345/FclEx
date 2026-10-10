@@ -35,10 +35,10 @@ public partial class TruncateTests
     }
 
     [Fact]
-    public void TruncateDialect_RejectsUnknownConnectionTypes()
+    public void RelationalDialect_RejectsUnknownConnectionTypes()
     {
         var exception = Assert.Throws<NotSupportedException>(() =>
-            FclEx.EfCore.DbContextExtensions.GetTruncateDialect(typeof(DbConnection)));
+            FclEx.EfCore.DbContextExtensions.GetRelationalDialect(typeof(DbConnection)));
         Assert.Contains(typeof(DbConnection).FullName!, exception.Message);
     }
 
@@ -84,7 +84,7 @@ public partial class TruncateTests
         });
     }
 
-    private static DbContext CreateModelContext(TestDbContext reference, Action<ModelBuilder> configureModel)
+    internal static DbContext CreateModelContext(TestDbContext reference, Action<ModelBuilder> configureModel)
     {
         var builder = new ModelBuilder(ConventionSet.CreateConventionSet(reference));
         // The convention set initially discovers TestDbContext's DbSets. These alternative
@@ -99,8 +99,6 @@ public partial class TruncateTests
             ((IDbContextOptionsBuilderInfrastructure)options).AddOrUpdateExtension(extension);
         options.UseModel(model);
         var context = new DbContext(options.Options);
-        // Temporary tables must share the open session. Validation-only models retain
-        // their own connection so disposing their short-lived reference does not dispose it.
         if (reference.Database.GetDbConnection().State == ConnectionState.Open)
             context.Database.SetDbConnection(reference.Database.GetDbConnection());
         return context;

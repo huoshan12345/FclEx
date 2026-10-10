@@ -195,7 +195,7 @@ public class UserClientFactoryTests : WebTests
     private sealed class TestGenericUserClient(TestAccount account, ILoggerFactory loggerFactory)
         : UserClient<TestAccount>(account, loggerFactory)
     {
-        protected override Task<OperationResult> LoginActionAsync(CancellationToken token)
+        protected override Task<OperationResult> LoginActionAsync(CancellationToken cancellationToken)
         {
             return Operation.Success();
         }

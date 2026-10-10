@@ -20,17 +20,17 @@ public abstract class HttpServiceBase : IHttpService
         GC.SuppressFinalize(this);
     }
 
-    protected abstract Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken token);
+    protected abstract Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken cancellationToken);
 
     /// <inheritdoc />
-    public async Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default)
+    public async Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken cancellationToken = default)
     {
-        token.ThrowIfCancellationRequested();
+        cancellationToken.ThrowIfCancellationRequested();
         var watch = ValueStopwatch.StartNew();
         var response = new HttpResponse(request) { StartTime = DateTimeOffset.UtcNow };
         try
         {
-            await ExecuteAsyncInternal(request, response, token);
+            await ExecuteAsyncInternal(request, response, cancellationToken);
         }
         catch (Exception e)
         {

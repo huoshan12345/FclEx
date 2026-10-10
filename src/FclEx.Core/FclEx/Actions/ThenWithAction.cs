@@ -19,12 +19,12 @@ public class ThenWithAction<T, TNext> : IAction<(T, TNext)>
     /// <summary>
     /// Executes the source action and then the next action, returning both values.
     /// </summary>
-    /// <param name="token">The cancellation token passed to both actions.</param>
+    /// <param name="cancellationToken">The cancellation token passed to both actions.</param>
     /// <returns>A tuple of both successful values, or a failure result.</returns>
     /// <remarks>The next action is not created when the source action fails.</remarks>
-    public async Task<OperationResult<(T, TNext)>> ExecuteAsync(CancellationToken token = default)
+    public async Task<OperationResult<(T, TNext)>> ExecuteAsync(CancellationToken cancellationToken = default)
     {
-        var result = await _action.ExecuteAsync(token);
+        var result = await _action.ExecuteAsync(cancellationToken);
         if (result.IsSuccess == false)
             return result.Cast<(T, TNext)>();
 
@@ -35,7 +35,7 @@ public class ThenWithAction<T, TNext> : IAction<(T, TNext)>
             return (Constants.NullNextError, result.Elapsed);
         }
 
-        var nextResult = await nextActor.ExecuteAsync(token);
+        var nextResult = await nextActor.ExecuteAsync(cancellationToken);
         return nextResult.IsSuccess
             ? ((item, nextResult.Value), result.Elapsed + nextResult.Elapsed)
             : nextResult.Cast<(T, TNext)>().AddElapsed(result.Elapsed);

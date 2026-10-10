@@ -1,42 +1,28 @@
 namespace FclEx.Databases;
 
-/// <summary>Owns one connection and the isolated tables used by a truncate test.</summary>
-/// <remarks>Temporary tables stay on this open connection. Oracle tables are leased from a fixture-owned pool.</remarks>
-public sealed class TruncateTestSession : IDisposable, IEntityMappingSource
+/// <summary>Owns a truncate test's connection and exclusive leases on existing ordinary tables.</summary>
+public sealed class TruncateTestSession : IDisposable
 {
-    private readonly Action? _release;
+    private readonly Action _release;
     private bool _disposed;
 
     public DbConnection Connection { get; }
     public DbDriver Driver { get; }
     public string? Schema { get; }
-    public string TablePrefix { get; }
-    public CommandOptions CommandOptions => new() { EntityMappingSource = this };
-
-    internal TruncateTestSession(DbConnection connection, DbDriver driver, string? schema, string prefix, Action? release = null)
+    internal TruncateTestSession(DbConnection connection, DbDriver driver, string? schema, Action release)
     {
         Connection = connection;
         Driver = driver;
         Schema = schema;
-        TablePrefix = prefix;
         _release = release;
     }
 
-    public string GetTableName(Type entityType) => TablePrefix + DapperHelper.GetEntityMapping(entityType).TableName;
-
-    public EntityMapping GetMapping(Type entityType)
-    {
-        var original = DapperHelper.GetEntityMapping(entityType);
-        var properties = original.Properties.Select(property => property.Property.Name == "Id"
-            && (entityType == typeof(EntityHasStates) || entityType == typeof(EntityWithNavigation)
-                || entityType == typeof(EntityWithIdAndIndex))
-            ? new PropertyMapping(property.Property, property.ColumnName, true, DatabaseValueGeneration.OnInsert)
-            : property);
-        return new(entityType, GetTableName(entityType), properties, Schema);
-    }
+#pragma warning disable CA1822 // Mark members as static
+    public string GetTableName(Type entityType) => DapperHelper.GetEntityMapping(entityType).TableName;
+#pragma warning restore CA1822 // Mark members as static
 
     public string GetQualifiedTableName(Type entityType)
-        => DapperHelper.GetTableNameWithSchema(Connection, Schema, entityType, this);
+        => DapperHelper.GetTableNameWithSchema(Connection, Schema, entityType);
 
     public void Dispose()
     {
@@ -49,7 +35,7 @@ public sealed class TruncateTestSession : IDisposable, IEntityMappingSource
         }
         finally
         {
-            _release?.Invoke();
+            _release();
         }
     }
 }

@@ -51,9 +51,13 @@ public static class DatabaseTestSettings
                         DbDriver.SqlServer,
                     ]
                 : [
-                    DbDriver.MySqlConnector,
                     DbDriver.SqlServer,
                     DbDriver.Sqlite,
+                    DbDriver.Npgsql,
+                    DbDriver.MySqlConnector,
+#if SUPPORT_ORACLE
+                    DbDriver.Oracle,
+#endif
                 ];
         }
 
@@ -88,29 +92,6 @@ public static class DatabaseTestSettings
                where driver is not DbDriver.Sqlite || schema is null
 #pragma warning restore IDE0078
                select (driver, schema);
-    }
-
-    /// <summary>Sets a PostgreSQL identity sequence's next value to one greater than the table's maximum key.</summary>
-    /// <returns>The configured next sequence value for PostgreSQL, or zero for other drivers or a missing table.</returns>
-    /// <remarks>
-    /// Uses the shared test model's integer Id column. This changes persistent sequence state and must
-    /// run without concurrent inserts into the same table.
-    /// </remarks>
-    public static async Task<int> SynchronizeIdentitySequenceAsync<T>(DbConnection connection, DbDriver driver, string? schema)
-    {
-        if (driver != DbDriver.Npgsql)
-            return 0;
-        if (!await connection.TableExistsAsync<T>(schema))
-            return 0;
-
-        var table = DapperHelper.GetTableNameWithSchema(connection, schema, typeof(T));
-        return await connection.ExecuteScalarAsync<int>($"""
-            SELECT setval(
-                pg_get_serial_sequence('{table}', 'Id'),
-                COALESCE((SELECT MAX("Id") FROM {table}), 0) + 1,
-                false
-            );
-            """);
     }
 
     public static DbParameter CreateParameter(DbDriver driver, string name, object value) => driver switch

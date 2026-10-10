@@ -17,6 +17,18 @@ public interface ISqlAdapter
     /// </remarks>
     bool SupportsSchemas { get; }
 
+    /// <summary>Synchronizes an existing table's native identity generator.</summary>
+    /// <param name="command">An initialized command on an open connection with the caller's timeout and transaction.</param>
+    /// <param name="tableName">The unquoted table-name component.</param>
+    /// <param name="columnName">The unquoted identity-column component.</param>
+    /// <param name="schema">The optional schema; adapters without schema support ignore it.</param>
+    /// <param name="cancellationToken">Cancels metadata and maintenance commands.</param>
+    /// <returns>True when synchronized; false when no supported generator belongs to the column.</returns>
+    /// <remarks>The caller checks table existence and excludes concurrent writes. Native commit and rollback rules apply.</remarks>
+    /// <exception cref="NotSupportedException">This adapter or the identity configuration is unsupported.</exception>
+    Task<bool> ReseedIdentityAsync(DbCommand command, string tableName, string columnName,
+        string? schema, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Quotes and escapes one unqualified table-name component for this SQL dialect.
     /// </summary>

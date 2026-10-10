@@ -60,7 +60,7 @@ public class HttpServiceBaseTests
             Logger = null,
         };
 
-        Assert.Same(Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance, service.Logger);
+        Assert.Same(NullLogger.Instance, service.Logger);
     }
 
     private sealed class TestHttpService : HttpServiceBase
@@ -69,7 +69,7 @@ public class HttpServiceBaseTests
 
         public Exception? Exception { get; init; }
 
-        protected override Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken token)
+        protected override Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken cancellationToken)
         {
             ExecuteCallCount++;
             if (Exception is not null)

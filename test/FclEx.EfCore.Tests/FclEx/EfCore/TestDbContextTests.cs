@@ -1,3 +1,5 @@
+using FclEx.Utils;
+
 namespace FclEx.EfCore;
 
 public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
@@ -13,7 +15,8 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
          select (db, assembly, ver, os))
         .ToTheoryData();
 
-#if NET10_0
+    private static readonly ConcurrentDictionary<DbDriver, SemaphoreSlim> SetupGates = new();
+
     /// <summary>
     /// Set up databases for all test cases.
     /// Run this only when test entities are changed.
@@ -22,6 +25,12 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [MemberData(nameof(SetupDatabaseCases))]
     public async Task SetupDatabase(DbDriver dbDriver, string assemblyName, int dotNetVersion, string os)
     {
+        Assert.SkipUnless(Environment.Version.Major == 10, "Only run this test on .NET 10");
+
+        var gate = SetupGates.GetOrAdd(dbDriver, _ => new SemaphoreSlim(1, 1));
+        await gate.WaitAsync(CancellationToken);
+        await using var _ = AsyncDisposable.Create(() => gate.Release());
+
         var defaultPassword = dbDriver is DbDriver.SqlServer
             ? SqlServerUserPassword
             : DefaultUserPassword;
@@ -175,5 +184,25 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         }
     }
 
-#endif
+    [Fact]
+    public void GeneratedSchema_MatchesSharedResource()
+    {
+        using var context = new TestDbContext(DbDriver.Sqlite, "Data Source=:memory:");
+        Assert.Equal(Normalize(context.Database.GenerateCreateScript()), Normalize(TestDatabaseEnvironment.ReadSqliteSchema()));
+    }
+
+    [Fact(Explicit = true)]
+    public void ExportSchema()
+    {
+        Assert.SkipUnless(Environment.Version.Major == 10, "Only run this test on .NET 10");
+
+        var path = Environment.GetEnvironmentVariable("FCLEX_SQLITE_SCHEMA_OUTPUT")
+                   ?? Directories.SolutionRoot.File("test", typeof(DbDriver).Assembly.GetName().Name!, "Schemas", "Sqlite.sql").FullName;
+        
+        using var context = new TestDbContext(DbDriver.Sqlite, "Data Source=:memory:");
+        var sql = Normalize(context.Database.GenerateCreateScript()).Replace("\n", Environment.NewLine);
+        File.WriteAllText(path, sql + Environment.NewLine, new UTF8Encoding(false));
+    }
+
+    private static string Normalize(string sql) => sql.Replace("\r\n", "\n").TrimEnd();
 }

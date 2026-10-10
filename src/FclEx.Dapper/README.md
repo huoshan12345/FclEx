@@ -160,6 +160,34 @@ SQL Server and PostgreSQL use native unqualified-name resolution when no schema 
 
 `ISqlAdapter.BuildTableExistsCommandText` supplies the metadata query. Direct interface implementations must implement this new member. `SqlAdapterBase` preserves existing derived implementations with a default that throws NotSupportedException until metadata querying is supplied.
 
+## Identity Sequence Synchronization
+
+Use this maintenance operation after importing explicit keys or deleting high keys:
+
+```csharp
+bool synchronized = await connection.ReseedIdentityAsync<Order>(
+    schema: "Sales", commandOptions: options, cancellationToken: cancellationToken);
+await connection.ReseedIdentityAsync("Orders", "OrderId", schema: "Sales");
+```
+
+The entity overload requires exactly one mapped database-generated integer key and uses its physical column
+name. The result is `false` when the table or native identity generator is absent. Invalid mappings and database
+access errors throw. A connection opened by this operation is closed before return.
+
+| Database | Native operation | Behavior |
+| --- | --- | --- |
+| PostgreSQL 10+ | `pg_get_serial_sequence` and `setval` | Next key is MAX + the positive sequence increment; empty tables restart at the sequence start. |
+| SQL Server | `DBCC CHECKIDENT` | Reseeds an ascending identity to MAX; an empty, previously used identity restarts at its seed. |
+| MySQL / MariaDB | `ALTER TABLE ... AUTO_INCREMENT` | Requests MAX + 1, or 1 when empty; the engine may retain a higher counter and session increment/offset still apply. |
+| SQLite | `sqlite_sequence` maintenance | Resets AUTOINCREMENT to MAX, or zero when empty, in the supplied or a locally owned transaction; ordinary ROWID returns false. Temp shadows main; attached databases are excluded. |
+| Oracle 12.2+ | `ALTER TABLE ... START WITH LIMIT VALUE` | Uses native identity limit calculation and retains generation mode and options. Trigger-managed sequences are excluded. |
+
+Pause concurrent writes and other users of the sequence during synchronization. This API does not coordinate
+writers, and resetting a counter may reuse deleted values. PostgreSQL sequence changes survive rollback;
+MySQL and Oracle DDL implicitly commit. Namespace rules match CRUD, including MySql.Data and SQLite ignoring
+schema arguments. Custom `ISqlAdapter` implementations must implement `ReseedIdentityAsync`;
+`SqlAdapterBase` throws `NotSupportedException` by default. This is a source-breaking interface addition.
+
 ## Table Truncation
 
 `TruncateAsync` accepts an unquoted table name or an entity mapping and removes every row in the physical table:
