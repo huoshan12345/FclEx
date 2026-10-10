@@ -23,20 +23,24 @@ public partial class TruncateTests
         await using var context = new TestDbContext(DbDriver.Sqlite, "Data Source=:memory:;Foreign Keys=True");
         await context.Database.OpenConnectionAsync(CancellationToken);
         if (hasMainTable)
+        {
             await context.Database.ExecuteSqlRawAsync("""
                 CREATE TABLE TruncateRow (Id INTEGER PRIMARY KEY AUTOINCREMENT, Value INTEGER NOT NULL);
                 INSERT INTO main.TruncateRow (Id, Value) VALUES (8, 1);
                 """, CancellationToken);
+        }
         await context.Database.ExecuteSqlRawAsync("""
             CREATE TEMP TABLE TruncateRow (Id INTEGER PRIMARY KEY AUTOINCREMENT, Value INTEGER NOT NULL);
             INSERT INTO temp.TruncateRow (Value) VALUES (1), (2);
             """, CancellationToken);
+
         await context.TruncateAsync<TruncateRow>(CancellationToken);
         Assert.Equal(0, await context.TruncateRow.CountAsync(CancellationToken));
         var next = new TruncateRow { Value = 3 };
         context.TruncateRow.Add(next);
         await context.SaveChangesAsync(CancellationToken);
         Assert.Equal(1, next.Id);
+
         if (hasMainTable)
         {
             Assert.Equal(1, await context.Database.SqlQueryRaw<int>("SELECT COUNT(*) AS Value FROM main.TruncateRow").SingleAsync(CancellationToken));

@@ -46,28 +46,28 @@ public static class FileExtensions
             await fs.FlushAsync(cancellationToken).NoCapture();
         }
 
-        public static async Task WriteAllTextAsync(string path, string content, Encoding encoding, CancellationToken token = default)
+        public static async Task WriteAllTextAsync(string path, string content, Encoding encoding, CancellationToken cancellationToken = default)
         {
             using var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, DefaultBufferSize, useAsync: true);
             using var sw = new StreamWriter(fs, encoding);
 
             await sw.WriteAsync(content);
-            await sw.FlushAsync(token);
-            await fs.FlushAsync(token);
+            await sw.FlushAsync(cancellationToken);
+            await fs.FlushAsync(cancellationToken);
         }
 
-        public static Task WriteAllTextAsync(string path, string content, CancellationToken token = default)
-            => File.WriteAllTextAsync(path, content, Encoding.Utf8WithoutBom, token);
+        public static Task WriteAllTextAsync(string path, string content, CancellationToken cancellationToken = default)
+            => File.WriteAllTextAsync(path, content, Encoding.Utf8WithoutBom, cancellationToken);
 
-        public static async Task<string> ReadAllTextAsync(string path, Encoding encoding, CancellationToken token = default)
+        public static async Task<string> ReadAllTextAsync(string path, Encoding encoding, CancellationToken cancellationToken = default)
         {
             using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, DefaultBufferSize, useAsync: true);
             using var sr = new StreamReader(fs, encoding);
-            return await sr.ReadToEndAsync(token);
+            return await sr.ReadToEndAsync(cancellationToken);
         }
 
-        public static Task<string> ReadAllTextAsync(string path, CancellationToken token = default)
-            => File.ReadAllTextAsync(path, Encoding.UTF8, token);
+        public static Task<string> ReadAllTextAsync(string path, CancellationToken cancellationToken = default)
+            => File.ReadAllTextAsync(path, Encoding.UTF8, cancellationToken);
 
         public static async Task<byte[]> ReadAllBytesAsync(string path, CancellationToken cancellationToken = default)
         {

@@ -19,11 +19,11 @@ public class MapResultAction<T, TDest> : IAction<TDest>
     /// <summary>
     /// Executes the source action and maps its successful value to a result.
     /// </summary>
-    /// <param name="token">The cancellation token passed to the source action.</param>
+    /// <param name="cancellationToken">The cancellation token passed to the source action.</param>
     /// <returns>The mapped result, or the source failure.</returns>
-    public async Task<OperationResult<TDest>> ExecuteAsync(CancellationToken token = default)
+    public async Task<OperationResult<TDest>> ExecuteAsync(CancellationToken cancellationToken = default)
     {
-        var result = await _action.ExecuteAsync(token);
+        var result = await _action.ExecuteAsync(cancellationToken);
         return result.Then(_map);
     }
 }

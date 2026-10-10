@@ -369,17 +369,17 @@ public static class FileInfoExtensions
             : fileInfo.CopyTo(destFileInfo.FullName, overwrite);
     }
 
-    public static Task WriteAllTextAsync(this FileInfo file, string content, Encoding? encoding = null, CancellationToken token = default)
+    public static Task WriteAllTextAsync(this FileInfo file, string content, Encoding? encoding = null, CancellationToken cancellationToken = default)
     {
         Check.NotNull(file);
         Check.NotNull(content);
-        return File.WriteAllTextAsync(file.FullName, content, encoding ?? Encoding.UTF8, token);
+        return File.WriteAllTextAsync(file.FullName, content, encoding ?? Encoding.UTF8, cancellationToken);
     }
 
-    public static Task<string> ReadAllTextAsync(this FileInfo file, Encoding? encoding = null, CancellationToken token = default)
+    public static Task<string> ReadAllTextAsync(this FileInfo file, Encoding? encoding = null, CancellationToken cancellationToken = default)
     {
         Check.NotNull(file);
-        return File.ReadAllTextAsync(file.FullName, encoding ?? Encoding.UTF8, token);
+        return File.ReadAllTextAsync(file.FullName, encoding ?? Encoding.UTF8, cancellationToken);
     }
 
     public static string ReadAllText(this FileInfo file, Encoding? encoding = null)

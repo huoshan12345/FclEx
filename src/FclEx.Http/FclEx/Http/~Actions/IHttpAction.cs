@@ -33,8 +33,8 @@ public interface IHttpAction<T> : IPipelineAction<T>, IHttpResponseHandler<T>
 #endif
 
 #if NET6_0_OR_GREATER
-    Task<OperationResult<T>> IPipelineAction<T>.ExecuteCoreAsync(CancellationToken token)
-        => DefaultHttpAction.ExecuteCoreAsync(this, token);
+    Task<OperationResult<T>> IPipelineAction<T>.ExecuteCoreAsync(CancellationToken cancellationToken)
+        => DefaultHttpAction.ExecuteCoreAsync(this, cancellationToken);
 #endif
 
     /// <summary>
@@ -63,11 +63,11 @@ public interface IHttpAction<T> : IPipelineAction<T>, IHttpResponseHandler<T>
     /// Sends or otherwise obtains the HTTP response for a request.
     /// </summary>
     /// <param name="request">The built request.</param>
-    /// <param name="token">The cancellation token for the send operation.</param>
+    /// <param name="cancellationToken">The cancellation token for the send operation.</param>
     /// <returns>The HTTP response.</returns>
-    Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken token = default)
+    Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken cancellationToken = default)
 #if NET6_0_OR_GREATER
-        => DefaultHttpAction.GetResponseAsync(this, request, token);
+        => DefaultHttpAction.GetResponseAsync(this, request, cancellationToken);
 #else
     ;
 #endif
@@ -95,16 +95,16 @@ public static class DefaultHttpAction
     /// </summary>
     /// <typeparam name="T">The final result type.</typeparam>
     /// <param name="action">The action to execute.</param>
-    /// <param name="token">The cancellation token for the response operation.</param>
+    /// <param name="cancellationToken">The cancellation token for the response operation.</param>
     /// <returns>The action result, or an error if sending, handling, or parsing fails.</returns>
-    public static async Task<OperationResult<T>> ExecuteCoreAsync<T>(IHttpAction<T> action, CancellationToken token)
+    public static async Task<OperationResult<T>> ExecuteCoreAsync<T>(IHttpAction<T> action, CancellationToken cancellationToken)
     {
         var logger = action.HttpService.Logger;
         HttpRequest? request = null;
         try
         {
             request = action.BuildRequest();
-            var response = await action.GetResponseAsync(request, token);
+            var response = await action.GetResponseAsync(request, cancellationToken);
             if (response.IsSuccess)
                 return await action.HandleResponseAsync(response)
                     .Then(action.GetResultAsync);
@@ -149,11 +149,11 @@ public static class DefaultHttpAction
     /// <typeparam name="T">The final result type.</typeparam>
     /// <param name="action">The HTTP action.</param>
     /// <param name="request">The request to send.</param>
-    /// <param name="token">The cancellation token for the send operation.</param>
+    /// <param name="cancellationToken">The cancellation token for the send operation.</param>
     /// <returns>The response returned by <see cref="IHttpService.SendAsync(HttpRequest, CancellationToken)"/>.</returns>
-    public static Task<HttpResponse> GetResponseAsync<T>(IHttpAction<T> action, HttpRequest request, CancellationToken token)
+    public static Task<HttpResponse> GetResponseAsync<T>(IHttpAction<T> action, HttpRequest request, CancellationToken cancellationToken)
     {
-        return action.HttpService.SendAsync(request, token);
+        return action.HttpService.SendAsync(request, cancellationToken);
     }
 
     /// <summary>
@@ -203,8 +203,8 @@ public abstract class HttpAction<T> : PipelineAction<T>, IHttpAction<T>
     public virtual void ModifyRequest(HttpRequest request) { }
 
     /// <inheritdoc />
-    public virtual Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken token = default)
-        => DefaultHttpAction.GetResponseAsync(this, request, token);
+    public virtual Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken cancellationToken = default)
+        => DefaultHttpAction.GetResponseAsync(this, request, cancellationToken);
 
     /// <inheritdoc />
     public virtual Task<OperationResult<HttpResponse>> HandleResponseAsync(HttpResponse response)
@@ -218,6 +218,6 @@ public abstract class HttpAction<T> : PipelineAction<T>, IHttpAction<T>
         => DefaultHttpResponseHandler.GetResultAsync(this, response);
 
     /// <inheritdoc />
-    public override Task<OperationResult<T>> ExecuteCoreAsync(CancellationToken token = default)
-        => DefaultHttpAction.ExecuteCoreAsync(this, token);
+    public override Task<OperationResult<T>> ExecuteCoreAsync(CancellationToken cancellationToken = default)
+        => DefaultHttpAction.ExecuteCoreAsync(this, cancellationToken);
 }

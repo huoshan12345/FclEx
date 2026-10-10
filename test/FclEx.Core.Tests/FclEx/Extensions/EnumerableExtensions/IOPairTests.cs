@@ -37,7 +37,7 @@ public class IOPairTests
     public async Task ToOperationIOPairsSerially_WhenAlreadyCanceled_ProducesCanceledResultForEachInput()
     {
         using var cancellation = new CancellationTokenSource();
-        cancellation.Cancel();
+        await cancellation.CancelAsync();
         var invocationCount = 0;
 
         var pairs = await new[] { 1, 2 }.ToOperationIOPairsSerially(
@@ -46,7 +46,7 @@ public class IOPairTests
                 invocationCount++;
                 return Task.FromResult(Operation.Success(1));
             },
-            token: cancellation.Token);
+            cancellationToken: cancellation.Token);
 
         Assert.Equal(0, invocationCount);
         Assert.Empty(pairs.Succeeded);

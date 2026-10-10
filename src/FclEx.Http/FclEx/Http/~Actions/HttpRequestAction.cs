@@ -25,14 +25,14 @@ public readonly struct HttpRequestAction : IAction<HttpResponse>
     /// <summary>
     /// Sends the request and returns the response result.
     /// </summary>
-    /// <param name="token">The cancellation token passed to the HTTP service.</param>
+    /// <param name="cancellationToken">The cancellation token passed to the HTTP service.</param>
     /// <returns>
     /// A successful result for normal responses. If the response has an exception and <c>unwrapError</c> is enabled,
     /// returns an object error containing the response and preserving elapsed time.
     /// </returns>
-    public async Task<OperationResult<HttpResponse>> ExecuteAsync(CancellationToken token = default)
+    public async Task<OperationResult<HttpResponse>> ExecuteAsync(CancellationToken cancellationToken = default)
     {
-        var response = await _httpService.SendAsync(_request, token);
+        var response = await _httpService.SendAsync(_request, cancellationToken);
         return response.IsError && _unwrapError
             ? Operation.ObjectError(response, response.Exception!, response.Elapsed).Cast<HttpResponse>()
             : Operation.Success(response, response.Elapsed);

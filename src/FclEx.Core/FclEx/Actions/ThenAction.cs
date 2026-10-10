@@ -19,12 +19,12 @@ public class ThenAction<T, TDest> : IAction<TDest>
     /// <summary>
     /// Executes the source action and then the next action on success.
     /// </summary>
-    /// <param name="token">The cancellation token passed to both actions.</param>
+    /// <param name="cancellationToken">The cancellation token passed to both actions.</param>
     /// <returns>The next action result, or the source failure.</returns>
     /// <remarks>If <c>next</c> returns <see langword="null"/>, an error result is returned.</remarks>
-    public async Task<OperationResult<TDest>> ExecuteAsync(CancellationToken token = default)
+    public async Task<OperationResult<TDest>> ExecuteAsync(CancellationToken cancellationToken = default)
     {
-        var result = await _action.ExecuteAsync(token);
+        var result = await _action.ExecuteAsync(cancellationToken);
         if (result.IsSuccess == false)
             return result.Cast<TDest>();
 
@@ -34,7 +34,7 @@ public class ThenAction<T, TDest> : IAction<TDest>
         if (nextActor is null)
             return Constants.NullNextError;
 
-        var nextResult = await nextActor.ExecuteAsync(token);
+        var nextResult = await nextActor.ExecuteAsync(cancellationToken);
         return nextResult.Elapsed(result.Elapsed + nextResult.Elapsed);
     }
 }

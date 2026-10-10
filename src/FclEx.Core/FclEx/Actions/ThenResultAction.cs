@@ -19,18 +19,18 @@ public class ThenResultAction<T, TNext> : IAction<TNext>
     /// <summary>
     /// Executes the source action and then the next action with its result.
     /// </summary>
-    /// <param name="token">The cancellation token passed to both actions.</param>
+    /// <param name="cancellationToken">The cancellation token passed to both actions.</param>
     /// <returns>The next action result.</returns>
     /// <remarks>The next action is created even when the source action fails.</remarks>
-    public async Task<OperationResult<TNext>> ExecuteAsync(CancellationToken token = default)
+    public async Task<OperationResult<TNext>> ExecuteAsync(CancellationToken cancellationToken = default)
     {
-        var result = await _action.ExecuteAsync(token);
+        var result = await _action.ExecuteAsync(cancellationToken);
 
         var nextActor = _next(result);
         if (nextActor == null)
             return (Constants.NullNextError, result.Elapsed);
 
-        var nextResult = await nextActor.ExecuteAsync(token);
+        var nextResult = await nextActor.ExecuteAsync(cancellationToken);
         return nextResult.Elapsed(result.Elapsed + nextResult.Elapsed);
     }
 }

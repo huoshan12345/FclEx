@@ -2,7 +2,12 @@ namespace FclEx.Extensions;
 
 public static class ZipArchiveEntryExtensions
 {
-    public static async Task ExtractToFileAsync(this ZipArchiveEntry source, string destPath, bool overwrite, int bufferSize = 4 * 1024, CancellationToken token = default)
+    public static async Task ExtractToFileAsync(
+        this ZipArchiveEntry source,
+        string destPath,
+        bool overwrite,
+        int bufferSize = 4 * 1024,
+        CancellationToken cancellationToken = default)
     {
         Check.NotNull(source);
         Check.NotEmpty(destPath);
@@ -18,12 +23,18 @@ public static class ZipArchiveEntryExtensions
             await
 #endif
             using var stream = source.Open();
-            await stream.CopyToAsync(destination, bufferSize, token);
+            await stream.CopyToAsync(destination, bufferSize, cancellationToken);
         }
         File.SetLastWriteTime(destPath, source.LastWriteTime.DateTime);
     }
 
-    public static Task ExtractToDirAsync(this ZipArchiveEntry entry, string dir, bool ignoreEntryDir, bool overwrite, int bufferSize = 4 * 1024, CancellationToken token = default)
+    public static Task ExtractToDirAsync(
+        this ZipArchiveEntry entry, 
+        string dir, 
+        bool ignoreEntryDir, 
+        bool overwrite, 
+        int bufferSize = 4 * 1024, 
+        CancellationToken cancellationToken = default)
     {
         Check.NotNull(entry);
         Check.NotEmpty(dir);
@@ -42,7 +53,7 @@ public static class ZipArchiveEntryExtensions
 
         var fi = new FileInfo(path);
         fi.Directory?.TryCreate();
-        return entry.ExtractToFileAsync(fi.FullName, overwrite, bufferSize, token);
+        return entry.ExtractToFileAsync(fi.FullName, overwrite, bufferSize, cancellationToken);
     }
 
     public static bool IsDirectory(this ZipArchiveEntry entry)

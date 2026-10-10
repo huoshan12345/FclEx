@@ -66,12 +66,12 @@ public abstract class SqlAdapterBase : ISqlAdapter
     /// <summary>Reuses an identity maintenance command to execute a scalar query.</summary>
     /// <param name="command">The initialized command with its connection, parameters, timeout, and transaction.</param>
     /// <param name="sql">The scalar query to assign to the command.</param>
-    /// <param name="token">Cancels query execution.</param>
+    /// <param name="cancellationToken">Cancels query execution.</param>
     /// <returns>The provider's first value, or null when no row is returned.</returns>
-    protected static async Task<object?> ReadIdentityScalarAsync(DbCommand command, string sql, CancellationToken token)
+    protected static async Task<object?> ReadIdentityScalarAsync(DbCommand command, string sql, CancellationToken cancellationToken)
     {
         command.CommandText = sql;
-        return await command.ExecuteScalarAsync(token);
+        return await command.ExecuteScalarAsync(cancellationToken);
     }
 
     /// <summary>
@@ -118,7 +118,10 @@ public abstract class SqlAdapterBase : ISqlAdapter
 
     /// <inheritdoc />
     public virtual Task<int> ExecuteTruncateAsync(
-        DbCommand command, string tableName, bool? restartIdentity, CancellationToken cancellationToken = default)
+        DbCommand command,
+        string tableName,
+        bool? restartIdentity,
+        CancellationToken cancellationToken = default)
         => command.ExecuteNonQueryAsync(cancellationToken);
 
     /// <inheritdoc />

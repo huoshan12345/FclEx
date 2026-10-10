@@ -19,11 +19,11 @@ public static class DefaultHtmlFileAction
     /// <typeparam name="T">The action result type.</typeparam>
     /// <param name="action">The HTML file action.</param>
     /// <param name="request">The request associated with the file response.</param>
-    /// <param name="token">The cancellation token for file reading.</param>
+    /// <param name="cancellationToken">The cancellation token for file reading.</param>
     /// <returns>A response with status <see cref="HttpStatusCode.OK"/> and the file content as text.</returns>
-    public static async Task<HttpResponse> GetResponseAsync<T>(IHtmlFileAction<T> action, HttpRequest request, CancellationToken token)
+    public static async Task<HttpResponse> GetResponseAsync<T>(IHtmlFileAction<T> action, HttpRequest request, CancellationToken cancellationToken)
     {
-        var text = await File.ReadAllTextAsync(action.FilePath, token);
+        var text = await File.ReadAllTextAsync(action.FilePath, cancellationToken);
 
         var response = new HttpResponse(request)
         {

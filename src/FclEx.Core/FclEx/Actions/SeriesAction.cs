@@ -30,9 +30,9 @@ public class SeriesAction<T> : IAction<T[]>
     /// <summary>
     /// Executes each action in order until one fails.
     /// </summary>
-    /// <param name="token">The cancellation token passed to each action.</param>
+    /// <param name="cancellationToken">The cancellation token passed to each action.</param>
     /// <returns>All successful values, or the first failure.</returns>
-    public async Task<OperationResult<T[]>> ExecuteAsync(CancellationToken token = default)
+    public async Task<OperationResult<T[]>> ExecuteAsync(CancellationToken cancellationToken = default)
     {
         var watch = ValueStopwatch.StartNew();
 
@@ -40,7 +40,7 @@ public class SeriesAction<T> : IAction<T[]>
 
         foreach (var action in _actions)
         {
-            var result = await action.ExecuteAsync(token);
+            var result = await action.ExecuteAsync(cancellationToken);
             if (result.IsError)
                 return (result.Exception, watch.GetElapsedTime());
 

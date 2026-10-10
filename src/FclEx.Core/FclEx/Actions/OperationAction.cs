@@ -16,10 +16,10 @@ public class OperationAction<T> : IAction<T>
     /// <summary>
     /// Executes the wrapped operation delegate.
     /// </summary>
-    /// <param name="token">The cancellation token passed to the delegate.</param>
+    /// <param name="cancellationToken">The cancellation token passed to the delegate.</param>
     /// <returns>The result returned by the delegate.</returns>
-    public Task<OperationResult<T>> ExecuteAsync(CancellationToken token = default)
+    public Task<OperationResult<T>> ExecuteAsync(CancellationToken cancellationToken = default)
     {
-        return _execute(token);
+        return _execute(cancellationToken);
     }
 }

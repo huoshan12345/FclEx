@@ -86,23 +86,23 @@ public class SqliteAdapter : SqlAdapterBase
         }, IsolationLevel.Serializable, cancellationToken);
     }
 
-    private async Task<int> DeleteTableAsync(DbCommand command, string tableName, bool restartIdentity, CancellationToken token)
+    private async Task<int> DeleteTableAsync(DbCommand command, string tableName, bool restartIdentity, CancellationToken cancellationToken)
     {
         // Unqualified SQLite names resolve to temp before main. Use that same namespace for
         // both deletion and sequence maintenance; attached databases are outside this API.
         command.Parameters.Add(CreateParameter("tableName", tableName));
         var parameter = GetParameterPlaceholder("tableName");
         command.CommandText = $"SELECT COUNT(*) FROM temp.sqlite_master WHERE type = 'table' AND name = {parameter} COLLATE NOCASE";
-        var database = Convert.ToInt64(await command.ExecuteScalarAsync(token)) != 0 ? "temp" : "main";
+        var database = Convert.ToInt64(await command.ExecuteScalarAsync(cancellationToken)) != 0 ? "temp" : "main";
         command.CommandText = $"DELETE FROM {database}.{GetQuotedTableName(tableName)};";
-        var deleted = await command.ExecuteNonQueryAsync(token);
+        var deleted = await command.ExecuteNonQueryAsync(cancellationToken);
         if (restartIdentity)
         {
             command.CommandText = $"SELECT COUNT(*) FROM {database}.sqlite_master WHERE type = 'table' AND name = 'sqlite_sequence'";
-            if (Convert.ToInt64(await command.ExecuteScalarAsync(token)) != 0)
+            if (Convert.ToInt64(await command.ExecuteScalarAsync(cancellationToken)) != 0)
             {
                 command.CommandText = $"DELETE FROM {database}.sqlite_sequence WHERE name = {parameter} COLLATE NOCASE;";
-                await command.ExecuteNonQueryAsync(token);
+                await command.ExecuteNonQueryAsync(cancellationToken);
             }
         }
         return deleted;

@@ -13,8 +13,8 @@ public interface IHtmlFileAction<T> : IHttpAction<T>, IHtmlAction<T>
 
 #if NET6_0_OR_GREATER
     /// <inheritdoc />
-    Task<HttpResponse> IHttpAction<T>.GetResponseAsync(HttpRequest request, CancellationToken token)
-        => DefaultHtmlFileAction.GetResponseAsync(this, request, token);
+    Task<HttpResponse> IHttpAction<T>.GetResponseAsync(HttpRequest request, CancellationToken cancellationToken)
+        => DefaultHtmlFileAction.GetResponseAsync(this, request, cancellationToken);
 
     /// <inheritdoc />
     IHttpService IHttpAction<T>.HttpService => HttpClientService.Default;

@@ -23,7 +23,7 @@ public static partial class Operation
     public static IAction<T> Action<T>(Func<CancellationToken, T> execute)
     {
         Check.NotNull(execute);
-        return new OperationAction<T>(t => ExecuteAsync(() => execute(t)));
+        return new OperationAction<T>(t => ExecuteAsync(() => execute(t), cancellationToken: t));
     }
 
     /// <summary>
@@ -47,7 +47,7 @@ public static partial class Operation
     public static IAction<T> Action<T>(Func<CancellationToken, OperationResult<T>> execute)
     {
         Check.NotNull(execute);
-        return new OperationAction<T>(t => ExecuteAsync(() => execute(t)));
+        return new OperationAction<T>(t => ExecuteAsync(() => execute(t), cancellationToken: t));
     }
 
     /// <summary>
@@ -58,7 +58,7 @@ public static partial class Operation
     public static IAction<Unit> Action(Action<CancellationToken> execute)
     {
         Check.NotNull(execute);
-        return new OperationAction(t => ExecuteAsync(() => execute(t)));
+        return new OperationAction(t => ExecuteAsync(() => execute(t), cancellationToken: t));
     }
 
     /// <summary>
@@ -80,7 +80,7 @@ public static partial class Operation
     public static IAction<Unit> Action(Func<CancellationToken, OperationResult> execute)
     {
         Check.NotNull(execute);
-        return new OperationAction(t => ExecuteAsync(() => execute(t)));
+        return new OperationAction(t => ExecuteAsync(() => execute(t), cancellationToken: t));
     }
 
     /// <summary>

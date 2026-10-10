@@ -6,9 +6,9 @@ public interface IPipelineAction<T> : IAction<T>
     /// <summary>
     /// Executes the core pipeline action logic.
     /// </summary>
-    /// <param name="token">The cancellation token passed to the core action.</param>
+    /// <param name="cancellationToken">The cancellation token passed to the core action.</param>
     /// <returns>The raw core action result before pipeline handlers run.</returns>
-    Task<OperationResult<T>> ExecuteCoreAsync(CancellationToken token = default);
+    Task<OperationResult<T>> ExecuteCoreAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the display name used for tracing.
@@ -46,8 +46,8 @@ public interface IPipelineAction<T> : IAction<T>
 #endif
 
 #if NET6_0_OR_GREATER
-    Task<OperationResult<T>> IAction<T>.ExecuteAsync(CancellationToken token)
-        => DefaultPipelineAction.ExecuteAsync(this, token);
+    Task<OperationResult<T>> IAction<T>.ExecuteAsync(CancellationToken cancellationToken)
+        => DefaultPipelineAction.ExecuteAsync(this, cancellationToken);
 #endif
 }
 
@@ -87,9 +87,9 @@ public static class DefaultPipelineAction
     /// </summary>
     /// <typeparam name="T">The action value type.</typeparam>
     /// <param name="action">The pipeline action to execute.</param>
-    /// <param name="token">The cancellation token passed to the action.</param>
+    /// <param name="cancellationToken">The cancellation token passed to the action.</param>
     /// <returns>The handled operation result.</returns>
-    public static Task<OperationResult<T>> ExecuteAsync<T>(IPipelineAction<T> action, CancellationToken token)
+    public static Task<OperationResult<T>> ExecuteAsync<T>(IPipelineAction<T> action, CancellationToken cancellationToken)
     {
         var time = ValueStopwatch.StartNew();
         Trace.WriteLine($"[{action.GetName()}]Begin");
@@ -106,7 +106,7 @@ public static class DefaultPipelineAction
             var r = m.Elapsed(time.GetElapsedTime());
             Trace.WriteLine($"[{action.GetName()}]End, after {r.Elapsed.TotalMilliseconds:f3} ms]");
             return r;
-        }).ExecuteAsync(token);
+        }).ExecuteAsync(cancellationToken);
     }
 }
 
@@ -115,9 +115,9 @@ public abstract class PipelineAction<T> : IPipelineAction<T>
     /// <summary>
     /// Executes the core pipeline action logic.
     /// </summary>
-    /// <param name="token">The cancellation token passed to the core action.</param>
+    /// <param name="cancellationToken">The cancellation token passed to the core action.</param>
     /// <returns>The raw core action result before pipeline handlers run.</returns>
-    public abstract Task<OperationResult<T>> ExecuteCoreAsync(CancellationToken token = default);
+    public abstract Task<OperationResult<T>> ExecuteCoreAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the display name used for tracing.

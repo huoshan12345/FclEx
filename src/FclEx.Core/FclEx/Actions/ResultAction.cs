@@ -21,9 +21,9 @@ public class ResultAction<T>(OperationResult<T> result) : IAction<T>
     /// <summary>
     /// Returns the configured result.
     /// </summary>
-    /// <param name="token">Ignored by this action.</param>
+    /// <param name="cancellationToken">Ignored by this action.</param>
     /// <returns>The configured result.</returns>
-    public Task<OperationResult<T>> ExecuteAsync(CancellationToken token = default)
+    public Task<OperationResult<T>> ExecuteAsync(CancellationToken cancellationToken = default)
     {
         return result;
     }
