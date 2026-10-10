@@ -3,6 +3,27 @@ namespace FclEx.Dapper.SqlAdapters;
 public class OracleAdapter : SqlAdapterBase
 {
     /// <inheritdoc />
+    public override async Task<bool> SynchronizeIdentitySequenceAsync(DbCommand command, string tableName, string columnName,
+        string? schema, CancellationToken cancellationToken = default)
+    {
+        var table = PrepareIdentityCommand(command, tableName, columnName, schema);
+        var generation = await ReadIdentityScalarAsync(command,
+            "SELECT generation_type FROM all_tab_identity_cols WHERE table_name = TO_CHAR(:tableName) " +
+            "AND column_name = TO_CHAR(:columnName) AND owner = COALESCE(TO_CHAR(:schema), SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA'))",
+            cancellationToken);
+        if (generation is null or DBNull)
+            return false;
+        // Generation type comes from Oracle's catalog, but validate before composing DDL.
+        var mode = Convert.ToString(generation)?.Trim();
+        if (mode is not ("ALWAYS" or "BY DEFAULT" or "BY DEFAULT ON NULL"))
+            throw new NotSupportedException($"Unsupported Oracle identity generation mode '{mode}'.");
+        command.Parameters.Clear();
+        command.CommandText = $"ALTER TABLE {table} MODIFY {GetQuotedColumnName(columnName)} GENERATED {mode} AS IDENTITY (START WITH LIMIT VALUE)";
+        await command.ExecuteNonQueryAsync(cancellationToken);
+        return true;
+    }
+
+    /// <inheritdoc />
     public override string BuildTruncateCommandText(string quotedTableName, bool? restartIdentity, bool cascade)
     {
         if (restartIdentity == true)

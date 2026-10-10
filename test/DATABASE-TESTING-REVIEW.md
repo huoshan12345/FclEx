@@ -10,7 +10,7 @@ Keep the existing initialization policy. Dapper's parameter type maps can take p
 
 Added production DbConnection.TableExistsAsync overloads for a table name and entity mapping. Provider adapters query their own catalogs using parameterized names. The operation supports CommandOptions, cancellation, transactions, mapping-source overrides, and the established connection ownership rules.
 
-SynchronizeIdentitySequenceAsync now checks the mapped PostgreSQL table before changing its sequence and returns zero when the table is absent. Other drivers retain their no-op behavior. An unavailable database or invalid connection is still an access error, not a missing-table result. Remote provisioning remains manually enabled and no remote databases or users were rebuilt during validation.
+SynchronizeIdentitySequenceAsync is now a production FclEx.Dapper extension supporting every built-in provider and mapped integer identity columns. It returns false when the physical table or identity generator is absent. An unavailable database or invalid connection is still an access error, not a missing-table result. Remote provisioning remains manually enabled and no remote databases or users were rebuilt during validation.
 
 The common tests cover existing and missing tables, mapped names and schemas, literal identifier characters, view exclusion, default and explicit namespaces, and connection state. Additional tests cover transaction visibility and the missing-PostgreSQL-table regression.
 

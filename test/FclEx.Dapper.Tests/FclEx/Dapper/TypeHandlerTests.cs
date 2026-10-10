@@ -1,5 +1,4 @@
-using System.Globalization;
-
+// ReSharper disable UseAwaitUsing
 namespace FclEx.Dapper;
 
 public class TypeHandlerTests

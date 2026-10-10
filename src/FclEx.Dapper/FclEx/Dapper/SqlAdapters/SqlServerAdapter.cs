@@ -6,6 +6,38 @@ namespace FclEx.Dapper.SqlAdapters;
 public class SqlServerAdapter : SqlAdapterBase
 {
     /// <inheritdoc />
+    public override async Task<bool> SynchronizeIdentitySequenceAsync(DbCommand command, string tableName, string columnName,
+        string? schema, CancellationToken cancellationToken = default)
+    {
+        var table = PrepareIdentityCommand(command, tableName, columnName, schema);
+        command.Parameters.Clear();
+        command.Parameters.Add(CreateParameter("table", table));
+        command.Parameters.Add(CreateParameter("column", columnName));
+        const string predicate = "FROM sys.identity_columns WHERE object_id = OBJECT_ID(@table, 'U') AND name = @column";
+        var seedValue = await ReadIdentityScalarAsync(command, "SELECT seed_value " + predicate, cancellationToken);
+        if (seedValue is null or DBNull)
+            return false;
+        var increment = Convert.ToDecimal(await ReadIdentityScalarAsync(command, "SELECT increment_value " + predicate, cancellationToken));
+        if (increment <= 0)
+            throw new NotSupportedException("Identity synchronization requires an ascending SQL Server identity.");
+        var maximum = await ReadIdentityScalarAsync(command,
+            $"SELECT MAX({GetQuotedColumnName(columnName)}) FROM {table}", cancellationToken);
+        if (maximum is null or DBNull)
+        {
+            var last = await ReadIdentityScalarAsync(command, "SELECT last_value " + predicate, cancellationToken);
+            // A never-used or truncated identity already starts at its seed; DBCC would change first-insert semantics.
+            if (last is null or DBNull)
+                return true;
+        }
+        var reseed = maximum is null or DBNull
+            ? checked(Convert.ToDecimal(seedValue) - increment) : Convert.ToDecimal(maximum);
+        command.Parameters.Clear();
+        command.CommandText = $"DBCC CHECKIDENT (N'{table.Replace("'", "''")}', RESEED, {reseed.ToString(System.Globalization.CultureInfo.InvariantCulture)}) WITH NO_INFOMSGS";
+        await command.ExecuteNonQueryAsync(cancellationToken);
+        return true;
+    }
+
+    /// <inheritdoc />
     public override string BuildTruncateCommandText(string quotedTableName, bool? restartIdentity, bool cascade)
     {
         if (restartIdentity == false || cascade)

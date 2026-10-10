@@ -40,6 +40,40 @@ public abstract class SqlAdapterBase : ISqlAdapter
     /// <inheritdoc />
     public virtual bool SupportsSchemas { get; } = true;
 
+    /// <inheritdoc />
+    public virtual Task<bool> SynchronizeIdentitySequenceAsync(DbCommand command, string tableName, string columnName,
+        string? schema, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException($"'{GetType().FullName}' does not support identity synchronization.");
+
+    /// <summary>Initializes identity lookup parameters and quotes the table using this adapter's namespace rules.</summary>
+    /// <param name="command">The command whose parameter collection will be replaced.</param>
+    /// <param name="tableName">One unquoted table-name component.</param>
+    /// <param name="columnName">One unquoted column-name component.</param>
+    /// <param name="schema">An optional unquoted schema, ignored when schemas are unsupported.</param>
+    /// <returns>The quoted, optionally schema-qualified table name.</returns>
+    protected string PrepareIdentityCommand(DbCommand command, string tableName, string columnName, string? schema)
+    {
+        command.Parameters.Clear();
+        command.Parameters.Add(CreateParameter("tableName", tableName));
+        command.Parameters.Add(CreateParameter("columnName", columnName));
+        command.Parameters.Add(CreateParameter("schema", SupportsSchemas ? schema : null));
+        var table = GetQuotedTableName(tableName);
+        if (SupportsSchemas && schema is not null)
+            table = GetQuotedTableName(schema) + "." + table;
+        return table;
+    }
+
+    /// <summary>Reuses an identity maintenance command to execute a scalar query.</summary>
+    /// <param name="command">The initialized command with its connection, parameters, timeout, and transaction.</param>
+    /// <param name="sql">The scalar query to assign to the command.</param>
+    /// <param name="token">Cancels query execution.</param>
+    /// <returns>The provider's first value, or null when no row is returned.</returns>
+    protected static async Task<object?> ReadIdentityScalarAsync(DbCommand command, string sql, CancellationToken token)
+    {
+        command.CommandText = sql;
+        return await command.ExecuteScalarAsync(token);
+    }
+
     /// <summary>
     /// Gets the provider delimiters used for table, schema, and column identifiers.
     /// </summary>
