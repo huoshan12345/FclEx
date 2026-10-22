@@ -18,6 +18,41 @@ Entity Framework Core helpers for FclEx.
 - It depends on `Microsoft.EntityFrameworkCore.Relational` and `FclEx.Core`.
 - Keep provider-specific SQL behavior in application code or provider-specific packages.
 
+### Copying primary keys
+
+`ApplyKeyTo` copies primary-key values from a source to a target without copying
+non-key members or alternate keys. Composite keys are copied in metadata order.
+
+```csharp
+context.ApplyKeyTo(source, target);
+context.Model.FindEntityType(typeof(Customer))!.ApplyKeyTo(source, target);
+context.Entry(source).ApplyKeyTo(target);
+
+// Transform each source value before assigning it to the target CLR member.
+context.ApplyKeyTo(source, target, (property, value) => value);
+
+// Reset the target key to CLR defaults, such as 0 or null.
+context.Entry(source).ApplyKeyToDefault(target);
+```
+
+The `DbContext` and `IEntityType` overloads read source CLR properties or fields,
+require a mapped primary key, and reject shadow primary-key properties. The metadata
+overload requires its CLR type to exactly match the generic entity type. The entry
+overload instead reads EF `CurrentValue`, including temporary key values that may not
+be present on the source CLR object. It reads shadow keys too, but cannot write them
+to the plain target object and silently leaves them unapplied. It does not copy
+tracking flags such as `IsTemporary`.
+
+The transform receives each primary-key property's metadata and its source value;
+null copies values unchanged. Return a value assignable to that CLR member. The
+context overload returns the context; entry methods return the source entry.
+The metadata overload returns no value.
+
+These methods do not attach the target, open a connection, or save changes. Prefer
+an untracked target because changing a tracked primary key can invalidate EF tracking
+and may be rejected during change detection. Copying is not atomic: if a transform
+or member access fails, assignments already performed are not rolled back.
+
 ### Truncating a table
 
 ```csharp
