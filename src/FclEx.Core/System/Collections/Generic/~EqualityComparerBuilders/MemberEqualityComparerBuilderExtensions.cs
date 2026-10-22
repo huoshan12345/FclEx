@@ -82,12 +82,9 @@ public static class MemberEqualityComparerBuilderExtensions
     public static MemberEqualityComparerBuilder<T> AddAllDataMembers<T>(this MemberEqualityComparerBuilder<T> builder,
         bool includeNonPublic = false, params IEnumerable<MemberInfo> excludeMembers)
     {
-        const DataMemberFlags publicFlags = Declared | Inherited | CanRead | Property | Field | Instance | Public;
-        const DataMemberFlags allFlags = publicFlags | NonPublic;
-
         var flags = includeNonPublic
-            ? allFlags
-            : publicFlags;
+            ? DataMemberFlags.ReadableInstance
+            : DataMemberFlags.PublicReadableInstance;
 
         var set = excludeMembers.ToHashSet(MemberInfoEqualityComparer.Instance);
         var members = typeof(T).GetDataMembers(flags)
@@ -104,9 +101,9 @@ public static class MemberEqualityComparerBuilderExtensions
     }
 
     public static MemberEqualityComparerBuilder<T> AddAllDataMembers<T>(this MemberEqualityComparerBuilder<T> builder,
-        bool includeNonPublic = false, params Expression<Func<T, object?>>[] members)
+        bool includeNonPublic = false, params Expression<Func<T, object?>>[] excludeMembers)
     {
-        var memberInfos = members.SelectMany(Expression.GetDataMembers);
+        var memberInfos = excludeMembers.SelectMany(Expression.GetDataMembers);
         return builder.AddAllDataMembers(includeNonPublic, memberInfos);
     }
 }

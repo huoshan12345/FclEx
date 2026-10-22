@@ -43,7 +43,7 @@ This repository is a multi-package library collection. Each package is intention
 |[FclEx.AspNetCore.Testing](src/FclEx.AspNetCore.Testing)|Integration-test helpers built around WebApplicationFactory, test content roots, and selective external HTTP forwarding.|
 |[FclEx.Caching](src/FclEx.Caching)|Cache abstractions and EasyCaching-based implementations for FclEx, including typed cache managers, configuration helpers, and System.Text.Json serialization patches.|
 |[FclEx.Caching.Redis](src/FclEx.Caching.Redis)|Redis-backed caching extensions for FclEx, including EasyCaching Redis integration, typed Redis collection wrappers, and collection configuration helpers.|
-|[FclEx.Core](src/FclEx.Core)|Foundational extensions, operation results, action pipelines, domain entity contracts, collection helpers, JSON/XML helpers, and general utilities.|
+|[FclEx.Core](src/FclEx.Core)|Foundational extensions, operation results, action pipelines, domain entity contracts and data comparers, collection helpers, JSON/XML helpers, and general utilities.|
 |[FclEx.Dapper](src/FclEx.Dapper)|Focused Dapper extensions for cached CRUD SQL, bounded multi-row inserts, local transactions, table existence checks, truncation and identity synchronization, explicit entity mappings, and provider-specific SQL adapters.|
 |[FclEx.DependencyInjection](src/FclEx.DependencyInjection)|Convenience extensions for service registration, replacement, removal, decoration, scopes, and provider lookup.|
 |[FclEx.EfCore](src/FclEx.EfCore)|Entity Framework Core query, update, soft-delete, schema, table truncation, identity-sequence synchronization, service-registration, SSH tunnel, and test-model helpers.|
