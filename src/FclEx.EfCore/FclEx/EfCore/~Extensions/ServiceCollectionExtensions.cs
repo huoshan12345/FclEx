@@ -37,29 +37,31 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddDbContextBy<TContext, TDependency>(
         this IServiceCollection serviceCollection,
-        Action<DbContextOptionsBuilder, TDependency>? optionsAction = null,
+        Action<DbContextOptionsBuilder, TDependency> optionsAction,
         ServiceLifetime contextLifetime = ServiceLifetime.Scoped,
         ServiceLifetime optionsLifetime = ServiceLifetime.Scoped)
         where TContext : DbContext
         where TDependency : notnull
     {
+        Check.NotNull(optionsAction);
         return serviceCollection.AddDbContext<TContext>((sp, o) =>
         {
             var dependency = sp.GetRequiredService<TDependency>();
-            optionsAction?.Invoke(o, dependency);
+            optionsAction.Invoke(o, dependency);
         }, contextLifetime, optionsLifetime);
     }
 
     public static IServiceCollection AddDbContextByOptions<TContext, TOptions>(
         this IServiceCollection serviceCollection,
-        Action<DbContextOptionsBuilder, TOptions>? optionsAction = null,
+        Action<DbContextOptionsBuilder, TOptions> optionsAction,
         ServiceLifetime contextLifetime = ServiceLifetime.Scoped,
         ServiceLifetime optionsLifetime = ServiceLifetime.Scoped)
         where TContext : DbContext
         where TOptions : class
     {
+        Check.NotNull(optionsAction);
         return serviceCollection.AddDbContextBy<TContext, IOptions<TOptions>>(
-            (builder, options) => optionsAction?.Invoke(builder, options.Value),
+            (builder, options) => optionsAction.Invoke(builder, options.Value),
             contextLifetime,
             optionsLifetime);
     }

@@ -61,9 +61,14 @@ public static class ReadOnlyDictionaryExtensions
         IFormatProvider? formatProvider = null,
         DateTimeStyles styles = DateTimeStyles.None)
     {
-        if (dic.TryGetValue(key, out var str)
-            && DateTimeOffset.TryParseExact(str, format, formatProvider, styles, out value))
-            return true;
+        if (dic.TryGetValue(key, out var str))
+        {
+            if (format is not null && DateTimeOffset.TryParseExact(str, format, formatProvider, styles, out value))
+                return true;
+
+            if (format is null && DateTimeOffset.TryParse(str, formatProvider, styles, out value))
+                return true;
+        }
 
         value = default;
         return false;

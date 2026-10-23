@@ -18,6 +18,11 @@ public static partial class EnumerableExtensions
         return source.AsCollection(m => new ReadOnlyCollection<T>(m.ToArray()));
     }
 
+    public static ReadOnlyHashSet<T> AsReadOnlyHashSet<T>(this IEnumerable<T> source)
+    {
+        return source.AsCollection(m => new ReadOnlyHashSet<T>(m.ToHashSet()));
+    }
+
     public static IList<T> AsIList<T>(this IEnumerable<T> source)
     {
         return source.AsCollection<T, IList<T>>(m => m.ToList());
@@ -63,12 +68,40 @@ public static partial class EnumerableExtensions
     }
 #endif
 
+    public static Dictionary<TKey, TValue> AsDictionary<TKey, TValue>(
+        this IEnumerable<KeyValuePair<TKey, TValue>> source,
+        IEqualityComparer<TKey>? comparer = null)
+        where TKey : notnull
+    {
+        return source switch
+        {
+            null => throw new ArgumentNullException(nameof(source)),
+            Dictionary<TKey, TValue> dic when Equals(comparer, dic.Comparer) => dic,
+            _ => source.ToDictionary(comparer),
+        };
+
+        static bool Equals(IEqualityComparer<TKey>? x, IEqualityComparer<TKey>? y)
+        {
+            var defaultComparer = EqualityComparer<TKey>.Default;
+            if (x is null && (y is null || defaultComparer.Equals(y)))
+                return true;
+
+            if (y is null && (x is null || defaultComparer.Equals(x)))
+                return true;
+
+            if (x is null || y is null)
+                return false;
+
+            return x.Equals(y);
+        }
+    }
+
     public static IReadOnlyDictionary<TKey, TValue> AsIReadOnlyDictionary<TKey, TValue>(
         this IEnumerable<KeyValuePair<TKey, TValue>> source,
         IEqualityComparer<TKey>? comparer = null)
         where TKey : notnull
     {
-        return source.AsCollection<KeyValuePair<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>>(m => m.ToDictionary(comparer));
+        return source.AsDictionary(comparer);
     }
 
     public static IDictionary<TKey, TValue> AsIDictionary<TKey, TValue>(
@@ -76,14 +109,6 @@ public static partial class EnumerableExtensions
         IEqualityComparer<TKey>? comparer = null)
         where TKey : notnull
     {
-        return source.AsCollection<KeyValuePair<TKey, TValue>, IDictionary<TKey, TValue>>(m => m.ToDictionary(comparer));
-    }
-
-    public static Dictionary<TKey, TValue> AsDictionary<TKey, TValue>(
-        this IEnumerable<KeyValuePair<TKey, TValue>> source,
-        IEqualityComparer<TKey>? comparer = null)
-        where TKey : notnull
-    {
-        return source.AsCollection<KeyValuePair<TKey, TValue>, Dictionary<TKey, TValue>>(m => m.ToDictionary(comparer));
+        return source.AsDictionary(comparer);
     }
 }

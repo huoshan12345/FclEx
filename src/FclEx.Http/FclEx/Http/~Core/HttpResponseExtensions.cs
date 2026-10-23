@@ -208,9 +208,15 @@ public static class HttpResponseExtensions
             : Operation.Success(response, response.Elapsed);
     }
 
+    public static bool HasContentType(this HttpResponse response, Func<string?, bool> predicate)
+    {
+        return response.TryGetMediaType(out var mediaType)
+               && predicate(mediaType.MediaType);
+    }
+
     public static bool HasContentType(this HttpResponse response, string contentType)
     {
-        return response.TryGetMediaType(out var mediaType) && mediaType.MediaType == contentType;
+        return response.HasContentType(mt => string.Equals(mt, contentType, StringComparison.OrdinalIgnoreCase));
     }
 
     public static bool IsHtml(this HttpResponse response)
@@ -220,7 +226,7 @@ public static class HttpResponseExtensions
 
     public static bool IsXml(this HttpResponse response)
     {
-        return response.HasContentType(MediaTypeNames.Text.Xml);
+        return response.HasContentType(mt => mt is not null && (mt.EndsWithIgnoreCase("/xml") || mt.EndsWithIgnoreCase("+xml")));
     }
 
     public static OperationResult<T> HandleJsonResponse<T>(

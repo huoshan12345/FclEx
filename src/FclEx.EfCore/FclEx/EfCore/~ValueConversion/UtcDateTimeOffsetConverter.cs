@@ -1,4 +1,4 @@
-﻿namespace FclEx.EfCore._ValueConversion;
+﻿namespace FclEx.EfCore;
 
 public class UtcDateTimeOffsetConverter : ValueConverter<DateTimeOffset, DateTimeOffset>
 {

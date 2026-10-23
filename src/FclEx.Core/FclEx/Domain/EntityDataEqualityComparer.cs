@@ -8,12 +8,12 @@ public static class EntityDataEqualityComparer
     /// The underlying set can be explicitly cast to a mutable set. Configure it before initializing generic
     /// comparers and do not modify it concurrently with comparer creation. Changes do not update cached comparers.
     /// </remarks>
-    public static readonly IReadOnlyCollection<string> DefaultExcludedNames = new HashSet<string>
+    public static readonly ReadOnlyHashSet<string> DefaultExcludedNames = new HashSet<string>
     {
         nameof(IHasCreatedAt.CreatedAt),
         nameof(IHasUpdatedAt.UpdatedAt),
         nameof(IHasDeletedAt.DeletedAt),
-    };
+    }.AsReadOnlyHashSet();
 
     /// <summary>Creates an entity data comparer using the complete set of excluded member names.</summary>
     /// <typeparam name="T">The declared entity type whose public readable instance fields and properties are compared.</typeparam>
@@ -76,7 +76,7 @@ public static class EntityDataEqualityComparer<T>
     /// </remarks>
     public static IEqualityComparer<T> Create(IReadOnlyCollection<string>? excludedNames = null)
     {
-        return excludedNames is null || EntityDataEqualityComparer.DefaultExcludedNames.AsISet().SetEquals(excludedNames)
+        return excludedNames is null || EntityDataEqualityComparer.DefaultExcludedNames.SetEquals(excludedNames)
             ? Instance
             : CreateCore(excludedNames);
     }
