@@ -61,11 +61,10 @@ subtypes are not inspected, and different runtime types compare unequal. Null co
 equal only to null. Hash codes use the included members as well.
 
 `EntityDataEqualityComparer<T>.Instance` is cached. Null exclusions, or exclusions
-set-equal to the current defaults, return that instance. The default names expose an
-underlying mutable set for explicit configuration; configure it before initializing
-comparers and avoid concurrent mutation. Changing defaults does not rebuild cached
-instances, even when an explicit list matches the new defaults. Other custom comparers
-fix their member selection at creation and do not track changes to the supplied list.
+set-equal to the fixed defaults, return that instance. The default names cannot be
+modified. Pass a complete exclusion list to `Create` to use a different policy.
+Custom comparers fix their member selection at creation and do not track changes
+to the supplied list.
 
 ### Adjacent duplicate removal
 

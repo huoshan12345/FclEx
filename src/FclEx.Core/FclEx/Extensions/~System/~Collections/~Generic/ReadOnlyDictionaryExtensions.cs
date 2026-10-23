@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions;
+namespace FclEx.Extensions;
 
 public static class ReadOnlyDictionaryExtensions
 {
@@ -49,6 +49,15 @@ public static class ReadOnlyDictionaryExtensions
         return false;
     }
 
+    /// <summary>Reads and parses a dictionary value as a date and time with an offset.</summary>
+    /// <typeparam name="TKey">The dictionary key type.</typeparam>
+    /// <param name="dic">The dictionary containing the date text.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <param name="value">The parsed value, or default when the key is missing or parsing fails.</param>
+    /// <param name="format">An exact date format; null uses general date parsing. A failed exact match does not fall back to general parsing.</param>
+    /// <param name="formatProvider">The culture used to parse the value; null uses the current culture.</param>
+    /// <param name="styles">The date parsing options. Invalid combinations can throw ArgumentException.</param>
+    /// <returns>True when the key exists and its value is successfully parsed; otherwise false.</returns>
     public static bool TryGetDateTimeOffset<TKey>(
         this IReadOnlyDictionary<TKey,
 #nullable disable

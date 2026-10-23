@@ -5,8 +5,7 @@ public static class EntityDataEqualityComparer
 {
     /// <summary>Gets the default member names excluded from entity data comparison: CreatedAt, UpdatedAt, and DeletedAt.</summary>
     /// <remarks>
-    /// The underlying set can be explicitly cast to a mutable set. Configure it before initializing generic
-    /// comparers and do not modify it concurrently with comparer creation. Changes do not update cached comparers.
+    /// The default names cannot be modified. Pass a complete exclusion list to Create to use a different policy.
     /// </remarks>
     public static readonly ReadOnlyHashSet<string> DefaultExcludedNames = new HashSet<string>
     {
@@ -42,7 +41,7 @@ public static class EntityDataEqualityComparer
 public static class EntityDataEqualityComparer<T>
 {
     /// <summary>Gets the cached comparer built with the default exclusions when this generic type is initialized.</summary>
-    /// <remarks>Later changes to <see cref="EntityDataEqualityComparer.DefaultExcludedNames"/> do not rebuild this comparer.</remarks>
+    /// <remarks>The default exclusions are fixed; use Create with a custom list for a different policy.</remarks>
     public static readonly IEqualityComparer<T> Instance = CreateCore();
 
     private static IEqualityComparer<T> CreateCore(IReadOnlyCollection<string>? excludedNames = null)
@@ -70,10 +69,6 @@ public static class EntityDataEqualityComparer<T>
     /// <see cref="Instance"/> when the list is null or set-equal to the current default names; otherwise, a new
     /// comparer. Member selection is fixed at creation and does not track later changes to the supplied collection.
     /// </returns>
-    /// <remarks>
-    /// A list matching the current defaults still returns the cached instance even if those defaults were modified
-    /// after initialization. To avoid mixing exclusion policies, configure the defaults before using this type.
-    /// </remarks>
     public static IEqualityComparer<T> Create(IReadOnlyCollection<string>? excludedNames = null)
     {
         return excludedNames is null || EntityDataEqualityComparer.DefaultExcludedNames.SetEquals(excludedNames)

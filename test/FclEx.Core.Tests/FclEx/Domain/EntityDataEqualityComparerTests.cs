@@ -124,31 +124,20 @@ public class EntityDataEqualityComparerTests
     }
 
     [Fact]
-    public void ModifiedDefaults_DoNotRebuildCachedComparers()
+    public void DefaultExclusions_AreReadOnly_AndCustomPoliciesDoNotChangeDefaults()
     {
         var cached = EntityDataEqualityComparer<CachedModel>.Instance;
-        var defaults = (ISet<string>)EntityDataEqualityComparer.DefaultExcludedNames;
-        var added = defaults.Add(nameof(CachedModel.ConfigurationProbe));
-        try
-        {
-            Assert.True(added);
-            Assert.False(cached.Equals(new CachedModel { ConfigurationProbe = 1 }, new CachedModel { ConfigurationProbe = 2 }));
-            var newlyCreated = GetNewModelComparer();
-            Assert.True(newlyCreated.Equals(new NewModel { ConfigurationProbe = 1 }, new NewModel { ConfigurationProbe = 2 }));
-            Assert.Same(cached, EntityDataEqualityComparer<CachedModel>.Create(defaults.ToArray()));
-        }
-        finally
-        {
-            if (added)
-                defaults.Remove(nameof(CachedModel.ConfigurationProbe));
-        }
-    }
+        var defaults = EntityDataEqualityComparer.DefaultExcludedNames;
+        Assert.False((object)defaults is ISet<string>);
+        Assert.False((object)defaults is ICollection<string>);
+        Assert.True(defaults.SetEquals(["CreatedAt", "UpdatedAt", "DeletedAt"]));
 
-    // Keep the runtime from initializing the new model's comparer before the defaults change.
-    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-    private static IEqualityComparer<NewModel> GetNewModelComparer()
-    {
-        return EntityDataEqualityComparer<NewModel>.Instance;
+        var custom = EntityDataEqualityComparer.Create<CachedModel>([nameof(CachedModel.ConfigurationProbe)]);
+        var first = new CachedModel { ConfigurationProbe = 1 };
+        var second = new CachedModel { ConfigurationProbe = 2 };
+        Assert.True(custom.Equals(first, second));
+        Assert.False(cached.Equals(first, second));
+        Assert.Same(cached, EntityDataEqualityComparer.Create<CachedModel>(defaults.ToArray()));
     }
 
     public class Model
@@ -187,10 +176,6 @@ public class EntityDataEqualityComparerTests
         public int ConfigurationProbe { get; set; }
     }
 
-    public class NewModel
-    {
-        public int ConfigurationProbe { get; set; }
-    }
 }
 
 [CollectionDefinition("EntityDataEquality", DisableParallelization = true)]

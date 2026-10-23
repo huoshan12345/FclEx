@@ -35,6 +35,17 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    /// <summary>Registers a DbContext whose options are configured using a required service from dependency injection.</summary>
+    /// <typeparam name="TContext">The context type to register.</typeparam>
+    /// <typeparam name="TDependency">The service type resolved when EF constructs the options.</typeparam>
+    /// <param name="serviceCollection">The service collection to update.</param>
+    /// <param name="optionsAction">Configures the options using the resolved service; cannot be null.</param>
+    /// <param name="contextLifetime">The context registration lifetime.</param>
+    /// <param name="optionsLifetime">The options registration lifetime.</param>
+    /// <returns>The same service collection.</returns>
+    /// <exception cref="ArgumentNullException">The configuration callback is null.</exception>
+    /// <remarks>The dependency is resolved later from the provider constructing the options and must be registered
+    /// with a compatible lifetime. Resolution and callback exceptions propagate when options are constructed.</remarks>
     public static IServiceCollection AddDbContextBy<TContext, TDependency>(
         this IServiceCollection serviceCollection,
         Action<DbContextOptionsBuilder, TDependency> optionsAction,
@@ -51,6 +62,17 @@ public static class ServiceCollectionExtensions
         }, contextLifetime, optionsLifetime);
     }
 
+    /// <summary>Registers a DbContext configured from the Value of a required IOptions&lt;TOptions&gt; service.</summary>
+    /// <typeparam name="TContext">The context type to register.</typeparam>
+    /// <typeparam name="TOptions">The configuration options type.</typeparam>
+    /// <param name="serviceCollection">The service collection to update.</param>
+    /// <param name="optionsAction">Configures the context options from the configuration value; cannot be null.</param>
+    /// <param name="contextLifetime">The context registration lifetime.</param>
+    /// <param name="optionsLifetime">The context options registration lifetime.</param>
+    /// <returns>The same service collection.</returns>
+    /// <exception cref="ArgumentNullException">The configuration callback is null.</exception>
+    /// <remarks>Uses IOptions, not IOptionsSnapshot or IOptionsMonitor. Options are resolved and validated when
+    /// EF constructs its options. This method does not register or bind TOptions.</remarks>
     public static IServiceCollection AddDbContextByOptions<TContext, TOptions>(
         this IServiceCollection serviceCollection,
         Action<DbContextOptionsBuilder, TOptions> optionsAction,

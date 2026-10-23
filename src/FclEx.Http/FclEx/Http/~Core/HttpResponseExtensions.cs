@@ -208,22 +208,37 @@ public static class HttpResponseExtensions
             : Operation.Success(response, response.Elapsed);
     }
 
+    /// <summary>Tests the last parseable Content-Type header's media type using a predicate.</summary>
+    /// <param name="response">The response whose headers are inspected.</param>
+    /// <param name="predicate">Receives the parsed media type without parameters such as charset. Called only when a header parses successfully.</param>
+    /// <returns>False when no header can be parsed; otherwise the predicate result.</returns>
+    /// <remarks>Predicate exceptions propagate to the caller.</remarks>
     public static bool HasContentType(this HttpResponse response, Func<string?, bool> predicate)
     {
         return response.TryGetMediaType(out var mediaType)
                && predicate(mediaType.MediaType);
     }
 
+    /// <summary>Matches the response media type using ordinal, case-insensitive comparison.</summary>
+    /// <param name="response">The response whose headers are inspected.</param>
+    /// <param name="contentType">The media type to match, without parameters such as charset.</param>
+    /// <returns>True when the last parseable Content-Type header matches; otherwise false.</returns>
     public static bool HasContentType(this HttpResponse response, string contentType)
     {
         return response.HasContentType(mt => string.Equals(mt, contentType, StringComparison.OrdinalIgnoreCase));
     }
 
+    /// <summary>Checks whether the response media type is text/html, ignoring case and header parameters.</summary>
+    /// <param name="response">The response whose headers are inspected.</param>
+    /// <returns>True for text/html; false for another media type or no parseable Content-Type header.</returns>
     public static bool IsHtml(this HttpResponse response)
     {
         return response.HasContentType(MediaTypeNames.Text.Html);
     }
 
+    /// <summary>Checks for an XML media type whose subtype is xml or ends in +xml, ignoring case.</summary>
+    /// <param name="response">The response whose headers are inspected.</param>
+    /// <returns>True for types such as text/xml, application/xml, and application/soap+xml; otherwise false.</returns>
     public static bool IsXml(this HttpResponse response)
     {
         return response.HasContentType(mt => mt is not null && (mt.EndsWithIgnoreCase("/xml") || mt.EndsWithIgnoreCase("+xml")));
