@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace FclEx.EfCore;
 
@@ -32,5 +33,34 @@ public static class ServiceCollectionExtensions
         services.RemoveAll<IDbContextOptionsConfiguration<TContext>>();
 #endif
         return services;
+    }
+
+    public static IServiceCollection AddDbContextBy<TContext, TDependency>(
+        this IServiceCollection serviceCollection,
+        Action<DbContextOptionsBuilder, TDependency>? optionsAction = null,
+        ServiceLifetime contextLifetime = ServiceLifetime.Scoped,
+        ServiceLifetime optionsLifetime = ServiceLifetime.Scoped)
+        where TContext : DbContext
+        where TDependency : notnull
+    {
+        return serviceCollection.AddDbContext<TContext>((sp, o) =>
+        {
+            var dependency = sp.GetRequiredService<TDependency>();
+            optionsAction?.Invoke(o, dependency);
+        }, contextLifetime, optionsLifetime);
+    }
+
+    public static IServiceCollection AddDbContextByOptions<TContext, TOptions>(
+        this IServiceCollection serviceCollection,
+        Action<DbContextOptionsBuilder, TOptions>? optionsAction = null,
+        ServiceLifetime contextLifetime = ServiceLifetime.Scoped,
+        ServiceLifetime optionsLifetime = ServiceLifetime.Scoped)
+        where TContext : DbContext
+        where TOptions : class
+    {
+        return serviceCollection.AddDbContextBy<TContext, IOptions<TOptions>>(
+            (builder, options) => optionsAction?.Invoke(builder, options.Value),
+            contextLifetime,
+            optionsLifetime);
     }
 }

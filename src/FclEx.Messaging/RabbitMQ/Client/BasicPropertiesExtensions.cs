@@ -14,7 +14,7 @@ public static class Extensions
     {
         Check.NotNull(properties);
 
-        var obj = properties.Headers?.Get(key);
+        var obj = properties.Headers?.AsIReadOnlyDictionary().Get(key);
         return obj.CastTo<T>() ?? defaultValue;
     }
 
@@ -60,12 +60,12 @@ public static class Extensions
 
     public static int GetErrorTimes(this IReadOnlyBasicProperties properties)
     {
-        return Get<int>(properties, RabbitMQHeaderNames.ErrorTimes);
+        return properties.Get<int>(RabbitMQHeaderNames.ErrorTimes);
     }
 
     public static int GetDelayMilli(this IReadOnlyBasicProperties properties)
     {
-        return properties.Headers?.Get(RabbitMQHeaderNames.DelayMilli)?.CastTo<int>() ?? 0;
+        return properties.Headers?.AsIReadOnlyDictionary().Get(RabbitMQHeaderNames.DelayMilli)?.CastTo<int>() ?? 0;
     }
 
     public static TimeSpan GetDelay(this IReadOnlyBasicProperties properties)

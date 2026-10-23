@@ -207,4 +207,90 @@ public static class HttpResponseExtensions
             ? Operation.Error<HttpResponse>(response.Exception, response.Elapsed)
             : Operation.Success(response, response.Elapsed);
     }
+
+    public static bool HasContentType(this HttpResponse response, string contentType)
+    {
+        return response.TryGetMediaType(out var mediaType) && mediaType.MediaType == contentType;
+    }
+
+    public static bool IsHtml(this HttpResponse response)
+    {
+        return response.HasContentType(MediaTypeNames.Text.Html);
+    }
+
+    public static bool IsXml(this HttpResponse response)
+    {
+        return response.HasContentType(MediaTypeNames.Text.Xml);
+    }
+
+    public static OperationResult<T> HandleJsonResponse<T>(
+        this HttpResponse response,
+        JsonOptions? jsonOptions,
+        bool readJsonOnNonSuccess = false,
+        ILogger? logger = null)
+    {
+        return response.HandleJsonResponse<T>(JsonHelper.GetOptions(jsonOptions), readJsonOnNonSuccess, logger);
+    }
+
+    public static OperationResult<T> HandleJsonResponse<T>(
+        this HttpResponse response,
+        JsonSerializerOptions? jsonOptions = null,
+        bool readJsonOnNonSuccess = false,
+        ILogger? logger = null)
+    {
+        if (response.IsError)
+            return (response.Exception, response.Elapsed);
+
+        var success = response.StatusCode.IsSuccess();
+
+        logger ??= NullLogger.Instance;
+
+        if (success)
+        {
+            logger.LogInformation("{Method} {Uri} succeeded", response.Request.Method, response.Request.GetUri());
+        }
+
+        if (success || readJsonOnNonSuccess)
+        {
+            return Operation.Execute(() => response.ResponseString.FromJson<T>(jsonOptions)!)
+                .AddElapsed(response.Elapsed);
+        }
+
+        var error = response.ResponseString;
+        if (error.IsNullOrEmpty())
+        {
+            var code = response.StatusCode;
+            error = $"Request failed with status code {code}/{code.ToInt()}";
+        }
+
+        logger.LogError("{Method} {Uri} failed due to: {Error}", response.Request.Method, response.Request.GetUri(), error);
+
+        return (error, response.Elapsed);
+    }
+
+    public static OperationResult<HttpResponse> HandleResponse(this HttpResponse response, ILogger? logger = null)
+    {
+
+        if (response.IsError)
+            return (response.Exception, response.Elapsed);
+
+        logger ??= NullLogger.Instance;
+
+        if (response.StatusCode.IsSuccess())
+        {
+            logger.LogInformation("{Method} {Uri} succeeded", response.Request.Method, response.Request.GetUri());
+            return Operation.Success(response, response.Elapsed);
+        }
+
+        var error = response.ResponseString;
+        if (error.IsNullOrEmpty())
+        {
+            var code = response.StatusCode;
+            error = $"Request failed with status code {code}/{code.ToInt()}";
+        }
+
+        logger.LogError("{Method} {Uri} failed due to: {Error}", response.Request.Method, response.Request.GetUri(), error);
+
+        return (error, response.Elapsed);
+    }
 }

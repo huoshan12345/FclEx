@@ -6,6 +6,8 @@ namespace AngleSharp.Dom;
 /// </summary>
 public static class ElementExtensions
 {
+    private static readonly string?[] TopLevelSelectors = [null];
+
     /// <summary>
     /// Returns the element's raw <c>href</c> attribute value.
     /// </summary>
@@ -148,8 +150,30 @@ public static class ElementExtensions
         return root.QueryHref([selector], baseUri);
     }
 
-    private static readonly string?[] TopLevelSelectors = [null];
+    public static OperationResult<(IElement Element, UriCreator Src)> QuerySrc(this IElement? root, string?[] selectors, Uri? baseUri = null)
+    {
+        var element = root.QueryAttribute(selectors, "src");
+        if (element.IsError)
+            return element.Exception;
 
+        var (e, src) = element.Value;
+        return Operation.Execute(() => Create(e, src, baseUri));
+
+        static (IElement Element, UriCreator Src) Create(IElement e, string src, Uri? baseUri)
+        {
+            var u = baseUri is null
+                ? new Uri(src, UriKind.RelativeOrAbsolute)
+                : new Uri(baseUri, src);
+            var uriCreator = new UriCreator(u);
+            return (e, uriCreator);
+        }
+    }
+
+    public static OperationResult<(IElement Element, UriCreator Src)> QuerySrc(this IElement? root, string? selector, Uri? baseUri = null)
+    {
+        return root.QuerySrc([selector], baseUri);
+    }
+    
     /// <summary>
     /// Maps the root element itself to caller-defined data.
     /// </summary>

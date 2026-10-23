@@ -52,4 +52,38 @@ public static partial class EnumerableExtensions
     {
         return source.AsCollection<T, T[]>(m => m.ToArray());
     }
+
+#if !NET5_0_OR_GREATER
+    public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(
+        this IEnumerable<KeyValuePair<TKey, TValue>> source,
+        IEqualityComparer<TKey>? comparer = null)
+        where TKey : notnull
+    {
+        return source.ToDictionary(m => m.Key, m => m.Value, comparer);
+    }
+#endif
+
+    public static IReadOnlyDictionary<TKey, TValue> AsIReadOnlyDictionary<TKey, TValue>(
+        this IEnumerable<KeyValuePair<TKey, TValue>> source,
+        IEqualityComparer<TKey>? comparer = null)
+        where TKey : notnull
+    {
+        return source.AsCollection<KeyValuePair<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>>(m => m.ToDictionary(comparer));
+    }
+
+    public static IDictionary<TKey, TValue> AsIDictionary<TKey, TValue>(
+        this IEnumerable<KeyValuePair<TKey, TValue>> source,
+        IEqualityComparer<TKey>? comparer = null)
+        where TKey : notnull
+    {
+        return source.AsCollection<KeyValuePair<TKey, TValue>, IDictionary<TKey, TValue>>(m => m.ToDictionary(comparer));
+    }
+
+    public static Dictionary<TKey, TValue> AsDictionary<TKey, TValue>(
+        this IEnumerable<KeyValuePair<TKey, TValue>> source,
+        IEqualityComparer<TKey>? comparer = null)
+        where TKey : notnull
+    {
+        return source.AsCollection<KeyValuePair<TKey, TValue>, Dictionary<TKey, TValue>>(m => m.ToDictionary(comparer));
+    }
 }
