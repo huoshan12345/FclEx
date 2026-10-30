@@ -10,7 +10,7 @@ internal static class FileTransferPathLock
             ? StringComparer.OrdinalIgnoreCase
             : StringComparer.Ordinal);
 
-    // Protect only registry membership and reference counts; path operations use their own monitors.
+    // Protect only registry membership and reference counts; each path has its own AsyncLock.
     private static readonly
 #if NET9_0_OR_GREATER
         Lock
@@ -22,33 +22,54 @@ internal static class FileTransferPathLock
     internal static IDisposable Acquire(string path)
     {
         path = Path.GetFullPath(path);
-        Entry entry;
+        var entry = AddReference(path);
+        AsyncLock.Lease? acquiredLock = null;
+        try
+        {
+            // Waiting must happen outside the registry lock so other paths can proceed independently.
+            acquiredLock = entry.Lock.Acquire();
+            return new Lease(path, entry, acquiredLock);
+        }
+        catch
+        {
+            acquiredLock?.Dispose();
+            ReleaseReference(path, entry);
+            throw;
+        }
+    }
+
+    internal static async Task<IDisposable> AcquireAsync(string path, CancellationToken cancellationToken = default)
+    {
+        path = Path.GetFullPath(path);
+        var entry = AddReference(path);
+        AsyncLock.Lease? acquiredLock = null;
+        try
+        {
+            // Async callers wait without occupying a thread and can cancel before acquiring the path.
+            acquiredLock = await entry.Lock.AcquireAsync(cancellationToken).ConfigureAwait(false);
+            return new Lease(path, entry, acquiredLock);
+        }
+        catch
+        {
+            // A canceled waiter still owns a registry reference, even though it never acquired the lock.
+            acquiredLock?.Dispose();
+            ReleaseReference(path, entry);
+            throw;
+        }
+    }
+
+    private static Entry AddReference(string path)
+    {
         lock (_lock)
         {
-            if (!_entries.TryGetValue(path, out entry!))
+            if (!_entries.TryGetValue(path, out var entry))
                 _entries.Add(path, entry = new Entry());
 
             // Register before waiting. If only holders were counted, an exiting holder could remove
             // the entry while a waiter still uses it, allowing a new caller to create a second lock
             // for the same path and enter concurrently with that waiter.
             entry.Users++;
-        }
-
-        var entered = false;
-        try
-        {
-            // Never wait while holding the registry lock: a busy path must not block other paths
-            // from acquiring locks or releasing their references.
-            Monitor.Enter(entry, ref entered);
-            return new Lease(path, entry);
-        }
-        catch
-        {
-            // Balance the registration even if waiting is interrupted or lease creation fails.
-            if (entered)
-                Monitor.Exit(entry);
-            ReleaseReference(path, entry);
-            throw;
+            return entry;
         }
     }
 
@@ -65,24 +86,26 @@ internal static class FileTransferPathLock
 
     private sealed class Entry
     {
-        // Holders plus waiters; access is protected by the registry lock, not this entry's monitor.
+        internal AsyncLock Lock { get; } = new();
+
+        // Holders plus sync/async waiters; access is protected by the registry lock, not the path lock.
         internal int Users;
     }
 
-    // Acquisition and disposal must run on the same thread; never hold a lease across await.
-    private sealed class Lease(string path, Entry entry) : IDisposable
+    // AsyncLock leases have no thread affinity; disposal may run on a different continuation thread.
+    private sealed class Lease(string path, Entry entry, AsyncLock.Lease acquiredLock) : IDisposable
     {
         private Entry? _entry = entry;
 
         public void Dispose()
         {
-            if (_entry is not { } current)
+            // Release the lock and its registry reference only once, including concurrent disposal.
+            if (Interlocked.Exchange(ref _entry, null) is not { } current)
                 return;
 
-            // Keep the reference until after leaving the monitor so the registry cannot replace
+            // Keep the reference until after releasing the path lock so the registry cannot replace
             // this entry while its protected operation is still running.
-            Monitor.Exit(current);
-            _entry = null;
+            acquiredLock.Dispose();
             ReleaseReference(path, current);
         }
     }

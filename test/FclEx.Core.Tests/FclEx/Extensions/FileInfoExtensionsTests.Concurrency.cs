@@ -88,14 +88,16 @@ public partial class FileInfoExtensionsTests
                 staged = SpinWait.SpinUntil(
                     () => directory.GetFiles(".fclex-*.tmp").Any(), TimeSpan.FromSeconds(10));
                 await cancellation.CancelAsync();
+
+                // Cancellation must finish and clean up while another transfer still holds the path.
+                await Assert.ThrowsAnyAsync<OperationCanceledException>(
+                    () => copy.WaitAsync(TimeSpan.FromSeconds(10)));
+                Assert.Empty(directory.GetFiles(".fclex-*.tmp"));
             }
 
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(
-                () => copy.WaitAsync(TimeSpan.FromSeconds(10), cancellation.Token));
             Assert.True(staged);
             Assert.False(File.Exists(destinationPath));
-            Assert.Empty(directory.GetFiles(".fclex-*.tmp"));
-            Assert.Equal("source", await File.ReadAllTextAsync(source.FullName, cancellation.Token));
+            Assert.Equal("source", await File.ReadAllTextAsync(source.FullName));
         }
         finally
         {

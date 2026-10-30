@@ -27,6 +27,8 @@ non-overwriting transfers by candidate destination path within the process. Copi
 moves share the same locks, including when auto-renaming reaches a path requested
 directly by another transfer. Different paths in the same directory can proceed independently.
 Copying to a temporary file happens outside the destination lock.
+Copies wait asynchronously for the destination lock and can cancel that wait; moves
+wait synchronously. Both use the same per-path `AsyncLock`.
 
 Path matching follows the package's operating-system convention: case-insensitive on
 Windows and case-sensitive elsewhere. Other processes, symbolic-link aliases, and
