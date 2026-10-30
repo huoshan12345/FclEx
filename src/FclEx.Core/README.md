@@ -20,6 +20,18 @@ The foundational package for FclEx.
 - Prefer using focused extension methods and small utility types directly rather than treating the package as an application framework.
 - Several APIs backfill newer .NET conveniences on older target frameworks.
 
+### Concurrent file transfers
+
+The `CopyToAsync` and `MoveTo` overloads that accept `FileTransferOptions` coordinate
+non-overwriting transfers by candidate destination path within the process. Copies and
+moves share the same locks, including when auto-renaming reaches a path requested
+directly by another transfer. Different paths in the same directory can proceed independently.
+Copying to a temporary file happens outside the destination lock.
+
+Path matching follows the package's operating-system convention: case-insensitive on
+Windows and case-sensitive elsewhere. Other processes, symbolic-link aliases, and
+explicit overwrite operations are outside this coordination.
+
 ### Entity data equality
 
 Use `EntityDataEqualityComparer` to compare entity data when deciding whether an update

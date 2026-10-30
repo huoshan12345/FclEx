@@ -1,6 +1,6 @@
 namespace FclEx.Extensions;
 
-public class FileInfoExtensionsTests
+public partial class FileInfoExtensionsTests
 {
     private static readonly FileTransferOptions OverwriteOptions = new()
     {
@@ -311,23 +311,10 @@ public class FileInfoExtensionsTests
         Cleanup(source, destination);
     }
 
-    [RetryFact(5, 500)]
+    [Fact]
     public async Task CopyToAsync_ConcurrentAutoRename_DoesNotOverwriteEitherCopy()
     {
-        var directory = CreateTempDir();
-        var firstSource = CreateTempFile("first");
-        var secondSource = CreateTempFile("second");
-        var destinationPath = Path.Combine(directory.FullName, "report.txt");
-
-        var results = await Task.WhenAll(
-            firstSource.CopyToAsync(new FileInfo(destinationPath), AutoRenameOptions),
-            secondSource.CopyToAsync(new FileInfo(destinationPath), AutoRenameOptions));
-
-        Assert.NotEqual(results[0].FullName, results[1].FullName);
-        Assert.Equal(
-            new[] { "first", "second" },
-            results.Select(result => File.ReadAllText(result.FullName)).OrderBy(value => value).ToArray());
-        Cleanup(firstSource, secondSource, directory);
+        await AssertConcurrentAutoRenameAsync(true, true, false);
     }
 
     [Fact]
@@ -336,7 +323,7 @@ public class FileInfoExtensionsTests
         var source = CreateTempFile(new string('x', 100_000));
         var destination = new FileInfo(Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()));
         using var cancellation = new CancellationTokenSource();
-        cancellation.Cancel();
+        await cancellation.CancelAsync();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
             () => source.CopyToAsync(destination, AutoRenameOptions, cancellation.Token));
@@ -345,24 +332,10 @@ public class FileInfoExtensionsTests
         Cleanup(source, destination);
     }
 
-    [RetryFact(5, 500)]
-    public void MoveTo_ConcurrentAutoRename_DoesNotOverwriteEitherMove()
+    [Fact]
+    public async Task MoveTo_ConcurrentAutoRename_DoesNotOverwriteEitherMove()
     {
-        var directory = CreateTempDir();
-        var firstSource = CreateTempFile("first");
-        var secondSource = CreateTempFile("second");
-        var destinationPath = Path.Combine(directory.FullName, "report.txt");
-
-        var results = new FileInfo[2];
-        Parallel.Invoke(
-            () => results[0] = firstSource.MoveTo(new FileInfo(destinationPath), AutoRenameOptions),
-            () => results[1] = secondSource.MoveTo(new FileInfo(destinationPath), AutoRenameOptions));
-
-        Assert.NotEqual(results[0].FullName, results[1].FullName);
-        Assert.Equal(
-            new[] { "first", "second" },
-            results.Select(result => File.ReadAllText(result.FullName)).OrderBy(value => value).ToArray());
-        Cleanup(directory);
+        await AssertConcurrentAutoRenameAsync(false, false, false);
     }
 
     [Fact]

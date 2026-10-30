@@ -13,8 +13,11 @@ public static class FileInfoExtensions
 
     /// <summary>Asynchronously copies a file using the requested conflict behavior.</summary>
     /// <remarks>
-    /// Except for <see cref="FileConflictResolution.Overwrite"/>, destination creation is atomic and never overwrites a
-    /// file created concurrently. A partially written newly-created destination is removed if copying fails.
+    /// Except for <see cref="FileConflictResolution.Overwrite"/>, completed copies and file moves through these
+    /// option-based extensions coordinate access to each candidate destination path within this process. File contents
+    /// are copied to a temporary file without holding the destination lock. Waiting for the lock is synchronous;
+    /// cancellation is checked again before publication. Temporary files are removed if copying or publication fails.
+    /// Other processes and paths aliased through symbolic links are not coordinated.
     /// </remarks>
     /// <returns>The actual destination, which can differ from <paramref name="destination"/> when auto-renaming.</returns>
     public static async Task<FileInfo> CopyToAsync(
@@ -72,6 +75,8 @@ public static class FileInfoExtensions
         {
             while (true)
             {
+                using var destinationLock = FileTransferPathLock.Acquire(candidate.FullName);
+                cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
                     File.Move(stagingFile.FullName, candidate.FullName);
@@ -250,6 +255,13 @@ public static class FileInfoExtensions
 #endif
 
     /// <summary>Moves a file using the requested conflict behavior.</summary>
+    /// <remarks>
+    /// Except for <see cref="FileConflictResolution.Overwrite"/>, access to each candidate destination path is
+    /// coordinated with file copies and moves through these option-based extensions within this process. A conflict
+    /// releases the current path's lock before trying the next name. Other processes and paths aliased through symbolic
+    /// links are not coordinated. Moving updates <paramref name="source"/> to refer to its new path; an ignored duplicate
+    /// instead deletes the source file.
+    /// </remarks>
     /// <returns>The actual destination, which can differ from <paramref name="destination"/> when auto-renaming.</returns>
     public static FileInfo MoveTo(
         this FileInfo source,
@@ -287,6 +299,7 @@ public static class FileInfoExtensions
         var candidate = destination;
         while (true)
         {
+            using var destinationLock = FileTransferPathLock.Acquire(candidate.FullName);
             try
             {
                 source.MoveTo(candidate.FullName, false);
