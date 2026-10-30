@@ -79,7 +79,7 @@ public partial class FileInfoExtensionsTests
             Task<FileInfo> copy;
             bool staged;
 
-            using (FileTransferPathLock.Acquire(destinationPath))
+            using (await FileTransferPathLock.AcquireAsync(destinationPath, cancellation.Token))
             {
                 copy = Task.Factory.StartNew(() => source.CopyToAsync(
                         // ReSharper disable once AccessToDisposedClosure
@@ -91,13 +91,13 @@ public partial class FileInfoExtensionsTests
 
                 // Cancellation must finish and clean up while another transfer still holds the path.
                 await Assert.ThrowsAnyAsync<OperationCanceledException>(
-                    () => copy.WaitAsync(TimeSpan.FromSeconds(10)));
+                    () => copy.WaitAsync(TimeSpan.FromSeconds(10), CancellationToken.None));
                 Assert.Empty(directory.GetFiles(".fclex-*.tmp"));
             }
 
             Assert.True(staged);
             Assert.False(File.Exists(destinationPath));
-            Assert.Equal("source", await File.ReadAllTextAsync(source.FullName));
+            Assert.Equal("source", await File.ReadAllTextAsync(source.FullName, CancellationToken.None));
         }
         finally
         {
