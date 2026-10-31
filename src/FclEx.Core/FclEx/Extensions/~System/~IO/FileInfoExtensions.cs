@@ -195,8 +195,12 @@ public static class FileInfoExtensions
 
     private static bool IsIgnoredDuplicate(FileInfo source, FileInfo destination, FileTransferOptions options)
     {
-        return options.IgnoreConflictIfDuplicate
-               && destination.Exists
+        if (!options.IgnoreConflictIfDuplicate)
+            return false;
+
+        destination.Refresh();
+
+        return destination.Exists
                && TryAreFilesEqual(source, destination);
     }
 
@@ -281,9 +285,6 @@ public static class FileInfoExtensions
         Check.NotNull(source);
         Check.NotNull(destination);
 
-        source.Refresh();
-        Check.EqualTo(source.Exists, true);
-
         options ??= FileTransferOptions.Default;
         options.ValidateForMove();
 
@@ -292,7 +293,6 @@ public static class FileInfoExtensions
 
         if (options.ConflictResolution == FileConflictResolution.Overwrite)
         {
-            destination.Refresh();
             if (IsIgnoredDuplicate(source, destination, options))
             {
                 source.Delete();
