@@ -54,9 +54,9 @@ public static class DateTimeExtensions
         return dateTime.ToDateTimeOffset(offset).ToUnixTimeMilliseconds();
     }
 
-    public static string ToShort(this DateTime @this) => @this.ToString(ShortTimeFormat);
+    public static string ToShort(this DateTime @this) => @this.ToString(ShortTimeFormat, CultureInfo.InvariantCulture);
 
-    public static string ToCommon(this DateTime @this) => @this.ToString(CommonTimeFormat);
+    public static string ToCommon(this DateTime @this) => @this.ToString(CommonTimeFormat, CultureInfo.InvariantCulture);
 
     public static DateTime AddWeek(this DateTime dateTime) => dateTime.AddWeeks(1);
 
@@ -207,6 +207,18 @@ public static class DateTimeExtensions
     public static DateTime SpecifyKind(this DateTime time, DateTimeKind kind)
     {
         return DateTime.SpecifyKind(time, kind);
+    }
+
+    /// <summary>
+    /// Truncates the <see cref="DateTime"/> to second precision by removing any sub-second components.
+    /// </summary>
+    /// <param name="time">The <see cref="DateTime"/> value to truncate.</param>
+    /// <returns>
+    /// A new <see cref="DateTime"/> truncated to seconds, preserving the original <see cref="DateTimeKind"/>.
+    /// </returns>
+    public static DateTime TruncateToSeconds(this DateTime time)
+    {
+        return new DateTime(time.Year, time.Month, time.Day, time.Hour, time.Minute, time.Second, 0, time.Kind);
     }
 
     /// <summary>
