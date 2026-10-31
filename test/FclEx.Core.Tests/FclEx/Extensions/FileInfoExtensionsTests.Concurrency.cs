@@ -66,6 +66,99 @@ public partial class FileInfoExtensionsTests
     }
 
     [Fact]
+    public async Task CopyToAsync_IgnoreDuplicate_WaitsForInFlightDestinationBeforeRenaming()
+    {
+        var directory = CreateTempDir();
+        try
+        {
+            var source = CreateTempFile("same", directory.FullName, "source.txt");
+            var destination = CreateTempFile("same", directory.FullName, "report.txt");
+            var options = new FileTransferOptions { IgnoreConflictIfDuplicate = true };
+            Task<FileInfo> copy;
+
+            using (await FileTransferPathLock.AcquireAsync(destination.FullName))
+            using (new FileStream(destination.FullName, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            {
+                // An in-flight transfer owns the path while its destination is temporarily unreadable.
+                // Duplicate detection must wait for that transfer before deciding to choose another name.
+                copy = source.CopyToAsync(destination, options);
+            }
+
+            var result = await copy.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(destination.FullName, result.FullName);
+            Assert.Single(directory.GetFiles("report*.txt"));
+            Assert.Equal("same", await File.ReadAllTextAsync(destination.FullName));
+            Assert.True(File.Exists(source.FullName));
+        }
+        finally
+        {
+            Cleanup(directory);
+        }
+    }
+
+    [Fact]
+    public async Task CopyToAsync_CanceledWhileWaitingForDuplicateComparison_LeavesFilesUnchanged()
+    {
+        var directory = CreateTempDir();
+        try
+        {
+            var source = CreateTempFile("same", directory.FullName, "source.txt");
+            var destination = CreateTempFile("same", directory.FullName, "report.txt");
+            using var cancellation = new CancellationTokenSource();
+
+            using (await FileTransferPathLock.AcquireAsync(destination.FullName))
+            {
+                var copy = source.CopyToAsync(destination, cancellationToken: cancellation.Token);
+                var waited = !copy.IsCompleted;
+                await cancellation.CancelAsync();
+
+                await Assert.ThrowsAnyAsync<OperationCanceledException>(
+                    () => copy.WaitAsync(TimeSpan.FromSeconds(10)));
+                Assert.True(waited);
+                Assert.Empty(directory.GetFiles(".fclex-*.tmp"));
+            }
+
+            Assert.Equal("same", await File.ReadAllTextAsync(source.FullName));
+            Assert.Equal("same", await File.ReadAllTextAsync(destination.FullName));
+        }
+        finally
+        {
+            Cleanup(directory);
+        }
+    }
+
+    [Theory]
+    [InlineData(FileConflictResolution.Cancel)]
+    [InlineData(FileConflictResolution.Throw)]
+    [InlineData(FileConflictResolution.AutoRename)]
+    public async Task CopyToAsync_DestinationRemovedWhileWaiting_RechecksConflict(FileConflictResolution resolution)
+    {
+        var directory = CreateTempDir();
+        try
+        {
+            var source = CreateTempFile("new", directory.FullName, "source.txt");
+            var destination = CreateTempFile("old", directory.FullName, "report.txt");
+            var options = new FileTransferOptions { ConflictResolution = resolution, IgnoreConflictIfDuplicate = false };
+            Task<FileInfo> copy;
+
+            using (await FileTransferPathLock.AcquireAsync(destination.FullName))
+            {
+                copy = source.CopyToAsync(destination, options);
+                File.Delete(destination.FullName);
+            }
+
+            var result = await copy.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(destination.FullName, result.FullName);
+            Assert.Equal("new", await File.ReadAllTextAsync(result.FullName));
+            Assert.Single(directory.GetFiles("report*.txt"));
+        }
+        finally
+        {
+            Cleanup(directory);
+        }
+    }
+
+    [Fact]
     public async Task CopyToAsync_CanceledBeforePublication_RemovesStagedFile()
     {
         var directory = CreateTempDir();

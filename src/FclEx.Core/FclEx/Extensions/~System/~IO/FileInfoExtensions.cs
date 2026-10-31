@@ -18,6 +18,7 @@ public static class FileInfoExtensions
     /// are copied to a temporary file without holding the destination lock. Waiting for the lock is asynchronous and
     /// observes <paramref name="cancellationToken"/>; cancellation is checked again before publication. Temporary files
     /// are removed if copying, waiting for the lock, or publication fails.
+    /// Duplicate comparisons and conflict decisions for existing destinations use the same path lock as publication.
     /// Other processes and paths aliased through symbolic links are not coordinated.
     /// </remarks>
     /// <returns>The actual destination, which can differ from <paramref name="destination"/> when auto-renaming.</returns>
@@ -53,6 +54,13 @@ public static class FileInfoExtensions
         var candidate = destination;
         while (DestinationExists(candidate))
         {
+            using var destinationLock = await FileTransferPathLock.AcquireAsync(
+                candidate.FullName, cancellationToken).NoCapture();
+            // A concurrent transfer can make the destination visible before it is ready to be read.
+            // Wait for its path lock before comparing contents or committing to an auto-renamed path.
+            if (!DestinationExists(candidate))
+                break;
+
             if (IsIgnoredDuplicate(source, candidate, options))
                 return candidate;
 
