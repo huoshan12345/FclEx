@@ -22,16 +22,14 @@ public partial class FileInfoExtensionsTests
 
     [Theory]
     [MemberData(nameof(ConcurrentTransferCases))]
-    public async Task ConcurrentAutoRename_PreservesBothTransfers(
-        bool copyFirst, bool copySecond, bool competeForRenamedPath)
+    public async Task ConcurrentAutoRename_PreservesBothTransfers(bool copyFirst, bool copySecond, bool competeForRenamedPath)
     {
         await AssertConcurrentAutoRenameAsync(copyFirst, copySecond, competeForRenamedPath);
     }
 
     [Theory]
     [MemberData(nameof(ConcurrentDuplicateCases))]
-    public async Task ConcurrentIgnoreDuplicate_KeepsOneDestinationAndDeletesOnlyMovedSources(
-        bool copyFirst, bool copySecond)
+    public async Task ConcurrentIgnoreDuplicate_KeepsOneDestinationAndDeletesOnlyMovedSources(bool copyFirst, bool copySecond)
     {
         var directory = CreateTempDir();
         try
@@ -105,8 +103,7 @@ public partial class FileInfoExtensionsTests
         }
     }
 
-    private static async Task AssertConcurrentAutoRenameAsync(
-        bool copyFirst, bool copySecond, bool competeForRenamedPath)
+    private static async Task AssertConcurrentAutoRenameAsync(bool copyFirst, bool copySecond, bool competeForRenamedPath)
     {
         var directory = CreateTempDir();
         try
@@ -151,8 +148,7 @@ public partial class FileInfoExtensionsTests
         }
     }
 
-    private static Task<FileInfo> StartConcurrentTransfer(
-        Barrier start, FileInfo source, string destinationPath, bool copy, FileTransferOptions? options = null)
+    private static Task<FileInfo> StartConcurrentTransfer(Barrier start, FileInfo source, string destinationPath, bool copy, FileTransferOptions? options = null)
     {
         // Dedicated workers avoid thread-pool starvation while waiting for their peer.
         return Task.Factory.StartNew(() =>

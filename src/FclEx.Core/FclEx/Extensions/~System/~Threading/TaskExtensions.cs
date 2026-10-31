@@ -106,7 +106,7 @@ public static partial class TaskExtensions
                     return await winner.NoCapture();
             }
         }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == timeoutSource.Token)
+        catch (OperationCanceledException ex) when (timeoutSource.Token.IsCancellationRequested)
         {
             throw new TimeoutException("The operation did not complete within the specified timeout.", ex);
         }
@@ -142,7 +142,7 @@ public static partial class TaskExtensions
                 }
             }
         }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == timeoutSource.Token)
+        catch (OperationCanceledException ex) when (timeoutSource.Token.IsCancellationRequested)
         {
             throw new TimeoutException("The operation did not complete within the specified timeout.", ex);
         }
