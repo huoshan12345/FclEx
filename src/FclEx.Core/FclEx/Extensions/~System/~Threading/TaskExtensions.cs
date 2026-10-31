@@ -98,7 +98,7 @@ public static partial class TaskExtensions
         {
             var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            using (cancellationToken.Register((m, t) => m.TrySetCanceled(t), tcs))
+            using (cts.Token.Register((m, t) => m.TrySetCanceled(t), tcs))
             {
                 var winner = await Task.WhenAny(task, tcs.Task).NoCapture();
 
@@ -131,7 +131,7 @@ public static partial class TaskExtensions
         {
             var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            using (cancellationToken.Register((m, t) => m.TrySetCanceled(t), tcs))
+            using (cts.Token.Register((m, t) => m.TrySetCanceled(t), tcs))
             {
                 var winner = await Task.WhenAny(task, tcs.Task).NoCapture();
 
