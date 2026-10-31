@@ -1,3 +1,5 @@
+using static System.Net.Mime.MediaTypeNames;
+
 namespace FclEx.Utils;
 
 public static partial class OperationResultExtensions
@@ -270,6 +272,29 @@ public static partial class OperationResultExtensions
     }
 
     /// <summary>
+    /// Awaits the source result and, on success, chains an asynchronous operation without changing the value type.
+    /// </summary>
+    /// <typeparam name="T">The value type shared by the source and next results.</typeparam>
+    /// <param name="task">The task producing the source result.</param>
+    /// <param name="next">Receives the successful source value and returns the next result asynchronously.</param>
+    /// <returns>
+    /// The source error without invoking the callback, or the next result with the source elapsed time added.
+    /// A faulted or canceled source task becomes an error result. When the source elapsed time is zero,
+    /// the time spent awaiting the source is used instead.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">The source task or callback is null.</exception>
+    /// <remarks>
+    /// Equivalent to Then&lt;T, T&gt;, while allowing callers to specify only one type argument.
+    /// A null callback is rejected synchronously. Exceptions thrown by the callback or its returned task
+    /// propagate through the returned task; cancellation of the next task cancels the returned task.
+    /// </remarks>
+    [OverloadResolutionPriority(-1)]
+    public static Task<OperationResult<T>> Then<T>(this Task<OperationResult<T>> task, Func<T, Task<OperationResult<T>>> next)
+    {
+        return task.Then<T, T>(next);
+    }
+
+    /// <summary>
     /// Awaits the source result, runs the next operation when successful, and returns the next result.
     /// </summary>
     /// <remarks>Source and next elapsed times are added. A faulted or canceled source task is normalized to an error result; exceptions from <paramref name="next"/> are not captured.</remarks>
@@ -280,11 +305,46 @@ public static partial class OperationResultExtensions
         return task.Then(m => Task.FromResult(next(m)));
     }
 
-    // this method is sometimes ambiguous with the Task<TNext> Then<T, TNext>(this Task<T> task, Func<T, TNext> next), so we provide MapValue as an alias for it.
-    //public static Task<OperationResult<TNext>> Then<T, TNext>(this Task<OperationResult<T>> task, Func<T, TNext> next)
-    //{
-    //    return task.Then(m => Operation.Success(next(m)));
-    //}
+    /// <summary>
+    /// Awaits the source result and, on success, chains a synchronous operation without changing the value type.
+    /// </summary>
+    /// <typeparam name="T">The value type shared by the source and next results.</typeparam>
+    /// <param name="task">The task producing the source result.</param>
+    /// <param name="next">Receives the successful source value and returns the next result.</param>
+    /// <returns>
+    /// The source error without invoking the callback, or the next result with the source elapsed time added.
+    /// A faulted or canceled source task becomes an error result. When the source elapsed time is zero,
+    /// the time spent awaiting the source is used instead.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">The source task or callback is null.</exception>
+    /// <remarks>
+    /// Equivalent to Then&lt;T, T&gt;, while allowing callers to specify only one type argument.
+    /// A null callback is rejected synchronously. Callback exceptions propagate through the returned task
+    /// rather than being converted into error results.
+    /// </remarks>
+    [OverloadResolutionPriority(-1)]
+    public static Task<OperationResult<T>> Then<T>(this Task<OperationResult<T>> task, Func<T, OperationResult<T>> next)
+    {
+        return task.Then<T, T>(next);
+    }
+
+    /// <summary>
+    /// Awaits the source result, runs the next operation when successful, and returns the next result.
+    /// </summary>
+    /// <typeparam name="T">The value type of the source result.</typeparam>
+    /// <typeparam name="TNext">The value type of the next result.</typeparam>
+    /// <param name="task">The task producing the source result.</param>
+    /// <param name="next">Receives the successful source value and returns the next result.</param>
+    /// <returns>
+    /// The source error without invoking the callback, or the next result with the source elapsed time added.
+    /// A faulted or canceled source task becomes an error result. When the source elapsed time is zero,
+    /// the time spent awaiting the source is used instead.
+    /// </returns>
+    [OverloadResolutionPriority(-1)]
+    public static Task<OperationResult<TNext>> Then<T, TNext>(this Task<OperationResult<T>> task, Func<T, TNext> next)
+    {
+        return task.Then(m => Operation.Success(next(m)));
+    }
 
     /// <summary>
     /// Maps a successful value while preserving error and elapsed time.
@@ -358,8 +418,11 @@ public static partial class OperationResultExtensions
     /// <summary>
     /// Chooses between two next asynchronous operations when the awaited source result is successful.
     /// </summary>
-    public static Task<OperationResult<TNext>> ThenIf<T, TNext>(this Task<OperationResult<T>> task, Func<T, bool> condition,
-        Func<T, Task<OperationResult<TNext>>> @true, Func<T, Task<OperationResult<TNext>>> @false)
+    public static Task<OperationResult<TNext>> ThenIf<T, TNext>(
+        this Task<OperationResult<T>> task,
+        Func<T, bool> condition,
+        Func<T, Task<OperationResult<TNext>>> @true,
+        Func<T, Task<OperationResult<TNext>>> @false)
     {
         Check.NotNull(condition);
         Check.NotNull(@true);
@@ -390,7 +453,10 @@ public static partial class OperationResultExtensions
     /// <param name="enumerable">The enumerable items to be converted to actions.</param>
     /// <param name="selector">A function that selects an asynchronous operation result for each item.</param>
     /// <param name="parallel">Whether the generated actions should be combined in parallel.</param>
-    public static IAction<TResult[]> ToAction<T, TResult>(this IEnumerable<T> enumerable, Func<T, CancellationToken, Task<OperationResult<TResult>>> selector, bool parallel)
+    public static IAction<TResult[]> ToAction<T, TResult>(
+        this IEnumerable<T> enumerable,
+        Func<T, CancellationToken, Task<OperationResult<TResult>>> selector,
+        bool parallel)
     {
         Check.NotNull(enumerable);
         Check.NotNull(selector);

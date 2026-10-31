@@ -58,87 +58,96 @@ public static partial class TaskExtensions
     public static Task<Unit> ToTaskUnit(this Task task) => task.Then(() => TaskUnit);
 
 #if !NET6_0_OR_GREATER
-    public static async Task<T> WaitAsync<T>(this Task<T> task, CancellationToken cancellationToken)
+    [MethodImpl(AggressiveInlining)]
+    public static Task<T> WaitAsync<T>(this Task<T> task, CancellationToken cancellationToken)
+    {
+        return task.WaitAsync(Timeout.InfiniteTimeSpan, cancellationToken);
+    }
+
+    [MethodImpl(AggressiveInlining)]
+    public static Task WaitAsync(this Task task, CancellationToken cancellationToken)
+    {
+        return task.WaitAsync(Timeout.InfiniteTimeSpan, cancellationToken);
+    }
+
+    [MethodImpl(AggressiveInlining)]
+    public static Task<TResult> WaitAsync<TResult>(this Task<TResult> task, TimeSpan timeout)
+    {
+        return task.WaitAsync(timeout, default);
+    }
+
+    [MethodImpl(AggressiveInlining)]
+    public static Task WaitAsync(this Task task, TimeSpan timeout)
+    {
+        return task.WaitAsync(timeout, default);
+    }
+
+    public static async Task<T> WaitAsync<T>(this Task<T> task, TimeSpan timeout, CancellationToken cancellationToken)
     {
         task = Check.NotNull(task);
 
-        if (task.IsCompleted || cancellationToken == default)
-            return await task.NoCapture();
-
-        var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        using (cancellationToken.Register((m, t) => m.TrySetCanceled(t), tcs))
+        if (task.IsCompleted
+            || timeout == Timeout.InfiniteTimeSpan && cancellationToken == default)
         {
-            var winner = await Task.WhenAny(task, tcs.Task).NoCapture();
+            return await task.NoCapture();
+        }
 
-            if (winner != task)
-                return await winner.NoCapture();
+        using var timeoutSource = new CancellationTokenSource(timeout);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutSource.Token);
+        try
+        {
+            var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            using (cts.Token.Register((m, t) => m.TrySetCanceled(t), tcs))
+            {
+                var winner = await Task.WhenAny(task, tcs.Task).NoCapture();
+
+                if (winner != task)
+                    return await winner.NoCapture();
+            }
+        }
+        catch (OperationCanceledException ex) when (timeoutSource.Token.IsCancellationRequested)
+        {
+            throw new TimeoutException("The operation did not complete within the specified timeout.", ex);
         }
 
         return await task.NoCapture();
     }
 
-    public static async Task WaitAsync(this Task task, CancellationToken cancellationToken)
+    public static async Task WaitAsync(this Task task, TimeSpan timeout, CancellationToken cancellationToken)
     {
         task = Check.NotNull(task);
 
-        if (task.IsCompleted || cancellationToken == default)
+        if (task.IsCompleted
+            || timeout == Timeout.InfiniteTimeSpan && cancellationToken == default)
         {
             await task.NoCapture();
             return;
         }
 
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        using (cancellationToken.Register((m, t) => m.TrySetCanceled(t), tcs))
+        using var timeoutSource = new CancellationTokenSource(timeout);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutSource.Token);
+        try
         {
-            var winner = await Task.WhenAny(task, tcs.Task).NoCapture();
+            var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            if (winner != task)
+            using (cts.Token.Register((m, t) => m.TrySetCanceled(t), tcs))
             {
-                await winner.NoCapture();
-                return;
+                var winner = await Task.WhenAny(task, tcs.Task).NoCapture();
+
+                if (winner != task)
+                {
+                    await winner.NoCapture();
+                    return;
+                }
             }
+        }
+        catch (OperationCanceledException ex) when (timeoutSource.Token.IsCancellationRequested)
+        {
+            throw new TimeoutException("The operation did not complete within the specified timeout.", ex);
         }
 
         await task.NoCapture();
-    }
-
-    public static async Task<TResult> WaitAsync<TResult>(this Task<TResult> task, TimeSpan timeout)
-    {
-        if (timeout <= TimeSpan.Zero)
-        {
-            return await task.NoCapture();
-        }
-
-        using var timeoutSource = new CancellationTokenSource(timeout);
-        try
-        {
-            return await task.WaitAsync(timeoutSource.Token).NoCapture();
-        }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == timeoutSource.Token)
-        {
-            throw new TimeoutException("The operation did not complete within the specified timeout.", ex);
-        }
-    }
-
-    public static async Task WaitAsync(this Task task, TimeSpan timeout)
-    {
-        if (timeout <= TimeSpan.Zero)
-        {
-            await task.NoCapture();
-            return;
-        }
-
-        using var timeoutSource = new CancellationTokenSource(timeout);
-        try
-        {
-            await task.WaitAsync(timeoutSource.Token).NoCapture();
-        }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == timeoutSource.Token)
-        {
-            throw new TimeoutException("The operation did not complete within the specified timeout.", ex);
-        }
     }
 #endif
 

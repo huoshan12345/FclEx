@@ -95,7 +95,7 @@ jobs:
         run: dotnet build ${{ env.SOLUTION }} -c Release --no-restore
 
       - name: Test Release
-        timeout-minutes: 10
+        timeout-minutes: 5
         run: dotnet test --solution ${{ env.SOLUTION }} -c Release --no-restore --no-build
 
       - name: Test Report
@@ -182,7 +182,7 @@ jobs:
         run: dotnet build ${{ env.SOLUTION }} -c Release --no-restore
 
       - name: Test Release
-        timeout-minutes: 10
+        timeout-minutes: 5
         run: dotnet test --solution ${{ env.SOLUTION }} -c Release --no-restore --no-build
 
       - name: Test Report

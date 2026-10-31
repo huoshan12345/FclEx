@@ -377,6 +377,25 @@ public static partial class DbContextExtensions
         return existing ?? context.Entry(entity);
     }
 
+    /// <summary>Copies primary-key values from a source entity to a target entity using this context's model.</summary>
+    /// <typeparam name="T">The entity CLR type registered in the context model.</typeparam>
+    /// <param name="context">The context whose model defines the key members.</param>
+    /// <param name="source">The entity whose CLR primary-key values are read. It need not be tracked.</param>
+    /// <param name="target">The entity whose CLR primary-key members are overwritten. Non-key members are unchanged.</param>
+    /// <param name="transform">
+    /// An optional function receiving each primary-key property's metadata and source value and returning the
+    /// target value. Null copies values unchanged. Returned values must be assignable to the key member.
+    /// </param>
+    /// <returns>The supplied context, for chaining.</returns>
+    /// <exception cref="InvalidOperationException">
+    /// T is not registered as an entity type, has no primary key, or has a shadow primary-key property.
+    /// </exception>
+    /// <remarks>
+    /// Copies every component of the primary key, not alternate keys. Reads CLR members rather than EF current
+    /// or temporary values. Does not attach either entity, execute SQL, or save changes. Prefer an untracked target;
+    /// changing a tracked key may invalidate tracking and be rejected during change detection.
+    /// Assignments are sequential and are not rolled back if a later transformation or member access fails.
+    /// </remarks>
     public static DbContext ApplyKeyTo<T>(this DbContext context, T source, T target, Func<IProperty, object?, object?>? transform = null) where T : class
     {
         var entityType = context.Model.FindEntityType(typeof(T))

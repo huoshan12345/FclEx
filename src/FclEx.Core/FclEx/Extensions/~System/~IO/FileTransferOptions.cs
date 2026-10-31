@@ -44,7 +44,7 @@ public sealed record FileTransferOptions
 
     internal void ValidateForMove()
     {
-        if (Enum.IsDefined(typeof(FileConflictResolution), ConflictResolution) == false)
+        if (Enum.IsDefined(ConflictResolution) == false)
             throw new ArgumentOutOfRangeException(nameof(ConflictResolution));
     }
 

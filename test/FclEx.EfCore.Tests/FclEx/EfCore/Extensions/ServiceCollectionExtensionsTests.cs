@@ -5,6 +5,71 @@ namespace FclEx.EfCore.Extensions;
 public class ServiceCollectionExtensionsTests
 {
     [Fact]
+    public void AddDbContextBy_RejectsNullCallbackBeforeRegisteringServices()
+    {
+        var services = new ServiceCollection();
+        Assert.Throws<ArgumentNullException>(() => services.AddDbContextBy<FirstContext, object>(null!));
+        Assert.Empty(services);
+        Assert.Throws<ArgumentNullException>(() => services.AddDbContextByOptions<FirstContext, ContextSettings>(null!));
+        Assert.Empty(services);
+    }
+
+    [Theory]
+    [InlineData(ServiceLifetime.Scoped)]
+    [InlineData(ServiceLifetime.Transient)]
+    [InlineData(ServiceLifetime.Singleton)]
+    public void AddDbContextBy_ConfiguresOptionsFromDependency_AndPreservesLifetimes(ServiceLifetime lifetime)
+    {
+        var services = new ServiceCollection();
+        var settings = new ContextSettings { ConnectionString = "Data Source=dependency.db" };
+        services.AddSingleton(settings);
+        var calls = 0;
+        var result = services.AddDbContextBy<FirstContext, ContextSettings>((builder, dependency) =>
+        {
+            Assert.Same(settings, dependency);
+            calls++;
+            builder.UseSqlite(dependency.ConnectionString);
+        }, lifetime, lifetime);
+
+        Assert.Same(services, result);
+        Assert.Equal(0, calls);
+        Assert.Equal(lifetime, Assert.Single(services, d => d.ServiceType == typeof(FirstContext)).Lifetime);
+        Assert.Equal(lifetime, Assert.Single(services, d => d.ServiceType == typeof(DbContextOptions<FirstContext>)).Lifetime);
+        using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+        using var scope = provider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<FirstContext>();
+        Assert.Equal(settings.ConnectionString, context.Database.GetConnectionString());
+        Assert.True(calls > 0);
+    }
+
+    [Fact]
+    public void AddDbContextBy_MissingDependencyFailsWhenOptionsAreResolved()
+    {
+        var services = new ServiceCollection();
+        services.AddDbContextBy<FirstContext, ContextSettings>((_, _) => Assert.Fail("Dependency must resolve first."));
+        using var provider = services.BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        Assert.Throws<InvalidOperationException>(() => scope.ServiceProvider.GetRequiredService<DbContextOptions<FirstContext>>());
+    }
+
+    [Fact]
+    public void AddDbContextByOptions_UsesConfiguredOptionsValue()
+    {
+        var services = new ServiceCollection();
+        services.Configure<ContextSettings>(settings => settings.ConnectionString = "Data Source=options.db");
+        services.AddDbContextByOptions<FirstContext, ContextSettings>((builder, settings) => builder.UseSqlite(settings.ConnectionString));
+        using var provider = services.BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<FirstContext>();
+        Assert.Equal("Data Source=options.db", context.Database.GetConnectionString());
+    }
+
+    private sealed class ContextSettings
+    {
+        public string ConnectionString { get; set; } = "";
+    }
+
+    [Fact]
     public void RemoveDbContext_RemovesAllContextAndOptionsRegistrations()
     {
         var services = new ServiceCollection();
