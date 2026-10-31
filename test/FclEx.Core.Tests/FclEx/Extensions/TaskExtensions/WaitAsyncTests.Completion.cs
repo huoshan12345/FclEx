@@ -89,6 +89,24 @@ public partial class WaitAsyncTests
     }
 
     [Theory]
+    [MemberData(nameof(TimeoutOverloads))]
+    public async Task WaitAsync_PendingSourceFaultsBeforeFiniteTimeout_PreservesAllExceptions(WaitOverload overload)
+    {
+        using var cancellation = new CancellationTokenSource();
+        var source = CreateSource();
+        Exception[] errors = [new InvalidOperationException("first"), new ArgumentException("second")];
+        var wait = Wait(source.Task, overload, TimeSpan.FromSeconds(30), cancellation.Token);
+        Assert.False(wait.IsCompleted);
+
+        source.SetException(errors);
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => AwaitWithWatchdog(wait));
+
+        Assert.Same(errors[0], exception);
+        Assert.True(wait.IsFaulted);
+        Assert.Equal(errors, wait.Exception!.InnerExceptions);
+    }
+
+    [Theory]
     [MemberData(nameof(OverloadsAndCompletionStates))]
     public async Task WaitAsync_SourceFaultsWithOperationCanceledException_PreservesFaultedStatus(WaitOverload overload, bool completedBeforeWait)
     {
