@@ -83,6 +83,24 @@ public static partial class ObjectExtensions
         return value;
     }
 
+    /// <summary>
+    /// Invokes the specified action on the object and returns the same object,
+    /// enabling fluent configuration or inline side effects (similar to "tap" / "also").
+    /// </summary>
+    /// <typeparam name="T">A reference type.</typeparam>
+    /// <param name="obj">The object to operate on.</param>
+    /// <param name="action">The action to invoke with <paramref name="obj"/>.</param>
+    /// <returns>The same <paramref name="obj"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="action"/> is <see langword="null"/>.
+    /// </exception>
+    public static T Tap<T>(this T obj, Action<T> action) where T : class
+    {
+        Check.NotNull(action);
+        action(obj);
+        return obj;
+    }
+
     private static Func<T, TMember> CreateGetter<T, TMember>(MemberInfo member)
     {
         var objParam = Expression.Parameter(typeof(T));

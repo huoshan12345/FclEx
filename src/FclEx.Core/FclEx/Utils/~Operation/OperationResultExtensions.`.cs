@@ -392,8 +392,13 @@ public static partial class OperationResultExtensions
     public static OperationResult<(T, TNext)> ThenWith<T, TNext>(this OperationResult<T> result, Func<T, TNext> next)
     {
         Check.NotNull(next);
-
         return result.MapValue(m => (m, next(m)));
+    }
+
+    public static OperationResult<(T, TNext)> ThenWith<T, TNext>(this OperationResult<T> result, Func<TNext> next)
+    {
+        Check.NotNull(next);
+        return result.ThenWith(_ => next());
     }
 
     /// <summary>
@@ -403,7 +408,12 @@ public static partial class OperationResultExtensions
     public static OperationResult<(T, TNext)> ThenWith<T, TNext>(this OperationResult<T> result, Func<T, OperationResult<TNext>> next)
     {
         Check.NotNull(next);
-
         return result.Then(m => next(m).MapValue(x => (m, x)));
+    }
+
+    public static OperationResult<(T, TNext)> ThenWith<T, TNext>(this OperationResult<T> result, Func<OperationResult<TNext>> next)
+    {
+        Check.NotNull(next);
+        return result.ThenWith(_ => next());
     }
 }

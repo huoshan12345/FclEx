@@ -58,86 +58,141 @@ public static partial class TaskExtensions
     public static Task<Unit> ToTaskUnit(this Task task) => task.Then(() => TaskUnit);
 
 #if !NET6_0_OR_GREATER
-    public static async Task<T> WaitAsync<T>(this Task<T> task, CancellationToken cancellationToken)
+    [MethodImpl(AggressiveInlining)]
+    public static Task<T> WaitAsync<T>(this Task<T> task, CancellationToken cancellationToken)
     {
-        task = Check.NotNull(task);
-
-        if (task.IsCompleted || cancellationToken == default)
-            return await task.NoCapture();
-
-        var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        using (cancellationToken.Register((m, t) => m.TrySetCanceled(t), tcs))
-        {
-            var winner = await Task.WhenAny(task, tcs.Task).NoCapture();
-
-            if (winner != task)
-                return await winner.NoCapture();
-        }
-
-        return await task.NoCapture();
+        return task.WaitAsync(Timeout.InfiniteTimeSpan, cancellationToken);
     }
 
-    public static async Task WaitAsync(this Task task, CancellationToken cancellationToken)
+    [MethodImpl(AggressiveInlining)]
+    public static Task WaitAsync(this Task task, CancellationToken cancellationToken)
+    {
+        return task.WaitAsync(Timeout.InfiniteTimeSpan, cancellationToken);
+    }
+
+    [MethodImpl(AggressiveInlining)]
+    public static Task<TResult> WaitAsync<TResult>(this Task<TResult> task, TimeSpan timeout)
+    {
+        return task.WaitAsync(timeout, default);
+    }
+
+    [MethodImpl(AggressiveInlining)]
+    public static Task WaitAsync(this Task task, TimeSpan timeout)
+    {
+        return task.WaitAsync(timeout, default);
+    }
+
+    private static (T, TimeSpan) Verify<T>(T task, TimeSpan timeout) where T : Task
     {
         task = Check.NotNull(task);
 
-        if (task.IsCompleted || cancellationToken == default)
+        timeout = timeout.TruncateToMilliseconds();
+
+        if (timeout < TimeSpan.Zero && timeout != Timeout.InfiniteTimeSpan)
+            throw new ArgumentOutOfRangeException(nameof(timeout), "The timeout must be nonnegative or infinite.");
+
+        if (timeout > Timeout.MaxTimeSpan)
+            throw new ArgumentOutOfRangeException(nameof(timeout), $"The timeout must not exceed {Timeout.MaxTimeSpan}.");
+
+        return (task, timeout);
+    }
+
+    /// <summary>
+    /// Waits for the task to complete, the timeout to expire, or caller cancellation.
+    /// </summary>
+    /// <typeparam name="T">The task result type.</typeparam>
+    /// <param name="task">The task to wait for. Stopping the wait does not cancel this task.</param>
+    /// <param name="timeout">The maximum wait time, truncated to whole milliseconds, or <see cref="Timeout.InfiniteTimeSpan"/> for no timeout.</param>
+    /// <param name="cancellationToken">The token that cancels the wait.</param>
+    /// <returns>A task that preserves the source task's result, cancellation, or complete exception collection when it completes first.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="task"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="timeout"/> is outside the supported range. This exception is thrown synchronously.</exception>
+    /// <remarks>Timeout faults the returned task with a <see cref="TimeoutException"/>. Caller cancellation cancels the returned task.</remarks>
+    public static Task<T> WaitAsync<T>(this Task<T> task, TimeSpan timeout, CancellationToken cancellationToken)
+    {
+        (task, timeout) = Verify(task, timeout);
+        if (task.IsCompleted || timeout == Timeout.InfiniteTimeSpan && !cancellationToken.CanBeCanceled)
+            return task;
+
+        return WaitAsyncCore(task, timeout, cancellationToken, static source => ((Task<T>)source).GetAwaiter().GetResult());
+    }
+
+    /// <summary>
+    /// Waits for the task to complete, the timeout to expire, or caller cancellation.
+    /// </summary>
+    /// <param name="task">The task to wait for. Stopping the wait does not cancel this task.</param>
+    /// <param name="timeout">The maximum wait time, truncated to whole milliseconds, or <see cref="Timeout.InfiniteTimeSpan"/> for no timeout.</param>
+    /// <param name="cancellationToken">The token that cancels the wait.</param>
+    /// <returns>A task that preserves the source task's completion, cancellation, or complete exception collection when it completes first.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="task"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="timeout"/> is outside the supported range. This exception is thrown synchronously.</exception>
+    /// <remarks>Timeout faults the returned task with a <see cref="TimeoutException"/>. Caller cancellation cancels the returned task.</remarks>
+    public static Task WaitAsync(this Task task, TimeSpan timeout, CancellationToken cancellationToken)
+    {
+        (task, timeout) = Verify(task, timeout);
+        if (task.IsCompleted || timeout == Timeout.InfiniteTimeSpan && !cancellationToken.CanBeCanceled)
+            return task;
+
+        return WaitAsyncCore(task, timeout, cancellationToken, static _ => Unit.Default);
+    }
+
+    private static Task<T> WaitAsyncCore<T>(Task task, TimeSpan timeout, CancellationToken cancellationToken, Func<Task, T> getResult)
+    {
+        var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (cancellationToken.IsCancellationRequested)
         {
-            await task.NoCapture();
-            return;
+            completion.TrySetCanceled(cancellationToken);
+        }
+        else if (timeout == TimeSpan.Zero)
+        {
+            completion.TrySetException(new TimeoutException("The operation did not complete within the specified timeout."));
+        }
+        else
+        {
+            _ = CompleteWaitAsync();
         }
 
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        return completion.Task;
 
-        using (cancellationToken.Register((m, t) => m.TrySetCanceled(t), tcs))
+        async Task CompleteWaitAsync()
         {
-            var winner = await Task.WhenAny(task, tcs.Task).NoCapture();
-
-            if (winner != task)
+            try
             {
-                await winner.NoCapture();
-                return;
+                using var timer = timeout == Timeout.InfiniteTimeSpan
+                    ? null
+                    : new System.Threading.Timer(_ => completion.TrySetException(new TimeoutException("The operation did not complete within the specified timeout.")),
+                        null, timeout, Timeout.InfiniteTimeSpan);
+                using var registration = cancellationToken.Register(() => completion.TrySetCanceled(cancellationToken));
+
+                var winner = await Task.WhenAny(task, completion.Task).NoCapture();
+                if (winner != task)
+                    return;
+
+                if (task.IsFaulted)
+                {
+                    completion.TrySetException(task.Exception!.InnerExceptions);
+                }
+                else if (task.IsCanceled)
+                {
+                    // Await only canceled source tasks to recover their original cancellation token.
+                    try
+                    {
+                        await task.NoCapture();
+                    }
+                    catch (OperationCanceledException ex)
+                    {
+                        completion.TrySetCanceled(ex.CancellationToken);
+                    }
+                }
+                else
+                {
+                    completion.TrySetResult(getResult(task));
+                }
             }
-        }
-
-        await task.NoCapture();
-    }
-
-    public static async Task<TResult> WaitAsync<TResult>(this Task<TResult> task, TimeSpan timeout)
-    {
-        if (timeout <= TimeSpan.Zero)
-        {
-            return await task.NoCapture();
-        }
-
-        using var timeoutSource = new CancellationTokenSource(timeout);
-        try
-        {
-            return await task.WaitAsync(timeoutSource.Token).NoCapture();
-        }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == timeoutSource.Token)
-        {
-            throw new TimeoutException("The operation did not complete within the specified timeout.", ex);
-        }
-    }
-
-    public static async Task WaitAsync(this Task task, TimeSpan timeout)
-    {
-        if (timeout <= TimeSpan.Zero)
-        {
-            await task.NoCapture();
-            return;
-        }
-
-        using var timeoutSource = new CancellationTokenSource(timeout);
-        try
-        {
-            await task.WaitAsync(timeoutSource.Token).NoCapture();
-        }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == timeoutSource.Token)
-        {
-            throw new TimeoutException("The operation did not complete within the specified timeout.", ex);
+            catch (Exception ex)
+            {
+                completion.TrySetException(ex);
+            }
         }
     }
 #endif

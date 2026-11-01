@@ -57,7 +57,6 @@ partial class HttpRequestExtensions
         return request;
     }
 
-
     /// <summary>
     /// Adds an unnamed query value to the request URI builder.
     /// </summary>
@@ -66,4 +65,8 @@ partial class HttpRequestExtensions
         return request.AddQueryParam(null, value);
     }
 
+    public static HttpRequest AddQueryValue<T>(this HttpRequest request, T? value)
+    {
+        return request.AddQueryParam(null, value);
+    }
 }

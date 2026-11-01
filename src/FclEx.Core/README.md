@@ -7,7 +7,7 @@ The foundational package for FclEx.
 - Extension methods for common .NET types, including strings, collections, LINQ, reflection, IO, networking, JSON, XML, tasks, diagnostics, and random test-data generation.
 - `OperationResult` and related helpers for success, failure, exceptions, elapsed time, and input/output tracking.
 - `IAction<T>` pipelines for composing, mapping, retrying, and combining operations.
-- Domain entity contracts such as `IHasId<T>`, soft-delete interfaces, common entity base types, and entity change helpers.
+- Domain entity contracts such as `IHasId<T>`, soft-delete interfaces, common entity base types, entity data comparers, and entity change helpers.
 - Collection implementations such as `BiDictionary`, `BPlusTreeDictionary`, `Deque`, `Heap`, ordered lists, ordered indexes, and multi-value dictionaries.
 - Comparers and comparer builders, including key/member comparers, delegate comparers, enumerable comparers, bitwise and interop-marshal equality comparers, and equality-comparer builders.
 - Serialization helpers for `System.Text.Json` and XML.
@@ -19,6 +19,66 @@ The foundational package for FclEx.
 - This package is intentionally broad and is referenced by most other FclEx packages.
 - Prefer using focused extension methods and small utility types directly rather than treating the package as an application framework.
 - Several APIs backfill newer .NET conveniences on older target frameworks.
+
+### Concurrent file transfers
+
+The `CopyToAsync` and `MoveTo` overloads that accept `FileTransferOptions` coordinate
+non-overwriting transfers by candidate destination path within the process. Copies and
+moves share the same locks, including when auto-renaming reaches a path requested
+directly by another transfer. Different paths in the same directory can proceed independently.
+Copying to a temporary file happens outside the destination lock.
+Copies wait asynchronously for the destination lock and can cancel that wait; moves
+wait synchronously. Both use the same per-path `AsyncLock`.
+
+Path matching follows the package's operating-system convention: case-insensitive on
+Windows and case-sensitive elsewhere. Other processes, symbolic-link aliases, and
+explicit overwrite operations are outside this coordination.
+
+### Entity data equality
+
+Use `EntityDataEqualityComparer` to compare entity data when deciding whether an update
+is needed. This compares public readable instance fields and non-indexer properties of
+the declared type, including inherited members. It compares data rather than identity
+alone: the primary key and other included members all participate.
+
+```csharp
+using FclEx.Domain;
+
+var comparer = EntityDataEqualityComparer.Create<Customer>();
+var needsUpdate = !comparer.Equals(existing, incoming);
+
+// A complete replacement for the default exclusion list.
+var customComparer = EntityDataEqualityComparer.Create<Customer>(["Version"]);
+
+public class Customer
+{
+    public long Id { get; set; }
+    public string? Name { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public int Version { get; set; }
+
+    [EntityDataEqualityIgnore]
+    public List<string>? Tags { get; set; }
+}
+```
+
+A null exclusion list uses the default names `CreatedAt`, `UpdatedAt`, and `DeletedAt`.
+A non-null list replaces those defaults entirely; an empty list excludes no members by
+name. Names are case-sensitive and unknown names are ignored. The ignore attribute
+always applies, including with an empty list. An inherited member keeps its attribute;
+an overriding property must be marked again.
+
+Comparison is shallow and uses each member's default equality comparer. Collections
+and navigation properties may therefore compare by reference; ignore them or construct
+a separate comparer when different rules are needed. Members declared only by runtime
+subtypes are not inspected, and different runtime types compare unequal. Null compares
+equal only to null. Hash codes use the included members as well.
+
+`EntityDataEqualityComparer<T>.Instance` is cached. Null exclusions, or exclusions
+set-equal to the fixed defaults, return that instance. The default names cannot be
+modified. Pass a complete exclusion list to `Create` to use a different policy.
+Custom comparers fix their member selection at creation and do not track changes
+to the supplied list.
 
 ### Adjacent duplicate removal
 

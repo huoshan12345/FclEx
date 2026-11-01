@@ -16,19 +16,6 @@ public class DictionaryExtensionsTests
     }
 
     [Fact]
-    public void Get_WhenKeyExistsWithNullValue_DoesNotUseFallback()
-    {
-        IDictionary<string, string?> dictionary = new Dictionary<string, string?>
-        {
-            ["present"] = null
-        };
-
-        var value = dictionary.Get("present", "fallback");
-
-        Assert.Null(value);
-    }
-
-    [Fact]
     public void Add_CreatesAndReusesTheCollectionForAKey()
     {
         IDictionary<string, List<int>> dictionary = new Dictionary<string, List<int>>();

@@ -2,26 +2,6 @@ namespace FclEx.Extensions;
 
 public static partial class DictionaryExtensions
 {
-    [return: NotNullIfNotNull(nameof(defaultValue))]
-    public static TValue? Get<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key, TValue? defaultValue = default)
-    {
-        return dic.TryGetValue(key, out var value) ? value : defaultValue;
-    }
-
-    [return: NotNullIfNotNull(nameof(defaultValue))]
-    public static TMember? Get<TKey, TValue, TMember>(this IDictionary<TKey, TValue> dic, TKey key, Func<TValue, TMember> selector, TMember? defaultValue = default)
-        where TMember : class
-    {
-        return dic.TryGetValue(key, out var value) ? selector(value) : defaultValue;
-    }
-
-    [return: NotNullIfNotNull(nameof(defaultValue))]
-    public static TMember? Get<TKey, TValue, TMember>(this IDictionary<TKey, TValue> dic, TKey key, Func<TValue, TMember> selector, TMember? defaultValue = default)
-        where TMember : struct
-    {
-        return dic.TryGetValue(key, out var value) ? selector(value) : defaultValue;
-    }
-
     public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> dic, IEnumerable<KeyValuePair<TKey, TValue>> pairs)
     {
         foreach (var pair in pairs)

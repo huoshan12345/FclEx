@@ -207,4 +207,111 @@ public static class HttpResponseExtensions
             ? Operation.Error<HttpResponse>(response.Exception, response.Elapsed)
             : Operation.Success(response, response.Elapsed);
     }
+
+    /// <summary>Tests the last parseable Content-Type header's media type using a predicate.</summary>
+    /// <param name="response">The response whose headers are inspected.</param>
+    /// <param name="predicate">Receives the parsed media type without parameters such as charset. Called only when a header parses successfully.</param>
+    /// <returns>False when no header can be parsed; otherwise the predicate result.</returns>
+    /// <remarks>Predicate exceptions propagate to the caller.</remarks>
+    public static bool HasContentType(this HttpResponse response, Func<string?, bool> predicate)
+    {
+        return response.TryGetMediaType(out var mediaType)
+               && predicate(mediaType.MediaType);
+    }
+
+    /// <summary>Matches the response media type using ordinal, case-insensitive comparison.</summary>
+    /// <param name="response">The response whose headers are inspected.</param>
+    /// <param name="contentType">The media type to match, without parameters such as charset.</param>
+    /// <returns>True when the last parseable Content-Type header matches; otherwise false.</returns>
+    public static bool HasContentType(this HttpResponse response, string contentType)
+    {
+        return response.HasContentType(mt => string.Equals(mt, contentType, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>Checks whether the response media type is text/html, ignoring case and header parameters.</summary>
+    /// <param name="response">The response whose headers are inspected.</param>
+    /// <returns>True for text/html; false for another media type or no parseable Content-Type header.</returns>
+    public static bool IsHtml(this HttpResponse response)
+    {
+        return response.HasContentType(MediaTypeNames.Text.Html);
+    }
+
+    /// <summary>Checks for an XML media type whose subtype is xml or ends in +xml, ignoring case.</summary>
+    /// <param name="response">The response whose headers are inspected.</param>
+    /// <returns>True for types such as text/xml, application/xml, and application/soap+xml; otherwise false.</returns>
+    public static bool IsXml(this HttpResponse response)
+    {
+        return response.HasContentType(mt => mt is not null && (mt.EndsWithIgnoreCase("/xml") || mt.EndsWithIgnoreCase("+xml")));
+    }
+
+    public static OperationResult<T> HandleJsonResponse<T>(
+        this HttpResponse response,
+        JsonOptions? jsonOptions,
+        bool readJsonOnNonSuccess = false,
+        ILogger? logger = null)
+    {
+        return response.HandleJsonResponse<T>(JsonHelper.GetOptions(jsonOptions), readJsonOnNonSuccess, logger);
+    }
+
+    public static OperationResult<T> HandleJsonResponse<T>(
+        this HttpResponse response,
+        JsonSerializerOptions? jsonOptions = null,
+        bool readJsonOnNonSuccess = false,
+        ILogger? logger = null)
+    {
+        if (response.IsError)
+            return (response.Exception, response.Elapsed);
+
+        var success = response.StatusCode.IsSuccess();
+
+        logger ??= NullLogger.Instance;
+
+        if (success)
+        {
+            logger.LogInformation("{Method} {Uri} succeeded", response.Request.Method, response.Request.GetUri());
+        }
+
+        if (success || readJsonOnNonSuccess)
+        {
+            return Operation.Execute(() => response.ResponseString.FromJson<T>(jsonOptions)!)
+                .AddElapsed(response.Elapsed);
+        }
+
+        var error = response.ResponseString;
+        if (error.IsNullOrEmpty())
+        {
+            var code = response.StatusCode;
+            error = $"Request failed with status code {code}/{code.ToInt()}";
+        }
+
+        logger.LogError("{Method} {Uri} failed due to: {Error}", response.Request.Method, response.Request.GetUri(), error);
+
+        return (error, response.Elapsed);
+    }
+
+    public static OperationResult<HttpResponse> HandleResponse(this HttpResponse response, ILogger? logger = null)
+    {
+
+        if (response.IsError)
+            return (response.Exception, response.Elapsed);
+
+        logger ??= NullLogger.Instance;
+
+        if (response.StatusCode.IsSuccess())
+        {
+            logger.LogInformation("{Method} {Uri} succeeded", response.Request.Method, response.Request.GetUri());
+            return Operation.Success(response, response.Elapsed);
+        }
+
+        var error = response.ResponseString;
+        if (error.IsNullOrEmpty())
+        {
+            var code = response.StatusCode;
+            error = $"Request failed with status code {code}/{code.ToInt()}";
+        }
+
+        logger.LogError("{Method} {Uri} failed due to: {Error}", response.Request.Method, response.Request.GetUri(), error);
+
+        return (error, response.Elapsed);
+    }
 }

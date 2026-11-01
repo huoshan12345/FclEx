@@ -72,6 +72,7 @@ public static class ComparerExtensions
             {
                 result = true;
             }
+            // ReSharper disable once DuplicatedChainedIfBodies
             else if (x is null || y is null)
             {
                 result = false;

@@ -326,17 +326,25 @@ public partial class ExtensionsTests
     public async Task RepeatUntil_InternalTimeout_CancelsDelay()
     {
         var attemptCount = 0;
-        var action = Operation.Action<int>(_ => ++attemptCount);
+        var conditionEvaluated = false;
+        // Complete inline so thread-pool scheduling cannot consume the timeout before the first attempt.
+        var action = new OperationAction<int>(_ => Operation.Success(++attemptCount));
 
         var execution = action
-            .RepeatUntil(_ => false, TimeSpan.FromSeconds(30), TimeSpan.FromMilliseconds(50))
+            .RepeatUntil(_ =>
+            {
+                conditionEvaluated = true;
+                return false;
+            }, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(1))
             .ExecuteAsync();
         var completedTask = await Task.WhenAny(execution, Task.Delay(TimeSpan.FromSeconds(5)));
 
         Assert.Same(execution, completedTask);
         var result = await execution;
+        Assert.True(result.IsError);
         Assert.IsType<TimeoutException>(result.Exception);
         Assert.Equal(1, attemptCount);
+        Assert.True(conditionEvaluated);
     }
 
     [Fact]
