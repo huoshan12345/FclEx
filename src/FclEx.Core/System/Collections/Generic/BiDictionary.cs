@@ -5,7 +5,9 @@ namespace System.Collections.Generic;
 /// </summary>
 /// <typeparam name="TKey">The type of the keys in the dictionary. Must be non-nullable.</typeparam>
 /// <typeparam name="TValue">The type of the values in the dictionary. Must be non-nullable.</typeparam>
-public class BiDictionary<TKey, TValue> : IDictionary<TKey, TValue> where TKey : notnull where TValue : notnull
+public class BiDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>
+    where TKey : notnull
+    where TValue : notnull
 {
     private readonly Dictionary<TKey, TValue> _dic1;
     private readonly Dictionary<TValue, TKey> _dic2;
@@ -22,6 +24,9 @@ public class BiDictionary<TKey, TValue> : IDictionary<TKey, TValue> where TKey :
     public ICollection<TKey> Keys => _dic1.Keys;
     public ICollection<TValue> Values => _dic2.Keys;
     bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly => false;
+
+    IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => Values;
+    IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => Keys;
 
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => _dic1.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
