@@ -19,8 +19,6 @@ public static class LoggerConfigurationExtensions
         return configuration;
     }
 
-    private static readonly ConcurrentDictionary<(LoggerConfiguration, LoggerFilterOptions, string), LogEventLevel> _levelCache = [];
-
     /// <summary>Filters events using provider-independent Microsoft logging level rules.</summary>
     /// <param name="config">The Serilog configuration receiving the filter.</param>
     /// <param name="configuration">The Logging configuration section containing LogLevel rules.</param>
@@ -28,6 +26,7 @@ public static class LoggerConfigurationExtensions
     /// <remarks>
     /// Configuration is read once when this method is called. Categories use case-insensitive prefix
     /// matching and support one wildcard. The longest matching category wins, with later rules winning ties.
+    /// Each filter owns its configuration snapshot and category-level cache.
     /// Serilog's minimum level determines which events reach this filter.
     /// </remarks>
     /// <exception cref="InvalidOperationException">A configured log level is invalid or a category contains multiple wildcards.</exception>
@@ -35,11 +34,17 @@ public static class LoggerConfigurationExtensions
     {
         var options = CreateLoggerFilterOptions(configuration);
 
-        config.Filter.ByIncludingOnly(e =>
+        // Keep the cache with this filter so it can be collected with the logger.
+        var levels = new ConcurrentDictionary<string, LogEventLevel>(StringComparer.OrdinalIgnoreCase);
+
+        // Reuse the factory delegate for cache misses and hits.
+        Func<string, LogEventLevel> resolveLevel = category => GetLogLevel(options, category);
+
+        config.Filter.ByIncludingOnly(logEvent =>
         {
-            var category = e.GetSourceContext() ?? "";
-            var minLevel = _levelCache.GetOrAdd((config, options, category), m => GetLogLevel(m.Item2, m.Item3));
-            return e.Level >= minLevel;
+            var category = logEvent.GetSourceContext() ?? "";
+            var minimumLevel = levels.GetOrAdd(category, resolveLevel);
+            return logEvent.Level >= minimumLevel;
         });
 
         return config;

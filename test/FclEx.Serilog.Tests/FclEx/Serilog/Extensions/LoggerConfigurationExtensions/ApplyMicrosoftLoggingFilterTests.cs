@@ -95,27 +95,58 @@ public class ApplyMicrosoftLoggingFilterTests
     }
 
     [Fact]
-    public void DisposedLogger_DoesNotKeepConfigurationAlive()
+    public void DisposedLogger_DoesNotKeepConfigurationOrSinkAlive()
     {
-        var reference = CreateDisposedConfigurationReference();
+        var references = CreateDisposedReferences();
 
         GC.Collect();
         GC.WaitForPendingFinalizers();
         GC.Collect();
 
-        Assert.False(reference.IsAlive);
+        Assert.False(references.Configuration.IsAlive);
+        Assert.False(references.Sink.IsAlive);
     }
 
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-    private static WeakReference CreateDisposedConfigurationReference()
+    private static (WeakReference Configuration, WeakReference Sink) CreateDisposedReferences()
     {
         var config = new ConfigurationBuilder().Build();
+        var sink = new CollectingSink();
         var loggerConfiguration = new LoggerConfiguration()
             .ApplyMicrosoftLoggingFilter(config)
-            .WriteTo.Sink(new CollectingSink());
+            .WriteTo.Sink(sink);
         using var logger = loggerConfiguration.CreateLogger();
         logger.Information("populate category cache");
-        return new WeakReference(loggerConfiguration);
+        return (new WeakReference(loggerConfiguration), new WeakReference(sink));
+    }
+
+    [Fact]
+    public void CategoryCache_UsesItsOwnConfigurationSnapshot()
+    {
+        var errorConfig = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Logging:LogLevel:Default"] = "Error"
+            })
+            .Build();
+        var warningConfig = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Logging:LogLevel:Default"] = "Warning"
+            })
+            .Build();
+        var (errorLogger, errorSink) = CreateLogger(errorConfig);
+        var (warningLogger, warningSink) = CreateLogger(warningConfig);
+        using (errorLogger)
+        using (warningLogger)
+        {
+            errorLogger.ForContext("SourceContext", "MyApp.Service").Warning("must be filtered");
+            warningLogger.ForContext("SourceContext", "MyApp.Service").Warning("must be recorded");
+            errorLogger.ForContext("SourceContext", "myapp.service").Error("must be recorded");
+
+            Assert.Equal(LogEventLevel.Error, Assert.Single(errorSink.Events).Level);
+            Assert.Equal(LogEventLevel.Warning, Assert.Single(warningSink.Events).Level);
+        }
     }
 
     private static (Logger logger, CollectingSink sink) CreateLogger(IConfiguration config)
