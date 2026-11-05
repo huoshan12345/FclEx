@@ -1,5 +1,6 @@
 namespace FclEx.Serilog;
 
+/// <summary>Formats batches and sends newline-delimited events through a fresh TCP or UDP transport per batch.</summary>
 public class LogstashSink : IBatchedLogEventSink
 {
     private readonly ITextFormatter _formatter;
@@ -19,6 +20,8 @@ public class LogstashSink : IBatchedLogEventSink
         await _input.SendAsync(strings);
     }
 
+    /// <summary>Completes without opening a transport when batching has no events.</summary>
+    /// <returns>An already-completed task.</returns>
     public Task OnEmptyBatchAsync()
     {
         return Task.CompletedTask;

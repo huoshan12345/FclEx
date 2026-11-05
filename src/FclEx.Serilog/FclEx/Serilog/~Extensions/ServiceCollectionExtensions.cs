@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace FclEx.Serilog;
 
+/// <summary>Registers container-owned Serilog logging services while replacing existing logging registrations.</summary>
 public static class ServiceCollectionExtensions
 {
     /// <summary>Registers a lazily created, container-owned Serilog logger as the Microsoft logging provider.</summary>

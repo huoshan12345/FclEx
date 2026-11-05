@@ -25,11 +25,17 @@ public class SerilogLoggerProviderWithoutExternalScope : ILoggerProvider, ILogEv
         _innerProvider = new SerilogLoggerProvider(logger, dispose);
     }
 
+    /// <summary>Creates a Microsoft logger using the supplied category as its Serilog SourceContext.</summary>
+    /// <param name="categoryName">The category attached to events emitted through the returned logger.</param>
+    /// <returns>A logger backed by the native Serilog provider and its provider-managed scopes.</returns>
     public Microsoft.Extensions.Logging.ILogger CreateLogger(string categoryName)
     {
         return _innerProvider.CreateLogger(categoryName);
     }
 
+    /// <summary>Delegates event enrichment from provider-managed scopes to the native provider.</summary>
+    /// <param name="logEvent">The event to enrich in place.</param>
+    /// <param name="propertyFactory">Creates event properties from scope values.</param>
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
         _innerProvider.Enrich(logEvent, propertyFactory);

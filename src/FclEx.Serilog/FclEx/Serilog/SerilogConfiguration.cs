@@ -3,11 +3,14 @@ using ILogger = Serilog.ILogger;
 
 namespace FclEx.Serilog;
 
+/// <summary>Collects Serilog pipeline configuration, exclusions, and Microsoft logging registration callbacks.</summary>
+/// <remarks>Finish configuration before creating loggers or registering services. Configuration mutation is not thread-safe.</remarks>
 public class SerilogConfiguration
 {
     private readonly List<ILogEventExcluder> _excluders = [];
     private readonly List<Action<LoggerConfiguration>> _actions = [];
 
+    /// <summary>The default root minimum level, initially Information; later Configure actions may override it.</summary>
     public LogEventLevel MinimumLevel { get; set; } = LogEventLevel.Information;
     /// <summary>Whether to wrap normalized exceptions for consistent formatting before dispatching to WriteTo sinks. Defaults to true.</summary>
     /// <remarks>Exception-level handling and duplicate-message unwrapping still run when this is false.</remarks>
@@ -20,6 +23,7 @@ public class SerilogConfiguration
     /// </remarks>
     public Action<ILoggingBuilder>? LoggingBuilderConfigure { get; set; }
 
+    /// <summary>Enables attributed destructuring, LogContext enrichment, and registered exclusions, with no default sinks.</summary>
     public SerilogConfiguration()
     {
         _actions.Add(m =>
@@ -47,6 +51,10 @@ public class SerilogConfiguration
         return this;
     }
 
+    /// <summary>Registers a rule that drops an event when it matches.</summary>
+    /// <param name="excluder">The exclusion rule, shared by loggers created from this configuration.</param>
+    /// <returns>The same configuration for further customization.</returns>
+    /// <remarks>Rules are evaluated in registration order with short-circuit OR semantics before exception unwrapping.</remarks>
     public SerilogConfiguration Exclude(ILogEventExcluder excluder)
     {
         _excluders.Add(excluder);

@@ -1,10 +1,15 @@
 namespace FclEx.Serilog;
 
+/// <summary>Writes newline-terminated JSON events with configurable basic fields, structured properties, and exception details.</summary>
+/// <remarks>Basic names are reserved. Top-level event and linking-metadata properties use the configured naming and collision policies.</remarks>
 public partial class JsonFormatter : ITextFormatter
 {
+    /// <summary>The event property recognized as a dictionary of New Relic metadata to flatten into the top-level JSON object.</summary>
     protected const string LinkingMetadataKey = "newrelic.linkingmetadata";
 
+    /// <summary>The options retained by this formatter; complete configuration before concurrent use.</summary>
     protected JsonFormatterOptions Options { get; }
+    /// <summary>The current nested exception options from Options.</summary>
     protected ExceptionFormatOptions ExceptionOptions => Options.ExceptionFormatOptions;
 
     /// <summary>Creates a formatter with the supplied options or a new, independent set of defaults.</summary>
@@ -68,6 +73,10 @@ public partial class JsonFormatter : ITextFormatter
         static bool Collides(string? first, string? second) => !string.IsNullOrEmpty(first) && first == second;
     }
 
+    /// <summary>Writes configured timestamp, level, literal message, and optional exception members.</summary>
+    /// <param name="logEvent">The source event; a FormattedException is unwrapped before JSON exception formatting.</param>
+    /// <param name="output">Receives JSON members. The timestamp is written without a preceding comma; later members include commas.</param>
+    /// <remarks>The timestamp uses UTC round-trip format. Empty configured names omit the corresponding fields.</remarks>
     protected virtual void WriteBasicData(LogEvent logEvent, TextWriter output)
     {
         var time = logEvent.Timestamp.UtcDateTime.ToString("O");
@@ -183,6 +192,11 @@ public partial class JsonFormatter : ITextFormatter
         }
     }
 
+    /// <summary>Writes a JSON member with an escaped string value, or omits it when the key is empty.</summary>
+    /// <param name="key">The exact output name, without applying PropertyNamingPolicy; null or empty omits the member.</param>
+    /// <param name="value">The string to escape and quote.</param>
+    /// <param name="output">Receives the member text without a newline.</param>
+    /// <param name="writePrefixComma">Whether a comma should precede a member that is written.</param>
     protected virtual void WriteJsonData(string? key, string value, TextWriter output, bool writePrefixComma)
     {
         if (key.IsNullOrEmpty())
@@ -212,10 +226,11 @@ public partial class JsonFormatter : ITextFormatter
     }
 
     /// <summary>
-    /// Write a valid non-quoted JSON string literal, escaping as necessary.
+    /// Writes escaped JSON string content without surrounding quotes.
     /// </summary>
     /// <param name="str">The string value to write.</param>
     /// <param name="output">The output.</param>
+    /// <remarks>Escapes quotation marks, backslashes, and control characters. Other characters are written unchanged.</remarks>
     public static void WriteJsonString(string str, TextWriter output)
     {
         var cleanSegmentStart = 0;

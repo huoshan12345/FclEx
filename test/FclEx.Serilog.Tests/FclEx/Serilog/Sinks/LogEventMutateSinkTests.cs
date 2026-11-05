@@ -2,6 +2,18 @@ namespace FclEx.Serilog.Sinks;
 
 public class LogEventMutateSinkTests
 {
+    [Fact]
+    public void Emit_MutatorFailure_PropagatesWithoutForwardingEvent()
+    {
+        var failure = new InvalidOperationException("mutation failed");
+        var sink = new Mock<ILogEventSink>();
+        using var wrapper = new LogEventMutateSink(sink.Object, _ => throw failure);
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Error, null, "message");
+
+        Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => wrapper.Emit(logEvent)));
+        sink.Verify(value => value.Emit(It.IsAny<LogEvent>()), Times.Never);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

@@ -1,6 +1,6 @@
 namespace FclEx.Serilog.Extensions;
 
-public class LogEventExtensionsTests
+public partial class LogEventExtensionsTests
 {
     [Theory]
     [InlineData(LogEventLevel.Warning, null, true)]

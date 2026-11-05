@@ -5,8 +5,11 @@ namespace FclEx.Serilog;
 /// <summary>Sends JSON log batches to New Relic Logs and manages ownership of its HTTP client.</summary>
 public class NewRelicSink : IBatchedLogEventSink, IDisposable
 {
+    /// <summary>The extension-method batching default of 100 events per request.</summary>
     public const int DefaultBatchSizeLimit = 100;
+    /// <summary>The US New Relic Logs API endpoint.</summary>
     public const string DefaultEndpoint = "https://log-api.newrelic.com/log/v1";
+    /// <summary>The extension-method batching interval default of two seconds.</summary>
     public static readonly TimeSpan DefaultPeriod = TimeSpan.FromSeconds(2);
 
     private readonly string _endpointUrl;
@@ -72,6 +75,8 @@ public class NewRelicSink : IBatchedLogEventSink, IDisposable
         throw new HttpRequestException($"New Relic Logs returned HTTP {(int)response.StatusCode} ({response.ReasonPhrase}). Expected HTTP 202 Accepted.");
     }
 
+    /// <summary>Completes without making an HTTP request when batching has no events.</summary>
+    /// <returns>An already-completed task.</returns>
     public virtual Task OnEmptyBatchAsync()
     {
         return Task.CompletedTask;
@@ -90,6 +95,10 @@ public class NewRelicSink : IBatchedLogEventSink, IDisposable
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>Formats events as the elements of one JSON array without compressing them.</summary>
+    /// <param name="events">Events enumerated in order.</param>
+    /// <param name="textFormatter">Must produce a complete JSON value for each event; its output is not parsed or escaped again.</param>
+    /// <returns>The array text, including any formatter whitespace; an empty sequence produces an empty array.</returns>
     protected internal static string Serialize(IEnumerable<LogEvent> events, ITextFormatter textFormatter)
     {
         using var disposable = StringBuilder.GetCached();

@@ -58,6 +58,17 @@ Serilog configuration and container-owned logging helpers for FclEx.
   is unaffected. Retries can duplicate events from a partially sent batch.
 - `ExceptionFormatOptions.IndexPolicy` selects when exception indexes are included:
   `None`, `Always`, `WhenMultiple`, or `WhenBranched`. The default is `WhenBranched`.
+- `MaxMessageLength` limits retained message content; an appended `...` is outside
+  that limit. Duplicate-message omission is checked against the full message first.
+- `MessageExcluder` searches raw template text, while `PropertyExcluder` checks a
+  top-level property's presence or a string scalar substring. Neither searches
+  recursively through structured values.
+- `LogEnricher` fills missing properties and preserves values already on an event.
+  Its static host metadata is shared across instances and should be configured
+  before concurrent logging begins.
+- `SetSelfLog` changes the global diagnostic destination. Disposing its handle
+  disables diagnostics, keeps the writer open, and does not restore a previous
+  destination. Use a synchronized writer for concurrent diagnostic output.
 
 ## API Migration
 

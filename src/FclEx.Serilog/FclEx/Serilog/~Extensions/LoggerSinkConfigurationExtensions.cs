@@ -1,5 +1,6 @@
 namespace FclEx.Serilog;
 
+/// <summary>Configures owning sink wrappers and buffered New Relic or Logstash delivery.</summary>
 public static class LoggerSinkConfigurationExtensions
 {
     /// <summary>Creates one owning sink wrapper around the configured group of sinks.</summary>
@@ -56,7 +57,7 @@ public static class LoggerSinkConfigurationExtensions
     /// <param name="loggerSinkConfiguration">The logger configuration.</param>
     /// <param name="formatter">The formatter used for each event in the JSON batch, or null to use the default JSON formatter.</param>
     /// <param name="endpointUrl">The NewRelic Logs API endpoint URL. Default is set to https://log-api.newrelic.com/log/v1 located in the US.</param>
-    /// <param name="licenseKey">New Relic APM License key. </param>
+    /// <param name="licenseKey">The request license key, or null to read NEW_RELIC_LICENSE_KEY when this method is called.</param>
     /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
     /// <param name="batchSizeLimit">The maximum number of events to include in a single batch. Default is 100 entries.</param>
     /// <param name="period">The time to wait between checking for event batches. TimeSpan with a default value of 2 seconds.</param>
@@ -105,6 +106,14 @@ public static class LoggerSinkConfigurationExtensions
     }
 
 
+    /// <summary>Registers buffered TCP or UDP delivery to Logstash using the supplied endpoint and batching options.</summary>
+    /// <param name="config">The parent sink configuration.</param>
+    /// <param name="options">Settings captured at registration; the referenced level switch remains live.</param>
+    /// <returns>The parent logger configuration.</returns>
+    /// <remarks>Batches are not emitted eagerly. Transport and formatting failures propagate to Serilog batching for retry.</remarks>
+    /// <exception cref="ArgumentNullException">Either argument is null.</exception>
+    /// <exception cref="ArgumentException">The endpoint, timeout, or batching options are invalid.</exception>
+    /// <exception cref="UriFormatException">The endpoint is not a valid absolute URI.</exception>
     public static LoggerConfiguration Logstash(this LoggerSinkConfiguration config, LogstashSinkOptions options)
     {
         Check.NotNull(config);
@@ -123,6 +132,13 @@ public static class LoggerSinkConfigurationExtensions
         );
     }
 
+    /// <summary>Registers buffered Logstash delivery with default formatter and batching settings.</summary>
+    /// <param name="config">The parent sink configuration.</param>
+    /// <param name="uri">An absolute tcp:// or udp:// endpoint containing a host and explicit port.</param>
+    /// <returns>The parent logger configuration.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="config"/> or <paramref name="uri"/> is null.</exception>
+    /// <exception cref="ArgumentException">The endpoint is empty or unsupported.</exception>
+    /// <exception cref="UriFormatException">The endpoint is not a valid absolute URI.</exception>
     public static LoggerConfiguration Logstash(this LoggerSinkConfiguration config, string uri)
     {
         var options = new LogstashSinkOptions(uri);

@@ -10,7 +10,9 @@ namespace FclEx.Serilog;
 /// </remarks>
 public class LogEventMutateSink : ILogEventSink, IDisposable, IAsyncDisposable, ISetLoggingFailureListener
 {
+    /// <summary>The inner sink owned by this wrapper.</summary>
     protected readonly ILogEventSink _sink;
+    /// <summary>Optional processing executed after built-in exception normalization.</summary>
     protected readonly Action<LogEvent>? _mutator;
     private int _disposed;
 
@@ -24,12 +26,17 @@ public class LogEventMutateSink : ILogEventSink, IDisposable, IAsyncDisposable, 
         _mutator = mutator;
     }
 
+    /// <summary>Normalizes the event in place, applies the custom mutator, and forwards it to the inner sink.</summary>
+    /// <param name="logEvent">The event to process and forward.</param>
+    /// <remarks>Normalization, mutator, and inner-sink errors propagate; the inner sink is not called if mutation fails.</remarks>
     public virtual void Emit(LogEvent logEvent)
     {
         Mutate(logEvent);
         _sink.Emit(logEvent);
     }
 
+    /// <summary>Handles an outer LogException, then SimpleException duplication, then invokes the custom mutator.</summary>
+    /// <param name="logEvent">The shared event updated in place.</param>
     protected internal virtual void Mutate(LogEvent logEvent)
     {
         logEvent.HandleLogException();

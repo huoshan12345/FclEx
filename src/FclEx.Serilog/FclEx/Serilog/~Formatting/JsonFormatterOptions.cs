@@ -29,7 +29,8 @@ public class JsonFormatterOptions
     /// </summary>
     public string ExceptionName { get; set; } = "@x";
     /// <summary>
-    /// Specifies the naming policy for JSON properties.
+    /// Names top-level event and flattened linking-metadata properties. Defaults to CamelCase.
+    /// Basic field names and nested members formatted by ValueFormatter are not transformed by this policy.
     /// </summary>
     public JsonNamingPolicy PropertyNamingPolicy { get; set; } = JsonNamingPolicy.CamelCase;
     /// <summary>Resolves duplicate top-level names after applying the naming policy and @ escaping. Defaults to KeepFirst.</summary>
@@ -40,9 +41,8 @@ public class JsonFormatterOptions
     /// </remarks>
     public JsonPropertyCollisionPolicy PropertyCollisionPolicy { get; set; } = JsonPropertyCollisionPolicy.KeepFirst;
     /// <summary>
-    /// Indicates whether enable formatting for exception. <br/>
-    /// <see langword="true" /> to format exception according to <see cref="ExceptionFormatOptions"/>, <br/>
-    /// <see langword="false" /> to use <see cref="Exception.ToString()"/>.
+    /// True writes an array of exception descriptions and frames using ExceptionFormatOptions.
+    /// False writes Exception.ToString() as one quoted string. Defaults to true.
     /// </summary>
     public bool EnableExceptionFormat { get; set; } = true;
     /// <summary>

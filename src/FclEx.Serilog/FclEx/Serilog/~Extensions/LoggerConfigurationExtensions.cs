@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace FclEx.Serilog;
 
+/// <summary>Wraps registered Serilog sinks and applies provider-independent Microsoft logging filters.</summary>
 public static class LoggerConfigurationExtensions
 {
     /// <summary>Wraps all currently registered WriteTo sinks as one pipeline, invoking the wrapper once per event before fan-out.</summary>
@@ -37,6 +38,15 @@ public static class LoggerConfigurationExtensions
         });
     }
 
+    /// <summary>Replaces each currently registered WriteTo sink with its own wrapper.</summary>
+    /// <param name="configuration">The configuration whose WriteTo registrations are updated.</param>
+    /// <param name="wrapSink">Creates an owning wrapper for each existing sink, including any per-sink restriction wrapper.</param>
+    /// <returns>The same configuration.</returns>
+    /// <remarks>
+    /// AuditTo sinks and later registrations are unaffected. Wrappers must forward disposal and failure
+    /// notifications themselves. Unlike WrapSinkPipeline, processing happens separately for each sink.
+    /// If the factory throws, earlier replacements remain and later sinks retain their original registrations.
+    /// </remarks>
     public static LoggerConfiguration WrapAllSinks(this LoggerConfiguration configuration, Func<ILogEventSink, ILogEventSink> wrapSink)
     {
         var sinks = Fields.LoggerConfiguration_Sinks.GetRequiredValue<List<ILogEventSink>>(configuration);

@@ -1,22 +1,22 @@
 namespace FclEx.Serilog;
 
 /// <summary>
-/// Configures the formatting options for exceptions when logging or rendering them.
-/// This class provides settings for controlling the message length, stack trace behavior, type name formatting, and more.
+/// Controls exception descriptions, message truncation, stack-frame text, type names, and tree indexes in JsonFormatter output.
 /// </summary>
 public class ExceptionFormatOptions
 {
     /// <summary>
-    /// The maximum length of the exception message.
-    /// Defaults to <see langword="null" /> if not set.
+    /// The maximum retained UTF-16 message content length, or null for unlimited content.
+    /// Truncated positive-length content is followed by three dots, which are outside this limit.
+    /// Zero or negative values produce empty message content. The default is null.
     /// </summary>
     public int? MaxMessageLength { get; set; } = null;
     /// <summary>
-    /// Determines whether parameters are omitted in the stack trace output.
+    /// Removes the first matched parameter list from each retained stack-frame line. Defaults to true.
     /// </summary>
     public bool OmitParametersInStackTrace { get; set; } = true;
     /// <summary>
-    /// Specifies whether the exception message should be omitted if it already exists in the rendered <see cref="MessageTemplate"/>.
+    /// Omits an exception message already contained in the rendered log message, using a case-sensitive substring check before truncation. Defaults to true.
     /// </summary>
     public bool OmitMessageIfExists { get; set; } = true;
     /// <summary>
