@@ -5,6 +5,27 @@ namespace FclEx.Serilog.Extensions;
 
 public class LoggerPropertyScopeExtensionsTests
 {
+    [Fact]
+    public void DisposeScope_ReleasesDynamicPropertyName()
+    {
+        var reference = CreateDisposedPropertyNameReference();
+
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+
+        Assert.False(reference.IsAlive);
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static WeakReference CreateDisposedPropertyNameReference()
+    {
+        var name = "DynamicProperty_" + Guid.NewGuid().ToString("N");
+        using var scope = global::FclEx.Serilog.LoggerExtensions.Properties(
+            Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance, name, new object(), destructureObjects: true);
+        return new WeakReference(name);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

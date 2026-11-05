@@ -92,6 +92,10 @@ the event level before applying event filters and sink restrictions. The resulti
 level must also pass the logger's current minimum level, including source overrides
 and dynamic level switches. `LogLevel.None` suppresses the event.
 
+After event filters, exception unwrapping and optional formatting run once before
+events are dispatched to `WriteTo` sinks. All sinks receive the same normalized
+exception and level; nested `LogException` levels are not reapplied for later sinks.
+
 The original log call must first pass Serilog's initial minimum-level check and any
 upstream filters. For example, an Information call carrying an Error `LogException`
 is discarded when the logger's minimum is Error. The exception level cannot restore

@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Text.Json.Nodes;
 using static FclEx.Serilog.ExceptionIndexOptions;
 
@@ -6,6 +8,44 @@ namespace FclEx.Serilog.Formatting;
 [Collection(nameof(Console))]
 public class JsonFormatterTests
 {
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Format_ExceptionTypeNameContainsQuote_ProducesValidJson(bool useSimpleTypeName)
+    {
+        var assembly = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("QuotedException_" + Guid.NewGuid().ToString("N")),
+            AssemblyBuilderAccess.Run);
+        var module = assembly.DefineDynamicModule("exceptions");
+        var typeBuilder = module.DefineType("Quoted\"Exception", TypeAttributes.Public, typeof(Exception));
+        typeBuilder.DefineDefaultConstructor(MethodAttributes.Public);
+        var exceptionType = typeBuilder.CreateTypeInfo()!.AsType();
+        var exception = (Exception)Activator.CreateInstance(exceptionType)!;
+        var formatter = new JsonFormatter(new JsonFormatterOptions
+        {
+            ExceptionFormatOptions = new ExceptionFormatOptions { UseSimpleTypeName = useSimpleTypeName }
+        });
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Error, exception, "message");
+        using var output = new StringWriter();
+
+        formatter.Format(logEvent, output);
+
+        using var document = System.Text.Json.JsonDocument.Parse(output.ToString());
+        Assert.Equal(System.Text.Json.JsonValueKind.Array, document.RootElement.GetProperty("@x").ValueKind);
+    }
+
+    [Fact]
+    public void Format_PropertyCollidesWithConfiguredLevelName_PreservesEventLevel()
+    {
+        var formatter = new JsonFormatter(new JsonFormatterOptions { LogLevelName = "level" });
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Error, null, "value {Level}", "overwritten");
+        using var output = new StringWriter();
+
+        formatter.Format(logEvent, output);
+
+        using var document = System.Text.Json.JsonDocument.Parse(output.ToString());
+        Assert.Equal("Error", document.RootElement.GetProperty("level").GetString());
+    }
+
     public static readonly TheoryData<bool, bool, bool, bool> IncludedFields =
     (
         from timestamp in new[] { false, true }

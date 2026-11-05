@@ -9,6 +9,8 @@ public class SerilogConfiguration
     private readonly List<Action<LoggerConfiguration>> _actions = [];
 
     public LogEventLevel MinimumLevel { get; set; } = LogEventLevel.Information;
+    /// <summary>Whether to wrap normalized exceptions for consistent formatting before dispatching to WriteTo sinks. Defaults to true.</summary>
+    /// <remarks>Exception-level handling and duplicate-message unwrapping still run when this is false.</remarks>
     public bool FormatException { get; set; } = true;
     /// <summary>Configures Microsoft's logging builder during service registration, before the logger is created.</summary>
     /// <remarks>
@@ -63,6 +65,8 @@ public class SerilogConfiguration
     /// <see cref="LogLevel.None"/> suppresses the event. A higher exception level cannot restore an event
     /// rejected before exception-level processing. Upstream Microsoft logger factory filters still evaluate
     /// the original call level.
+    /// After event filters, exception unwrapping and optional formatting run once before dispatching to
+    /// the configured WriteTo sinks. Nested exception levels are not reapplied for subsequent sinks.
     /// </remarks>
     /// <exception cref="AggregateException">Configuration fails and cleanup of the registered sinks also fails.</exception>
     public Logger CreateLogger()
@@ -130,9 +134,23 @@ public class SerilogConfiguration
             throw;
         }
 
-        logger = configuration
-            .WrapAllSinks(m => new LogEventMutateSink(m, FormatException ? x => x.FormatException() : null))
-            .CreateLogger();
+        var sinks = Fields.LoggerConfiguration_Sinks.GetRequiredValue<List<ILogEventSink>>(configuration);
+
+        // Normalize once before fan-out, so later sinks cannot unwrap another exception or change its level.
+        // Native aggregation preserves each sink's restrictions, failure isolation, and disposal support.
+        var aggregateSink = LoggerSinkConfiguration.CreateSink(wrapped =>
+        {
+            foreach (var sink in sinks)
+                wrapped.Sink(sink);
+        });
+
+        // This wrapper forwards disposal itself; Wrap's optional-interface forwarding would dispose twice.
+        var mutationSink = new LogEventMutateSink(aggregateSink, FormatException ? logEvent => logEvent.FormatException() : null);
+
+        // The wrapper now owns the captured sinks; remove the original registrations to avoid double dispatch/disposal.
+        sinks.Clear();
+        configuration.WriteTo.Sink(mutationSink);
+        logger = configuration.CreateLogger();
         return logger;
     }
 }

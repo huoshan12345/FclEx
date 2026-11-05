@@ -4,6 +4,85 @@ namespace FclEx.Serilog;
 
 public class SerilogConfigurationTests
 {
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CreateLogger_MultipleSinks_NormalizeNestedLogExceptionOnce(bool formatException)
+    {
+        var levels = new List<LogEventLevel>();
+        var exceptions = new List<Exception?>();
+        var first = new Mock<ILogEventSink>();
+        first.Setup(sink => sink.Emit(It.IsAny<LogEvent>())).Callback<LogEvent>(logEvent =>
+        {
+            levels.Add(logEvent.Level);
+            exceptions.Add(logEvent.Exception);
+        });
+        var second = new Mock<ILogEventSink>();
+        second.Setup(sink => sink.Emit(It.IsAny<LogEvent>())).Callback<LogEvent>(logEvent =>
+        {
+            levels.Add(logEvent.Level);
+            exceptions.Add(logEvent.Exception);
+        });
+        var configuration = new SerilogConfiguration
+        {
+            MinimumLevel = LogEventLevel.Error,
+            FormatException = formatException
+        };
+        using var logger = configuration.WriteTo(first.Object).WriteTo(second.Object).CreateLogger();
+        var inner = new LogException("failure", LogLevel.Warning, new InvalidOperationException("failure"));
+        var outer = new LogException("failure", LogLevel.Error, inner);
+
+        logger.Error(outer, "failure");
+
+        Assert.Equal(new[] { LogEventLevel.Error, LogEventLevel.Error }, levels);
+        Assert.NotNull(exceptions[0]);
+        Assert.Same(exceptions[0], exceptions[1]);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CreateLogger_MultipleSinks_FailureDoesNotPreventLaterSinks(bool formatException)
+    {
+        var failing = new Mock<ILogEventSink>();
+        failing.Setup(sink => sink.Emit(It.IsAny<LogEvent>())).Throws(new IOException("sink failed"));
+        var collecting = new CollectingSink();
+        using var logger = new SerilogConfiguration { FormatException = formatException }
+            .WriteTo(failing.Object).WriteTo(collecting).CreateLogger();
+
+        logger.Error(new LogException("failure", LogLevel.Warning), "failure");
+
+        failing.Verify(sink => sink.Emit(It.IsAny<LogEvent>()), Times.Once);
+        Assert.Equal(LogEventLevel.Warning, Assert.Single(collecting.Events).Level);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CreateLogger_MultipleSinks_RestrictionsUseOuterExceptionLevel(bool formatException)
+    {
+        var unrestricted = new CollectingSink();
+        var restricted = new CollectingSink();
+        var switched = new CollectingSink();
+        var levelSwitch = new LoggingLevelSwitch(LogEventLevel.Error);
+        var configuration = new SerilogConfiguration { FormatException = formatException };
+        configuration.Configure(logger => logger.WriteTo.Sink(unrestricted)
+            .WriteTo.Sink(restricted, restrictedToMinimumLevel: LogEventLevel.Error)
+            .WriteTo.Sink(switched, levelSwitch: levelSwitch));
+        using var logger = configuration.CreateLogger();
+
+        // The inner level must not replace the already-filtered outer level during fan-out.
+        logger.Error(new LogException("failure", LogLevel.Error,
+            new LogException("failure", LogLevel.Warning, new InvalidOperationException("failure"))), "failure");
+        levelSwitch.MinimumLevel = LogEventLevel.Fatal;
+        logger.Error(new LogException("failure", LogLevel.Warning,
+            new LogException("failure", LogLevel.Error, new InvalidOperationException("failure"))), "failure");
+
+        Assert.Equal(new[] { LogEventLevel.Error, LogEventLevel.Warning }, unrestricted.Events.Select(logEvent => logEvent.Level));
+        Assert.Equal(LogEventLevel.Error, Assert.Single(restricted.Events).Level);
+        Assert.Equal(LogEventLevel.Error, Assert.Single(switched.Events).Level);
+    }
+
     [Fact]
     public void Configure_NullAction_Throws()
     {
@@ -25,16 +104,85 @@ public class SerilogConfigurationTests
         Assert.Same(exception, Assert.Single(sink.Events).GetOriginalException());
     }
 
-    [Fact]
-    public void CreateLogger_Dispose_DisposesWrappedSink()
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void CreateLogger_Dispose_DisposesWrappedSinksOnce(int sinkCount)
     {
-        var sink = new Mock<ILogEventSink>();
-        var disposable = sink.As<IDisposable>();
-        Logger logger = new SerilogConfiguration().WriteTo(sink.Object).CreateLogger();
+        var configuration = new SerilogConfiguration();
+        var sinks = Enumerable.Range(0, sinkCount).Select(_ => new Mock<ILogEventSink>()).ToArray();
+        foreach (var sink in sinks)
+        {
+            sink.As<IDisposable>();
+            configuration.WriteTo(sink.Object);
+        }
+        var logger = configuration.CreateLogger();
 
         logger.Dispose();
 
-        disposable.Verify(m => m.Dispose(), Times.Once);
+        foreach (var sink in sinks)
+            sink.As<IDisposable>().Verify(disposable => disposable.Dispose(), Times.Once);
+    }
+
+#if NET6_0_OR_GREATER
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task CreateLogger_DisposeAsync_DisposesWrappedSinksOnce(int asyncSinkCount)
+    {
+        var configuration = new SerilogConfiguration();
+        var sinks = Enumerable.Range(0, asyncSinkCount).Select(_ => new Mock<ILogEventSink>()).ToArray();
+        foreach (var sink in sinks)
+        {
+            sink.As<IAsyncDisposable>().Setup(disposable => disposable.DisposeAsync()).Returns(ValueTask.CompletedTask);
+            configuration.WriteTo(sink.Object);
+        }
+        var logger = configuration.CreateLogger();
+
+        await logger.DisposeAsync();
+
+        foreach (var sink in sinks)
+            sink.As<IAsyncDisposable>().Verify(disposable => disposable.DisposeAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateLogger_DisposeAsync_DisposesMixedSinksOnce()
+    {
+        var synchronous = new Mock<ILogEventSink>();
+        synchronous.As<IDisposable>();
+        var asynchronous = new Mock<ILogEventSink>();
+        asynchronous.As<IDisposable>();
+        asynchronous.As<IAsyncDisposable>().Setup(sink => sink.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var logger = new SerilogConfiguration().WriteTo(synchronous.Object).WriteTo(asynchronous.Object).CreateLogger();
+
+        await logger.DisposeAsync();
+
+        synchronous.As<IDisposable>().Verify(sink => sink.Dispose(), Times.Once);
+        asynchronous.As<IAsyncDisposable>().Verify(sink => sink.DisposeAsync(), Times.Once);
+        asynchronous.As<IDisposable>().Verify(sink => sink.Dispose(), Times.Never);
+    }
+#endif
+
+    [Fact]
+    public void CreateLogger_Dispose_FlushesBatchingSink()
+    {
+        var emitted = new List<LogEvent>();
+        var batching = new Mock<IBatchedLogEventSink>();
+        batching.Setup(sink => sink.EmitBatchAsync(It.IsAny<IReadOnlyCollection<LogEvent>>()))
+            .Callback<IReadOnlyCollection<LogEvent>>(events => emitted.AddRange(events))
+            .Returns(Task.CompletedTask);
+        var configuration = new SerilogConfiguration().WriteTo(new CollectingSink());
+        configuration.Configure(logger => logger.WriteTo.Sink(batching.Object, new global::Serilog.Configuration.BatchingOptions
+        {
+            EagerlyEmitFirstEvent = false,
+            BufferingTimeLimit = TimeSpan.FromHours(1)
+        }));
+        var logger = configuration.CreateLogger();
+        logger.Error("buffered event");
+
+        logger.Dispose();
+
+        Assert.Equal("buffered event", Assert.Single(emitted).RenderMessage());
     }
 
     [Fact]

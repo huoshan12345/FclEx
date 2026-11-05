@@ -39,7 +39,7 @@ public class LogstashSinkTests
     }
 
     [Theory]
-    [InlineData("/relative")]
+    [InlineData("relative/path")]
     [InlineData("tcp://localhost:not-a-port")]
     [InlineData("tcp://localhost:65536")]
     public void Constructor_MalformedUri_Throws(string uri)
