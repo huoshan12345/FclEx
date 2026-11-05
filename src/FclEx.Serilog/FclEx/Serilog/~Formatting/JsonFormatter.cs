@@ -15,15 +15,28 @@ public partial class JsonFormatter : ITextFormatter
     }
 
     /// <summary>
-    /// Format the log event into the output. Subsequent events will be newline-delimited.
+    /// Writes one JSON object followed by a newline, omitting fields whose configured names are empty.
     /// </summary>
     /// <param name="logEvent">The event to format.</param>
     /// <param name="output">The output.</param>
     public virtual void Format(LogEvent logEvent, TextWriter output)
     {
+        // Omitting the first field leaves a leading separator in the existing field writers.
+        // Buffer this case so the first separator can be removed before the members are written.
+        using var buffer = Options.UtcTimeName.IsNullOrEmpty() ? StringBuilder.GetCached() : null;
+        using var bufferWriter = buffer == null ? null : new StringWriter(buffer.Value, output.FormatProvider);
+        var writer = bufferWriter ?? output;
+
         output.Write('{');
-        WriteBasicData(logEvent, output);
-        WriteProperties(logEvent, output);
+        WriteBasicData(logEvent, writer);
+        WriteProperties(logEvent, writer);
+        if (buffer != null)
+        {
+            var builder = buffer.Value;
+            if (builder.Length > 0 && builder[0] == ',')
+                builder.Remove(0, 1);
+            output.Write(builder.ToString());
+        }
         output.Write('}');
         output.WriteLine();
     }
@@ -43,23 +56,36 @@ public partial class JsonFormatter : ITextFormatter
         WriteException(message, ex, output);
     }
 
+    /// <summary>Writes an exception member, using a diagnostic string if exception formatting fails.</summary>
+    /// <param name="logEventMessage">The rendered message used to identify duplicate exception text.</param>
+    /// <param name="ex">The exception to format.</param>
+    /// <param name="output">The writer receiving a complete comma-prefixed exception member.</param>
+    /// <remarks>An empty exception member name omits formatting. Exception fragments are buffered before being committed to the output.</remarks>
     protected virtual void WriteException(string logEventMessage, Exception ex, TextWriter output)
     {
+        if (Options.ExceptionName.IsNullOrEmpty())
+            return;
+
+        // Commit the exception member only after formatting succeeds, or replace the whole fragment.
+        using var buffer = StringBuilder.GetCached();
+        using var writer = new StringWriter(buffer.Value, output.FormatProvider);
         try
         {
             if (Options.EnableExceptionFormat)
             {
-                WriteFormattedException(logEventMessage, ex, output);
+                WriteFormattedException(logEventMessage, ex, writer);
             }
             else
             {
-                WriteJsonData(Options.ExceptionName, ex.ToString(), output, true);
+                WriteJsonData(Options.ExceptionName, ex.ToString(), writer, true);
             }
         }
         catch (Exception e)
         {
-            WriteJsonData(Options.ExceptionName, "[Failed to Format Exception]" + e.Message, output, true);
+            buffer.Value.Clear();
+            WriteJsonData(Options.ExceptionName, "[Failed to Format Exception]" + e.Message, writer, true);
         }
+        output.Write(buffer.Value.ToString());
     }
 
     protected virtual void WriteProperties(LogEvent logEvent, TextWriter output)

@@ -8,6 +8,93 @@ namespace FclEx.Serilog.Sinks;
 
 public class NewRelicSinkTests
 {
+    [Fact]
+    public void Dispose_OwnedClient_DisposesHandlerOnce()
+    {
+        var handler = new TrackingHandler();
+        using var client = new HttpClient(handler);
+        var sink = new NewRelicSink(client, "test-license", disposeHttpClient: true);
+
+        sink.Dispose();
+        sink.Dispose();
+
+        Assert.Equal(1, handler.DisposeCount);
+    }
+
+    [Fact]
+    public async Task Dispose_SharedClient_PreservesClientAndPerSinkAuthentication()
+    {
+        var handler = new TrackingHandler();
+        using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(2) };
+        client.DefaultRequestHeaders.Add("X-License-Key", "caller-license");
+        using var first = new NewRelicSink(client, "first-license");
+        using var second = new NewRelicSink(client, "second-license");
+
+        await first.EmitBatchAsync(new[] { CreateLogEvent(1) });
+        first.Dispose();
+        await second.EmitBatchAsync(new[] { CreateLogEvent(2) });
+
+        Assert.Equal(0, handler.DisposeCount);
+        Assert.Equal(new[] { "first-license", "second-license" }, handler.LicenseKeys);
+        Assert.Equal("caller-license", client.DefaultRequestHeaders.GetValues("X-License-Key").Single());
+        Assert.Equal(TimeSpan.FromSeconds(2), client.Timeout);
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => first.EmitBatchAsync(new[] { CreateLogEvent(3) }));
+    }
+
+    [Fact]
+    public async Task EmitBatchAsync_DisposesRequestContent()
+    {
+        var handler = new TrackingHandler();
+        using var client = new HttpClient(handler);
+        using var sink = new NewRelicSink(client, "test-license");
+
+        await sink.EmitBatchAsync(new[] { CreateLogEvent(1) });
+
+        var request = Assert.Single(handler.Requests);
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => request.Content!.ReadAsByteArrayAsync());
+    }
+
+    [Fact]
+    public void DisposeLogger_DisposesBatchedNewRelicSink()
+    {
+        var handler = new TrackingHandler();
+        using var client = new HttpClient(handler);
+        var sink = new NewRelicSink(client, "test-license", disposeHttpClient: true);
+        var configuration = new SerilogConfiguration().WriteTo(writeTo => writeTo.Sink(sink, new global::Serilog.Configuration.BatchingOptions()));
+        var logger = (Logger)configuration.CreateLogger();
+
+        logger.Dispose();
+
+        Assert.Equal(1, handler.DisposeCount);
+    }
+
+    [Fact]
+    public void Constructor_NullClient_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() => new NewRelicSink((HttpClient)null!, "test-license"));
+    }
+
+    private sealed class TrackingHandler : HttpMessageHandler
+    {
+        public int DisposeCount { get; private set; }
+        public List<string> LicenseKeys { get; } = [];
+        public List<HttpRequestMessage> Requests { get; } = [];
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            LicenseKeys.Add(request.Headers.GetValues("X-License-Key").Single());
+            Requests.Add(request);
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted));
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                DisposeCount++;
+            base.Dispose(disposing);
+        }
+    }
+
     [Theory]
     [InlineData(202, true)]
     [InlineData(200, false)]
@@ -21,7 +108,7 @@ public class NewRelicSinkTests
         try
         {
             var port = ((IPEndPoint)listener.LocalEndpoint).Port;
-            var sink = new NewRelicSink("test-license", $"http://127.0.0.1:{port}/log/v1");
+            using var sink = new NewRelicSink("test-license", $"http://127.0.0.1:{port}/log/v1");
             var timeout = TimeSpan.FromSeconds(10);
             var sending = sink.EmitBatchAsync(new[] { CreateLogEvent(1) });
             using var connection = await listener.AcceptTcpClientAsync().WaitAsync(timeout);
@@ -57,7 +144,7 @@ public class NewRelicSinkTests
     [Fact]
     public async Task EmitBatchAsync_TransportFailure_PropagatesForBatchRetry()
     {
-        var sink = new NewRelicSink("test-license", "unsupported://localhost/log/v1");
+        using var sink = new NewRelicSink("test-license", "unsupported://localhost/log/v1");
         var events = new[] { CreateLogEvent(1) };
 
 #if NETFRAMEWORK
@@ -73,7 +160,7 @@ public class NewRelicSinkTests
         var exception = new FormatException("formatting failed");
         var formatter = new Mock<global::Serilog.Formatting.ITextFormatter>();
         formatter.Setup(m => m.Format(It.IsAny<LogEvent>(), It.IsAny<TextWriter>())).Throws(exception);
-        var sink = new NewRelicSink("test-license", formatter: formatter.Object);
+        using var sink = new NewRelicSink("test-license", formatter: formatter.Object);
 
         var actual = await Assert.ThrowsAsync<FormatException>(() => sink.EmitBatchAsync(new[] { CreateLogEvent(1) }));
 
@@ -98,7 +185,7 @@ public class NewRelicSinkTests
         var writer = new StringWriter();
         using var x = writer.SetSelfLog();
 
-        var sink = new NewRelicSink(licenseKey: "");
+        using var sink = new NewRelicSink(licenseKey: "");
         var events = Enumerable.Range(1, 5).Select(CreateLogEvent).ToArray();
         await sink.EmitBatchAsync(events);
 

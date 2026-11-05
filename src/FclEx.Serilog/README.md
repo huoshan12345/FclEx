@@ -29,6 +29,20 @@ Serilog helpers for FclEx.
 - New Relic batches succeed on HTTP 202 Accepted. Serialization, transport, timeout,
   and other HTTP response failures propagate to Serilog's batching infrastructure
   for diagnostics and retries.
+- New Relic sinks own their default HTTP client and release it during disposal.
+  The `NewRelicSink(HttpClient, ...)` overload keeps the caller's client settings and
+  uses caller ownership by default. Pass `disposeHttpClient: true` to transfer
+  ownership to the sink. License keys are attached to individual requests.
+- Logstash endpoints use `tcp://host:port` or `udp://host:port`, with an explicit
+  destination port from 1 through 65535. The sink validates the URI during construction.
+- Empty JSON formatter field names omit those fields. Exception formatting failures
+  produce a diagnostic string after the incomplete exception fragment is discarded.
+
+## API Migration
+
+1. Replace calls to `MatchMaxLeveOrNull` with `MatchMaxLevelOrNull`.
+2. The `LogstashInputType` enum has been removed. Select the transport using the
+   `tcp` or `udp` scheme in `LogstashSinkOptions.Uri`.
 
 ## Exception Log Levels
 

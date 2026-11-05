@@ -11,7 +11,7 @@ public record SourceExcluder(string Source, LogEventLevel? MaxLevel = null) : IL
 
     public bool ShouldExclude(LogEvent e)
     {
-        return e.MatchMaxLeveOrNull(MaxLevel)
+        return e.MatchMaxLevelOrNull(MaxLevel)
                && Matching.FromSource(Source)(e);
     }
 

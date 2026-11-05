@@ -14,7 +14,7 @@ public record MessageExcluder(string? Source, string Message, LogEventLevel? Max
 
     public bool ShouldExclude(LogEvent e)
     {
-        return e.MatchMaxLeveOrNull(MaxLevel)
+        return e.MatchMaxLevelOrNull(MaxLevel)
                && e.MatchSourceOrNull(Source)
                && Message.IsNotEmpty()
                && e.MessageTemplate.Text.Contains(Message);

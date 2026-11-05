@@ -4,6 +4,21 @@ namespace FclEx.Serilog;
 
 public class SerilogConfigurationTests
 {
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CreateLogger_PreservesExceptionWhenOnlyPlaceholderNameMatches(bool formatException)
+    {
+        var sink = new CollectingSink();
+        var configuration = new SerilogConfiguration { FormatException = formatException };
+        using var logger = (Logger)configuration.WriteTo(sink).CreateLogger();
+        var exception = new SimpleException("Method");
+
+        logger.Error(exception, "Failed to execute {Method}", "Save");
+
+        Assert.Same(exception, Assert.Single(sink.Events).GetOriginalException());
+    }
+
     [Fact]
     public void CreateLogger_Dispose_DisposesWrappedSink()
     {

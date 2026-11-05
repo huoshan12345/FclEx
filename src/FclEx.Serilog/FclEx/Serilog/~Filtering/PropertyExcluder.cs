@@ -16,7 +16,7 @@ public record PropertyExcluder(string? Source, string Name, string? Value, LogEv
 
     public bool ShouldExclude(LogEvent e)
     {
-        if (e.MatchMaxLeveOrNull(MaxLevel) == false)
+        if (e.MatchMaxLevelOrNull(MaxLevel) == false)
             return false;
 
         if (e.MatchSourceOrNull(Source) == false)

@@ -2,12 +2,16 @@ namespace FclEx.Serilog;
 
 public class LogstashSinkOptions
 {
+    /// <summary>Configures a Logstash endpoint and its batching defaults.</summary>
+    /// <param name="uri">An absolute tcp:// or udp:// URI containing a host and explicit destination port.</param>
+    /// <remarks>The sink validates the endpoint when it is constructed.</remarks>
     public LogstashSinkOptions(string uri)
     {
         Check.NotEmpty(uri);
         Uri = uri;
     }
 
+    /// <summary>The TCP or UDP endpoint URI, including its host and explicit port.</summary>
     public string Uri { get; }
 
     /// <summary>

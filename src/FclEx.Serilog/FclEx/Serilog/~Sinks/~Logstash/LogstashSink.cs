@@ -16,11 +16,19 @@ public class LogstashSink : IBatchedLogEventSink
         return Task.CompletedTask;
     }
 
+    /// <summary>Creates a Logstash sink using the TCP or UDP endpoint in the supplied options.</summary>
+    /// <param name="options">The endpoint URI and event formatter.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="options"/> is null.</exception>
+    /// <exception cref="UriFormatException">The endpoint is not a valid absolute URI.</exception>
+    /// <exception cref="ArgumentException">The URI does not identify a TCP or UDP host with an explicit port from 1 through 65535.</exception>
     public LogstashSink(LogstashSinkOptions options)
     {
-        var uri = new Uri(options.Uri);
-        var type = Enum.Parse(uri.Scheme, LogstashInputType.Tcp);
-        _input = LogstashInputFactory.Create(type, uri);
+        Check.NotNull(options);
+        var uri = new Uri(options.Uri, UriKind.Absolute);
+        if (uri.Host.IsNullOrEmpty() || uri.Port <= 0)
+            throw new ArgumentException("Logstash requires a host and an explicit port from 1 through 65535.", nameof(options));
+
+        _input = LogstashInputFactory.Create(uri);
         _formatter = options.Formatter ?? new JsonFormatter();
     }
 }

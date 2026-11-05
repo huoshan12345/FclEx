@@ -77,9 +77,13 @@ public static class LogEventExtensions
         return source is null || Matching.FromSource(source)(e);
     }
 
-    public static bool MatchMaxLeveOrNull(this LogEvent e, LogEventLevel? maxLevel)
+    /// <summary>Checks whether an event satisfies an optional inclusive maximum level.</summary>
+    /// <param name="logEvent">The event whose level is checked.</param>
+    /// <param name="maxLevel">The inclusive maximum, or null to accept any event level.</param>
+    /// <returns>True when the maximum is absent or the event level is at most the maximum.</returns>
+    public static bool MatchMaxLevelOrNull(this LogEvent logEvent, LogEventLevel? maxLevel)
     {
-        return maxLevel is null || e.Level <= maxLevel;
+        return maxLevel is null || logEvent.Level <= maxLevel;
     }
 
     public static string ToString(this LogEvent logEvent, ITextFormatter formatter)
@@ -112,6 +116,14 @@ public static class LogEventExtensions
         return ex;
     }
 
+    /// <summary>Unwraps a stack-trace-free exception when its message already appears in the rendered log message or its inner exception's message.</summary>
+    /// <param name="logEvent">The event to update in place.</param>
+    /// <returns>The same event, with a duplicate outer exception replaced by its inner exception or cleared when there is no inner exception.</returns>
+    /// <remarks>
+    /// An empty message template is populated with the exception message as literal text before checking
+    /// for duplication. Exceptions with a stack trace are retained. Each call considers the outermost
+    /// exception and uses case-sensitive substring comparisons for duplicate messages.
+    /// </remarks>
     public static LogEvent UnwrapException(this LogEvent logEvent)
     {
         if (logEvent.Exception is not { } ex)
@@ -129,8 +141,7 @@ public static class LogEventExtensions
         var inner = ex.InnerException;
         var template = logEvent.MessageTemplate;
         var error = ex.Message;
-        if (template.Text.Contains(error)
-            || inner?.Message.Contains(error) == true
+        if (inner?.Message.Contains(error) == true
             || template.Render(logEvent.Properties).Contains(error))
         {
             logEvent.SetException(inner);

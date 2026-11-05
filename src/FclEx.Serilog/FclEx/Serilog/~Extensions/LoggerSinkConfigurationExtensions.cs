@@ -23,7 +23,10 @@ public static class LoggerSinkConfigurationExtensions
     /// <param name="batchSizeLimit">The maximum number of events to include in a single batch. Default is 100 entries.</param>
     /// <param name="period">The time to wait between checking for event batches. TimeSpan with a default value of 2 seconds.</param>
     /// <returns>The logger configuration for further customization.</returns>
-    /// <remarks>Serialization failures, request failures, and responses other than HTTP 202 Accepted are handled by Serilog's batching diagnostics and retry policy.</remarks>
+    /// <remarks>
+    /// Serialization failures, request failures, and responses other than HTTP 202 Accepted are handled
+    /// by Serilog's batching diagnostics and retry policy. Logger disposal releases the sink's owned HTTP client.
+    /// </remarks>
     public static LoggerConfiguration NewRelic(
         this LoggerSinkConfiguration loggerSinkConfiguration,
         string? licenseKey = null,
@@ -52,7 +55,15 @@ public static class LoggerSinkConfigurationExtensions
             EagerlyEmitFirstEvent = true,
             QueueLimit = 10000,
         };
-        return loggerSinkConfiguration.Sink(sink, batchingOptions, restrictedToMinimumLevel);
+        try
+        {
+            return loggerSinkConfiguration.Sink(sink, batchingOptions, restrictedToMinimumLevel);
+        }
+        catch
+        {
+            sink.Dispose();
+            throw;
+        }
     }
 
 

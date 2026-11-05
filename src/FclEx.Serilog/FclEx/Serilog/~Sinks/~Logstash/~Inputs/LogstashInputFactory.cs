@@ -1,15 +1,15 @@
 namespace FclEx.Serilog;
 
-internal class LogstashInputFactory
+internal static class LogstashInputFactory
 {
-    public static ILogstashInput Create(LogstashInputType type, Uri uri)
+    public static ILogstashInput Create(Uri uri)
     {
-        switch (type)
+        switch (uri.Scheme)
         {
-            case LogstashInputType.Udp: return new UdpInput(uri);
-            case LogstashInputType.Tcp: return new TcpInput(uri);
+            case "udp": return new UdpInput(uri);
+            case "tcp": return new TcpInput(uri);
             default:
-                throw new ArgumentOutOfRangeException(nameof(type), type, null);
+                throw new ArgumentException("Logstash supports only tcp:// and udp:// endpoint URIs.", nameof(uri));
         }
     }
 }

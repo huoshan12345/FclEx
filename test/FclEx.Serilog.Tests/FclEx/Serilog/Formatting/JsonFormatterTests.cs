@@ -6,6 +6,109 @@ namespace FclEx.Serilog.Formatting;
 [Collection(nameof(Console))]
 public class JsonFormatterTests
 {
+    public static readonly TheoryData<bool, bool, bool, bool> IncludedFields =
+    (
+        from timestamp in new[] { false, true }
+        from level in new[] { false, true }
+        from message in new[] { false, true }
+        from exception in new[] { false, true }
+        select (timestamp, level, message, exception)
+    ).ToTheoryData();
+
+    [Theory]
+    [MemberData(nameof(IncludedFields))]
+    public void Format_OptionalFields_ProducesValidJson(bool timestamp, bool level, bool message, bool exception)
+    {
+        var options = new JsonFormatterOptions
+        {
+            UtcTimeName = timestamp ? "@t" : "",
+            LogLevelName = level ? "@l" : "",
+            MessageName = message ? "@m" : "",
+            ExceptionName = exception ? "@x" : ""
+        };
+        var formatter = new JsonFormatter(options);
+        var logEvent = new LogEvent(DateTimeOffset.UtcNow, LogEventLevel.Error,
+            new InvalidOperationException("failure"), MessageTemplate.Empty, []);
+        using var output = new StringWriter();
+
+        formatter.Format(logEvent, output);
+
+        using var document = System.Text.Json.JsonDocument.Parse(output.ToString());
+        var root = document.RootElement;
+        Assert.Equal(timestamp, root.TryGetProperty("@t", out _));
+        Assert.Equal(level, root.TryGetProperty("@l", out _));
+        Assert.Equal(message, root.TryGetProperty("@m", out _));
+        Assert.Equal(exception, root.TryGetProperty("@x", out _));
+        Assert.Equal(new[] { timestamp, level, message, exception }.Count(included => included), root.EnumerateObject().Count());
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Format_OnlyProperties_ProducesValidJson(bool enableExceptionFormat)
+    {
+        var formatter = new JsonFormatter(new JsonFormatterOptions
+        {
+            UtcTimeName = "",
+            LogLevelName = "",
+            MessageName = "",
+            ExceptionName = "",
+            EnableExceptionFormat = enableExceptionFormat
+        });
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Information, null, "Hello {Name}", "Tom");
+        using var output = new StringWriter();
+
+        formatter.Format(logEvent, output);
+
+        using var document = System.Text.Json.JsonDocument.Parse(output.ToString());
+        Assert.Equal("Tom", document.RootElement.GetProperty("name").GetString());
+        Assert.Equal(2, document.RootElement.EnumerateObject().Count());
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Format_OmittedException_SkipsExceptionFormatting(bool enableExceptionFormat)
+    {
+        var formatter = new JsonFormatter(new JsonFormatterOptions
+        {
+            ExceptionName = "",
+            EnableExceptionFormat = enableExceptionFormat
+        });
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Error, new ThrowingMessageException(), "message");
+        using var output = new StringWriter();
+
+        formatter.Format(logEvent, output);
+
+        using var document = System.Text.Json.JsonDocument.Parse(output.ToString());
+        Assert.False(document.RootElement.TryGetProperty("@x", out _));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Format_ExceptionFormattingFailsAfterWriting_ReplacesEntireFragment(bool includeTimestamp)
+    {
+        var formatter = new PartiallyFailingFormatter(new JsonFormatterOptions { UtcTimeName = includeTimestamp ? "@t" : "" });
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Error, new InvalidOperationException("failure"), "message");
+        using var output = new StringWriter();
+
+        formatter.Format(logEvent, output);
+
+        using var document = System.Text.Json.JsonDocument.Parse(output.ToString());
+        Assert.Contains("Failed to Format Exception", document.RootElement.GetProperty("@x").GetString());
+        Assert.DoesNotContain("partial fragment", output.ToString());
+    }
+
+    private sealed class PartiallyFailingFormatter(JsonFormatterOptions options) : JsonFormatter(options)
+    {
+        protected override void WriteFormattedException(string logEventMessage, Exception ex, TextWriter output)
+        {
+            output.Write(",\"@x\":[\"partial fragment\"");
+            throw new InvalidOperationException("formatting failed");
+        }
+    }
+
     [Fact]
     public void Format_OmittedTimestamp_ProducesValidJson()
     {
