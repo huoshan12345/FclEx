@@ -75,7 +75,7 @@ public sealed class LfuCache<TKey, TValue> : IBoundedCache<TKey, TValue> where T
     }
 
     /// <inheritdoc />
-    /// <remarks>Keys are ordered from highest priority to the next eviction candidate.</remarks>
+    /// <remarks>Keys are ordered from the highest priority to the next eviction candidate.</remarks>
     public IReadOnlyCollection<TKey> Keys
     {
         get

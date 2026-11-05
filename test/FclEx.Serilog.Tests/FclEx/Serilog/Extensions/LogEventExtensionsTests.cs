@@ -1,7 +1,67 @@
 namespace FclEx.Serilog.Extensions;
 
-public class LogEventExtensionsTests
+public partial class LogEventExtensionsTests
 {
+    [Theory]
+    [InlineData(LogEventLevel.Warning, null, true)]
+    [InlineData(LogEventLevel.Warning, LogEventLevel.Warning, true)]
+    [InlineData(LogEventLevel.Warning, LogEventLevel.Error, true)]
+    [InlineData(LogEventLevel.Error, LogEventLevel.Warning, false)]
+    public void MatchMaxLevelOrNull_UsesInclusiveMaximum(LogEventLevel level, LogEventLevel? maximum, bool matches)
+    {
+        var logEvent = SerilogHelper.CreateLogEvent(level, null, "message");
+
+        Assert.Equal(matches, logEvent.MatchMaxLevelOrNull(maximum));
+    }
+
+    [Fact]
+    public void UnwrapException_ErrorOnlyMatchesPlaceholderName_PreservesException()
+    {
+        var exception = new SimpleException("Method");
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Error, exception,
+            "Failed to execute {Method}", "Save");
+
+        logEvent.UnwrapException();
+
+        Assert.Same(exception, logEvent.Exception);
+    }
+
+    [Fact]
+    public void UnwrapException_LiteralMessageContainsError_RemovesException()
+    {
+        var exception = new SimpleException("remote service");
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Error, exception,
+            "Failed because the remote service is unavailable");
+
+        logEvent.UnwrapException();
+
+        Assert.Null(logEvent.Exception);
+    }
+
+    [Fact]
+    public void UnwrapException_InnerMessageContainsError_ReplacesWithInner()
+    {
+        var inner = new InvalidOperationException("The remote service is unavailable");
+        var exception = new SimpleException("remote service", inner);
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Error, exception, "operation failed");
+
+        logEvent.UnwrapException();
+
+        Assert.Same(inner, logEvent.Exception);
+    }
+
+    [Fact]
+    public void UnwrapException_ExceptionHasStackTrace_PreservesException()
+    {
+        var exception = new SimpleException("failure", noStackTrace: false);
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Error, exception, "failure");
+        Assert.False(string.IsNullOrEmpty(exception.StackTrace));
+
+        logEvent.UnwrapException();
+
+        Assert.Same(exception, logEvent.Exception);
+    }
+
     [Fact]
     public void UnwrapException_MessageDoesNotContainError()
     {

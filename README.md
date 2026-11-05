@@ -53,7 +53,7 @@ This repository is a multi-package library collection. Each package is intention
 |[FclEx.NewRelic](src/FclEx.NewRelic)|New Relic agent helpers and NerdGraph NRQL client support.|
 |[FclEx.NewtonsoftJson](src/FclEx.NewtonsoftJson)|Newtonsoft.Json converters and helpers for flexible JSON parsing, serialization, JToken, and XML conversion.|
 |[FclEx.Options](src/FclEx.Options)|Helpers for registering prebuilt, factory-created, and service-configured options.|
-|[FclEx.Serilog](src/FclEx.Serilog)|Serilog configuration helpers, enrichers, filters, formatters, and sinks.|
+|[FclEx.Serilog](src/FclEx.Serilog)|Serilog configuration, container-owned logging, enrichers, filters, formatters, and sinks.|
 |[FclEx.Serilog.Slack](src/FclEx.Serilog.Slack)|Serilog sink support for sending batched log events to Slack.|
 |[FclEx.Slack](src/FclEx.Slack)|SlackNet registration, Slack API extensions, message builders, webhook helpers, and table-to-message formatting.|
 |[FclEx.Xunit.v3](src/FclEx.Xunit.v3)|xUnit v3 variant of the FclEx test helper package.|

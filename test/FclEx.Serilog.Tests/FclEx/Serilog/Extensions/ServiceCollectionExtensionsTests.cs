@@ -1,4 +1,3 @@
-using System.Xml.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog.Extensions.Logging;
@@ -6,21 +5,120 @@ using Serilog.Extensions.Logging;
 namespace FclEx.Serilog.Extensions;
 
 [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
-public class ServiceCollectionExtensionsTests
+public partial class ServiceCollectionExtensionsTests
 {
+    [Theory]
+    [InlineData(LogLevel.Warning, false)]
+    [InlineData(LogLevel.Error, true)]
+    public void AddSerilog_LogError_RequiresExceptionLevelToPassMinimum(LogLevel exceptionLevel, bool shouldLog)
+    {
+        var sink = new CollectingSink();
+        var options = new SerilogConfiguration { MinimumLevel = LogEventLevel.Error };
+        options.WriteTo(sink);
+        using var provider = new ServiceCollection().AddSerilog(options).BuildServiceProvider();
+        var logger = provider.GetRequiredService<ILogger<ServiceCollectionExtensionsTests>>();
+
+        try
+        {
+            throw new LogException("inner failure", exceptionLevel);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "outer failure");
+        }
+
+        Assert.Equal(shouldLog ? 1 : 0, sink.Events.Count);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void AddSerilog_AppliesConfigureLoggingBuilderBeforeRegistration(bool useBuilderAlias)
+    {
+        var sink = new CollectingSink();
+        var options = new SerilogConfiguration().WriteTo(sink);
+        if (useBuilderAlias)
+            options.ConfigureLoggingBuilder(builder => builder.SetMinimumLevel(LogLevel.Error));
+        else
+            options.ConfigureLogging(builder => builder.SetMinimumLevel(LogLevel.Error));
+        using var provider = new ServiceCollection().AddSerilog(options).BuildServiceProvider();
+        var logger = provider.GetRequiredService<ILogger<ServiceCollectionExtensionsTests>>();
+
+        logger.LogInformation("must be filtered");
+
+        Assert.Empty(sink.Events);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void AddSerilog_AppliesLoggingBuilderBeforeDeferredLoggerConfiguration(bool useBuilderAlias)
+    {
+        var sink = new CollectingSink();
+        var calls = new List<string>();
+        var options = new SerilogConfiguration().Configure(logger =>
+        {
+            calls.Add("logger");
+            logger.WriteTo.Sink(sink);
+        });
+        Action<ILoggingBuilder> configureLogging = builder =>
+        {
+            calls.Add("logging builder");
+            builder.SetMinimumLevel(LogLevel.Error);
+        };
+        if (useBuilderAlias)
+            options.ConfigureLoggingBuilder(configureLogging);
+        else
+            options.ConfigureLogging(configureLogging);
+        var services = new ServiceCollection().AddSerilog(options);
+        Assert.Equal(new[] { "logging builder" }, calls);
+        using var provider = services.BuildServiceProvider();
+        var logger = provider.GetRequiredService<ILogger<ServiceCollectionExtensionsTests>>();
+
+        logger.LogInformation("must be filtered");
+        logger.LogError("must be recorded");
+
+        Assert.Equal(LogEventLevel.Error, Assert.Single(sink.Events).Level);
+        Assert.Equal(new[] { "logging builder", "logger" }, calls);
+    }
+
+    [Fact]
+    public void AddSerilog_LoggingBuilderFailure_DoesNotCreateLogger()
+    {
+        var exception = new InvalidOperationException("logging configuration failed");
+        var loggerCreations = 0;
+        var options = new SerilogConfiguration().Configure(logger => loggerCreations++)
+            .ConfigureLogging(builder => throw exception);
+
+        var actual = Assert.Throws<InvalidOperationException>(() => new ServiceCollection().AddSerilog(options));
+
+        Assert.Same(exception, actual);
+        Assert.Equal(0, loggerCreations);
+    }
+
+    [Fact]
+    public void AddSerilog_LoggingBuilderActions_RunInRegistrationOrder()
+    {
+        var calls = new List<int>();
+        var options = new SerilogConfiguration().ConfigureLoggingBuilder(builder => calls.Add(1));
+        options.ConfigureLogging(builder => calls.Add(2));
+        using var provider = new ServiceCollection().AddSerilog(options).BuildServiceProvider();
+
+        Assert.Equal(new[] { 1, 2 }, calls);
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void AddSerilog_Test(bool formatException)
     {
         var sink = new CollectingSink();
-        var provider = new ServiceCollection()
-            .AddSerilog((m, n) =>
-            {
-                n.WriteTo(sink)
-                    .Enrich(new LogEnricher(nameof(AddSerilog_Test)))
-                    .FormatException(formatException);
-            })
+        var options = new SerilogConfiguration().AddCommonExcluders()
+            .WriteTo(sink)
+            .Enrich(new LogEnricher(nameof(AddSerilog_Test)))
+            .FormatException(formatException);
+        using var provider = new ServiceCollection()
+            .AddSerilog(options)
             .BuildServiceProvider();
 
         var logger = provider.GetService<Microsoft.Extensions.Logging.ILogger>();

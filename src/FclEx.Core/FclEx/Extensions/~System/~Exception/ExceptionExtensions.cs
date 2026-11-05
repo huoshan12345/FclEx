@@ -7,6 +7,7 @@ public static partial class ExceptionExtensions
     /// </summary>
     /// <param name="ex">The exception to re-throw.</param>
     [StackTraceHidden, DoesNotReturn]
+    [MethodImpl(AggressiveInlining)]
     public static void ReThrow(this Exception ex) => ExceptionDispatchInfo.Capture(ex).Throw();
 
     /// <summary>

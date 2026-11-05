@@ -1,14 +1,13 @@
 namespace FclEx.Extensions;
 
 /// <summary>
-/// Represents detailed information about an exception. br/>
-/// NOTE: StackTraceLines will be from the outermost stack trace frame to the innermost, which is opposite from Exception.StackTrace.
+/// Describes one retained exception node and its filtered stack trace, ordered from outermost to innermost frame.
 /// </summary>
 /// <param name="Type">The type of the exception.</param>
 /// <param name="Message">The message associated with the exception.</param>
 /// <param name="StackTraceLines">The stack trace lines, starting from the outermost frame.</param>
-/// <param name="Index">The index of this exception in the context of a collection (e.g., ExceptionTree)</param>
-/// <param name="ParentIndex">The index of the parent exception in the context of a collection (if applicable).</param>
+/// <param name="Index">The zero-based index of this retained node in the exception tree.</param>
+/// <param name="ParentIndex">The index of its retained parent, or -1 when this node is the root after redundant wrappers are omitted.</param>
 public readonly record struct ExceptionInfo(Type Type, string Message, IReadOnlyList<string> StackTraceLines, int Index, int ParentIndex);
 
 /// <summary>
@@ -43,17 +42,19 @@ partial class ExceptionExtensions
     public static Func<string, bool> DefaultStackTraceLineFilter { get; } = m => ExcludeStackTracePrefixes.Any(m.StartsWith);
 
     /// <summary>
-    /// Builds an exception tree from the given exception, including information about the exception 
-    /// and any inner exceptions in a hierarchical structure. The method recursively traverses the 
-    /// exception chain to capture all relevant details and determine if the tree is multi-branched.
+    /// Builds a breadth-first tree of exception details, omitting redundant single-child AggregateException wrappers.
     /// </summary>
     /// <param name="exception">The root exception to start building the tree from.</param>
-    /// <param name="stackTraceLineFilter"></param>
+    /// <param name="stackTraceLineFilter">Returns true for stack trace lines to exclude, or null to use DefaultStackTraceLineFilter.</param>
     /// <returns>
-    /// An <see cref="ExceptionTree"/> containing a list of <see cref="ExceptionInfo"/> nodes 
-    /// with details about the exception and its inner exceptions, along with a flag indicating 
-    /// whether the tree is multi-branched.
+    /// Retained nodes with zero-based indexes and parent indexes, plus whether any aggregate has multiple children.
     /// </returns>
+    /// <remarks>
+    /// An aggregate with one child is omitted when its own message is empty or the default English message.
+    /// Its child inherits the omitted wrapper's parent; a retained root has ParentIndex equal to -1.
+    /// Stack trace lines are filtered and ordered from outermost to innermost frame.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="exception"/> is null.</exception>
     public static ExceptionTree BuildTree(this Exception exception, Func<string, bool>? stackTraceLineFilter = null)
     {
         Check.NotNull(exception);
@@ -73,7 +74,8 @@ partial class ExceptionExtensions
                     var msg = aggEx.GetMessage();
                     if (msg.IsNullOrEmpty() || msg.Equals("One or more errors occurred."))
                     {
-                        queue.Enqueue((inners[0], index));
+                        // No node is added for this wrapper, so retain its existing parent relationship.
+                        queue.Enqueue((inners[0], parent));
                         continue;
                     }
                 }

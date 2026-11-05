@@ -1,12 +1,21 @@
 namespace FclEx.Serilog;
 
+/// <summary>Adds operation-error logging, source contexts, and Serilog-aware Microsoft logging scopes.</summary>
 public static class LoggerExtensions
 {
+    /// <summary>Writes an Error event describing a failed action, retaining the exception and structured title/message properties.</summary>
+    /// <param name="logger">The Serilog logger receiving the event.</param>
+    /// <param name="title">The action description captured in the Title property.</param>
+    /// <param name="ex">The exception attached to the event; its Message is also captured in Error.</param>
     public static void ActionError(this ILogger logger, string title, Exception ex)
     {
         logger.Error(ex, "Failed to execute {Title} due to {Error}", title, ex.Message);
     }
 
+    /// <summary>Creates a context logger whose SourceContext is the supplied string.</summary>
+    /// <param name="logger">The parent Serilog logger.</param>
+    /// <param name="name">The source/category name used for source enrichment and level overrides.</param>
+    /// <returns>A context logger retaining the parent's pipeline and ownership.</returns>
     public static ILogger ForContext(this ILogger logger, string name)
     {
         return logger.ForContext(Constants.SourceContext, name);

@@ -1,24 +1,200 @@
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Text.Json.Nodes;
-using static FclEx.Serilog.ExceptionIndexOptions;
+using static FclEx.Serilog.ExceptionIndexPolicy;
 
 namespace FclEx.Serilog.Formatting;
 
 [Collection(nameof(Console))]
-public class JsonFormatterTests
+public partial class JsonFormatterTests
 {
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Format_ExceptionTypeNameContainsQuote_ProducesValidJson(bool useSimpleTypeName)
+    {
+        var assembly = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("QuotedException_" + Guid.NewGuid().ToString("N")),
+            AssemblyBuilderAccess.Run);
+        var module = assembly.DefineDynamicModule("exceptions");
+        var typeBuilder = module.DefineType("Quoted\"Exception", TypeAttributes.Public, typeof(Exception));
+        typeBuilder.DefineDefaultConstructor(MethodAttributes.Public);
+        var exceptionType = typeBuilder.CreateTypeInfo()!.AsType();
+        var exception = (Exception)Activator.CreateInstance(exceptionType)!;
+        var formatter = new JsonFormatter(new JsonFormatterOptions
+        {
+            ExceptionFormatOptions = new ExceptionFormatOptions { UseSimpleTypeName = useSimpleTypeName }
+        });
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Error, exception, "message");
+        using var output = new StringWriter();
+
+        formatter.Format(logEvent, output);
+
+        using var document = System.Text.Json.JsonDocument.Parse(output.ToString());
+        Assert.Equal(System.Text.Json.JsonValueKind.Array, document.RootElement.GetProperty("@x").ValueKind);
+        Assert.StartsWith(exceptionType.Name, document.RootElement.GetProperty("@x")[0].GetString());
+    }
+
+    [Fact]
+    public void Format_PropertyCollidesWithConfiguredLevelName_PreservesEventLevel()
+    {
+        var formatter = new JsonFormatter(new JsonFormatterOptions { LogLevelName = "level" });
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Error, null, "value {Level}", "overwritten");
+        using var output = new StringWriter();
+
+        formatter.Format(logEvent, output);
+
+        using var document = System.Text.Json.JsonDocument.Parse(output.ToString());
+        Assert.Equal("Error", document.RootElement.GetProperty("level").GetString());
+        Assert.Single(document.RootElement.EnumerateObject(), property => property.Name == "level");
+    }
+
+    public static readonly TheoryData<bool, bool, bool, bool> IncludedFields =
+    (
+        from timestamp in new[] { false, true }
+        from level in new[] { false, true }
+        from message in new[] { false, true }
+        from exception in new[] { false, true }
+        select (timestamp, level, message, exception)
+    ).ToTheoryData();
+
+    [Theory]
+    [MemberData(nameof(IncludedFields))]
+    public void Format_OptionalFields_ProducesValidJson(bool timestamp, bool level, bool message, bool exception)
+    {
+        var options = new JsonFormatterOptions
+        {
+            UtcTimeName = timestamp ? "@t" : "",
+            LogLevelName = level ? "@l" : "",
+            MessageName = message ? "@m" : "",
+            ExceptionName = exception ? "@x" : ""
+        };
+        var formatter = new JsonFormatter(options);
+        var logEvent = new LogEvent(DateTimeOffset.UtcNow, LogEventLevel.Error,
+            new InvalidOperationException("failure"), MessageTemplate.Empty, []);
+        using var output = new StringWriter();
+
+        formatter.Format(logEvent, output);
+
+        using var document = System.Text.Json.JsonDocument.Parse(output.ToString());
+        var root = document.RootElement;
+        Assert.Equal(timestamp, root.TryGetProperty("@t", out _));
+        Assert.Equal(level, root.TryGetProperty("@l", out _));
+        Assert.Equal(message, root.TryGetProperty("@m", out _));
+        Assert.Equal(exception, root.TryGetProperty("@x", out _));
+        Assert.Equal(new[] { timestamp, level, message, exception }.Count(included => included), root.EnumerateObject().Count());
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Format_OnlyProperties_ProducesValidJson(bool enableExceptionFormat)
+    {
+        var formatter = new JsonFormatter(new JsonFormatterOptions
+        {
+            UtcTimeName = "",
+            LogLevelName = "",
+            MessageName = "",
+            ExceptionName = "",
+            EnableExceptionFormat = enableExceptionFormat
+        });
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Information, null, "Hello {Name}", "Tom");
+        using var output = new StringWriter();
+
+        formatter.Format(logEvent, output);
+
+        using var document = System.Text.Json.JsonDocument.Parse(output.ToString());
+        Assert.Equal("Tom", document.RootElement.GetProperty("name").GetString());
+        Assert.Equal(2, document.RootElement.EnumerateObject().Count());
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Format_OmittedException_SkipsExceptionFormatting(bool enableExceptionFormat)
+    {
+        var formatter = new JsonFormatter(new JsonFormatterOptions
+        {
+            ExceptionName = "",
+            EnableExceptionFormat = enableExceptionFormat
+        });
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Error, new ThrowingMessageException(), "message");
+        using var output = new StringWriter();
+
+        formatter.Format(logEvent, output);
+
+        using var document = System.Text.Json.JsonDocument.Parse(output.ToString());
+        Assert.False(document.RootElement.TryGetProperty("@x", out _));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Format_ExceptionFormattingFailsAfterWriting_ReplacesEntireFragment(bool includeTimestamp)
+    {
+        var formatter = new PartiallyFailingFormatter(new JsonFormatterOptions { UtcTimeName = includeTimestamp ? "@t" : "" });
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Error, new InvalidOperationException("failure"), "message");
+        using var output = new StringWriter();
+
+        formatter.Format(logEvent, output);
+
+        using var document = System.Text.Json.JsonDocument.Parse(output.ToString());
+        Assert.Contains("Failed to Format Exception", document.RootElement.GetProperty("@x").GetString());
+        Assert.DoesNotContain("partial fragment", output.ToString());
+    }
+
+    private sealed class PartiallyFailingFormatter(JsonFormatterOptions options) : JsonFormatter(options)
+    {
+        protected override void WriteFormattedException(string logEventMessage, Exception ex, TextWriter output)
+        {
+            output.Write(",\"@x\":[\"partial fragment\"");
+            throw new InvalidOperationException("formatting failed");
+        }
+    }
+
+    [Fact]
+    public void Format_OmittedTimestamp_ProducesValidJson()
+    {
+        var formatter = new JsonFormatter(new JsonFormatterOptions { UtcTimeName = "" });
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Information, null, "message");
+        using var output = new StringWriter();
+
+        formatter.Format(logEvent, output);
+
+        using var document = System.Text.Json.JsonDocument.Parse(output.ToString());
+        Assert.Equal("message", document.RootElement.GetProperty("@m").GetString());
+    }
+
+    [Fact]
+    public void Format_ExceptionMessageThrows_ProducesValidFallbackJson()
+    {
+        var formatter = new JsonFormatter();
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Error, new ThrowingMessageException(), "message");
+        using var output = new StringWriter();
+
+        formatter.Format(logEvent, output);
+
+        using var document = System.Text.Json.JsonDocument.Parse(output.ToString());
+        Assert.Contains("Failed to Format Exception", document.RootElement.GetProperty("@x").GetString());
+    }
+
+    private sealed class ThrowingMessageException : Exception
+    {
+        public override string Message => throw new InvalidOperationException("message unavailable");
+    }
+
     public ITestOutputHelper? Output => TestContext.Current.TestOutputHelper;
 
-    public static readonly TheoryData<int?, bool, ExceptionIndexOptions> TestCases =
+    public static readonly TheoryData<int?, bool, ExceptionIndexPolicy> TestCases =
     (
         from len in new int?[] { null, 5 }
         from omitParams in new[] { true, false }
-        from indexOp in new[] { None, Default }
+        from indexOp in new[] { None, WhenBranched }
         select (len, omitParams, indexOp)
     ).ToTheoryData();
 
     [Theory]
     [MemberData(nameof(TestCases))]
-    public async Task Format_Test(int? maxLen, bool omitParams, ExceptionIndexOptions indexOptions)
+    public async Task Format_Test(int? maxLen, bool omitParams, ExceptionIndexPolicy indexPolicy)
     {
         var options = new JsonFormatterOptions
         {
@@ -26,7 +202,7 @@ public class JsonFormatterTests
             {
                 MaxMessageLength = maxLen,
                 OmitParametersInStackTrace = omitParams,
-                IndexOptions = indexOptions,
+                IndexPolicy = indexPolicy,
             }
         };
         try
