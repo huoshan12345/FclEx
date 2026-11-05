@@ -3,6 +3,18 @@ namespace FclEx.Serilog.Extensions;
 public class LogEventExtensionsTests
 {
     [Fact]
+    public void UnwrapException_ErrorOnlyMatchesPlaceholderName_PreservesException()
+    {
+        var exception = new SimpleException("Method");
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Error, exception,
+            "Failed to execute {Method}", "Save");
+
+        logEvent.UnwrapException();
+
+        Assert.Same(exception, logEvent.Exception);
+    }
+
+    [Fact]
     public void UnwrapException_MessageDoesNotContainError()
     {
         const string method = nameof(UnwrapException_MessageDoesNotContainError);

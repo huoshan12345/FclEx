@@ -6,6 +6,37 @@ namespace FclEx.Serilog.Formatting;
 [Collection(nameof(Console))]
 public class JsonFormatterTests
 {
+    [Fact]
+    public void Format_OmittedTimestamp_ProducesValidJson()
+    {
+        var formatter = new JsonFormatter(new JsonFormatterOptions { UtcTimeName = "" });
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Information, null, "message");
+        using var output = new StringWriter();
+
+        formatter.Format(logEvent, output);
+
+        using var document = System.Text.Json.JsonDocument.Parse(output.ToString());
+        Assert.Equal("message", document.RootElement.GetProperty("@m").GetString());
+    }
+
+    [Fact]
+    public void Format_ExceptionMessageThrows_ProducesValidFallbackJson()
+    {
+        var formatter = new JsonFormatter();
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Error, new ThrowingMessageException(), "message");
+        using var output = new StringWriter();
+
+        formatter.Format(logEvent, output);
+
+        using var document = System.Text.Json.JsonDocument.Parse(output.ToString());
+        Assert.Contains("Failed to Format Exception", document.RootElement.GetProperty("@x").GetString());
+    }
+
+    private sealed class ThrowingMessageException : Exception
+    {
+        public override string Message => throw new InvalidOperationException("message unavailable");
+    }
+
     public ITestOutputHelper? Output => TestContext.Current.TestOutputHelper;
 
     public static readonly TheoryData<int?, bool, ExceptionIndexOptions> TestCases =

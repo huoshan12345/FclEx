@@ -5,6 +5,73 @@ namespace FclEx.Serilog.Extensions.LoggerConfigurationExtensions;
 
 public class ApplyMicrosoftLoggingFilterTests
 {
+    [Fact]
+    public void DefaultLevel_None_FiltersFatal()
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Logging:LogLevel:Default"] = "None"
+            })
+            .Build();
+        var (logger, sink) = CreateLogger(config);
+        using (logger)
+        {
+            logger.Fatal("must be disabled");
+            Assert.Empty(sink.Events);
+        }
+    }
+
+    [Theory]
+    [InlineData("MYAPP", "myapp.Service")]
+    [InlineData("MyApp.*.Worker", "MyApp.Background.Worker")]
+    public void CategoryOverride_UsesMicrosoftMatchingRules(string categoryRule, string category)
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Logging:LogLevel:Default"] = "Information",
+                [$"Logging:LogLevel:{categoryRule}"] = "Error"
+            })
+            .Build();
+        using var microsoftFactory = LoggerFactory.Create(builder => builder
+            .AddConfiguration(config.GetSection("Logging"))
+            .AddProvider(new global::Serilog.Extensions.Logging.SerilogLoggerProvider(
+                new LoggerConfiguration().MinimumLevel.Verbose().CreateLogger(), dispose: true)));
+        Assert.False(microsoftFactory.CreateLogger(category).IsEnabled(LogLevel.Warning));
+
+        var (logger, sink) = CreateLogger(config);
+        using (logger)
+        {
+            logger.ForContext("SourceContext", category).Warning("must be filtered");
+            Assert.Empty(sink.Events);
+        }
+    }
+
+    [Fact]
+    public void DisposedLogger_DoesNotKeepConfigurationAlive()
+    {
+        var reference = CreateDisposedConfigurationReference();
+
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+
+        Assert.False(reference.IsAlive);
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static WeakReference CreateDisposedConfigurationReference()
+    {
+        var config = new ConfigurationBuilder().Build();
+        var loggerConfiguration = new LoggerConfiguration()
+            .ApplyMicrosoftLoggingFilter(config)
+            .WriteTo.Sink(new CollectingSink());
+        using var logger = loggerConfiguration.CreateLogger();
+        logger.Information("populate category cache");
+        return new WeakReference(loggerConfiguration);
+    }
+
     private static (Logger logger, CollectingSink sink) CreateLogger(IConfiguration config)
     {
         var sink = new CollectingSink();

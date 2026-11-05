@@ -4,6 +4,15 @@ namespace FclEx.Serilog.Sinks;
 
 public class NewRelicSinkTests
 {
+    [Fact]
+    public async Task EmitBatchAsync_TransportFailure_PropagatesForBatchRetry()
+    {
+        var sink = new NewRelicSink("test-license", "unsupported://localhost/log/v1");
+        var events = new[] { CreateLogEvent(1) };
+
+        await Assert.ThrowsAsync<NotSupportedException>(() => sink.EmitBatchAsync(events));
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(1)]

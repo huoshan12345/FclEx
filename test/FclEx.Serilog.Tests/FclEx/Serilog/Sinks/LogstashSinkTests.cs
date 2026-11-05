@@ -4,6 +4,24 @@ namespace FclEx.Serilog.Sinks;
 
 public class LogstashSinkTests
 {
+    [Theory]
+    [InlineData("https://localhost:5050")]
+    [InlineData("tpc://localhost:5050")]
+    public void Constructor_UnsupportedScheme_Throws(string uri)
+    {
+        Assert.ThrowsAny<ArgumentException>(() => new LogstashSink(new LogstashSinkOptions(uri)));
+    }
+
+    [Fact(Explicit = true)]
+    public async Task EmitBatchAsync_TailscaleTcp_Completes()
+    {
+        var sink = new LogstashSink(new LogstashSinkOptions("tcp://yecao-hk-4c8g-200m:5050"));
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Information, null,
+            "FclEx.Serilog review test {TestId}", Guid.NewGuid());
+
+        await sink.EmitBatchAsync(new[] { logEvent }).WaitAsync(TimeSpan.FromSeconds(20));
+    }
+
     [Fact(Explicit = true)]
     public async Task Tcp_Test()
     {

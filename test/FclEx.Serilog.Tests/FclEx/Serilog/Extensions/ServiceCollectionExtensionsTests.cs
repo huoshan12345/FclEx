@@ -9,6 +9,44 @@ namespace FclEx.Serilog.Extensions;
 public class ServiceCollectionExtensionsTests
 {
     [Theory]
+    [InlineData(LogLevel.Warning, false)]
+    [InlineData(LogLevel.Error, true)]
+    public void AddSerilog_LogError_RequiresExceptionLevelToPassMinimum(LogLevel exceptionLevel, bool shouldLog)
+    {
+        var sink = new CollectingSink();
+        var options = new SerilogConfiguration { MinimumLevel = LogEventLevel.Error };
+        options.WriteTo(sink);
+        using var provider = new ServiceCollection().AddSerilog(options).BuildServiceProvider();
+        var logger = provider.GetRequiredService<ILogger<ServiceCollectionExtensionsTests>>();
+
+        try
+        {
+            throw new LogException("inner failure", exceptionLevel);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "outer failure");
+        }
+
+        Assert.Equal(shouldLog ? 1 : 0, sink.Events.Count);
+    }
+
+    [Fact]
+    public void AddSerilog_AppliesConfigureLoggingBuilderBeforeRegistration()
+    {
+        var sink = new CollectingSink();
+        var options = new SerilogConfiguration()
+            .ConfigureLoggingBuilder(builder => builder.SetMinimumLevel(LogLevel.Error))
+            .WriteTo(sink);
+        using var provider = new ServiceCollection().AddSerilog(options).BuildServiceProvider();
+        var logger = provider.GetRequiredService<ILogger<ServiceCollectionExtensionsTests>>();
+
+        logger.LogInformation("must be filtered");
+
+        Assert.Empty(sink.Events);
+    }
+
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void AddSerilog_Test(bool formatException)

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using ILogger = Serilog.ILogger;
 
 namespace FclEx.Serilog;
@@ -37,9 +38,43 @@ public class SerilogConfiguration
         return this;
     }
 
+    private static readonly ConcurrentDictionary<string, ILogger> _sourceLoggers = new(StringComparer.Ordinal);
+
+    /// <summary>Creates a logger with the configured enrichers, filters, sinks, and exception handling.</summary>
+    /// <returns>The configured Serilog logger.</returns>
+    /// <remarks>
+    /// The original event level must pass Serilog's initial minimum-level check and any upstream filters.
+    /// For events carrying a <see cref="LogException"/>, its level is applied before event filters and
+    /// rechecked against the logger's current minimum level, including source overrides and level switches.
+    /// <see cref="LogLevel.None"/> suppresses the event. A higher exception level cannot restore an event
+    /// rejected before exception-level processing. Upstream Microsoft logger factory filters still evaluate
+    /// the original call level.
+    /// </remarks>
     public ILogger CreateLogger()
     {
-        var configuration = new LoggerConfiguration();
+        ILogger? logger = null;
+
+        var configuration = new LoggerConfiguration()
+            .Filter.ByIncludingOnly(logEvent =>
+            {
+                if (logEvent.Exception is not LogException logException)
+                    return true;
+
+                if (logException.Level == LogLevel.None)
+                    return false;
+
+                logEvent.SetLevel(logException.Level.ToSerilogLevel());
+
+                // ReSharper disable once AccessToModifiedClosure
+                var sourceLogger = logger ?? Logger.None;
+
+                if (logEvent.GetSourceContext() is { } source)
+                {
+                    sourceLogger = _sourceLoggers.GetOrAdd(source, m => sourceLogger.ForContext(Constants.SourceContext, m));
+                }
+
+                return sourceLogger.IsEnabled(logEvent.Level);
+            });
 
         // ReSharper disable once ForCanBeConvertedToForeach
         for (var i = 0; i < _actions.Count; i++)
@@ -48,8 +83,9 @@ public class SerilogConfiguration
             action.Invoke(configuration, this);
         }
 
-        return configuration
+        logger = configuration
             .WrapAllSinks(m => new LogEventMutateSink(m, FormatException ? x => x.FormatException() : null))
             .CreateLogger();
+        return logger;
     }
 }
