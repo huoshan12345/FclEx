@@ -4,6 +4,12 @@ namespace FclEx.Serilog;
 
 public class SerilogConfigurationTests
 {
+    [Fact]
+    public void Configure_NullAction_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() => new SerilogConfiguration().Configure(null!));
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
@@ -24,12 +30,69 @@ public class SerilogConfigurationTests
     {
         var sink = new Mock<ILogEventSink>();
         var disposable = sink.As<IDisposable>();
-        var logger = new SerilogConfiguration().WriteTo(sink.Object).CreateLogger();
+        Logger logger = new SerilogConfiguration().WriteTo(sink.Object).CreateLogger();
 
-        ((IDisposable)logger).Dispose();
+        logger.Dispose();
 
         disposable.Verify(m => m.Dispose(), Times.Once);
     }
+
+    [Fact]
+    public void CreateLogger_ConfigurationFailure_DisposesRegisteredSink()
+    {
+        var exception = new InvalidOperationException("configuration failed");
+        var sink = new Mock<ILogEventSink>();
+        var disposable = sink.As<IDisposable>();
+        var configuration = new SerilogConfiguration().Configure(logger =>
+        {
+            logger.WriteTo.Sink(sink.Object);
+            throw exception;
+        });
+
+        var actual = Assert.Throws<InvalidOperationException>(() => configuration.CreateLogger());
+
+        Assert.Same(exception, actual);
+        disposable.Verify(m => m.Dispose(), Times.Once);
+    }
+
+    [Fact]
+    public void CreateLogger_ConfigurationAndCleanupFail_PreservesBothErrors()
+    {
+        var configurationError = new InvalidOperationException("configuration failed");
+        var cleanupError = new IOException("cleanup failed");
+        var sink = new Mock<ILogEventSink>();
+        sink.As<IDisposable>().Setup(m => m.Dispose()).Throws(cleanupError);
+        var configuration = new SerilogConfiguration().Configure(logger =>
+        {
+            logger.WriteTo.Sink(sink.Object);
+            throw configurationError;
+        });
+
+        var actual = Assert.Throws<AggregateException>(() => configuration.CreateLogger());
+
+        Assert.Equal(new Exception[] { configurationError, cleanupError }, actual.InnerExceptions);
+    }
+
+#if NET6_0_OR_GREATER
+    [Fact]
+    public void CreateLogger_ConfigurationFailure_DisposesAsyncOnlySink()
+    {
+        var exception = new InvalidOperationException("configuration failed");
+        var sink = new Mock<ILogEventSink>();
+        var asynchronous = sink.As<IAsyncDisposable>();
+        asynchronous.Setup(m => m.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var configuration = new SerilogConfiguration().Configure(logger =>
+        {
+            logger.WriteTo.Sink(sink.Object);
+            throw exception;
+        });
+
+        var actual = Assert.Throws<InvalidOperationException>(() => configuration.CreateLogger());
+
+        Assert.Same(exception, actual);
+        asynchronous.Verify(m => m.DisposeAsync(), Times.Once);
+    }
+#endif
 
     [Theory]
     [InlineData(LogEventLevel.Information, LogLevel.Error, false)]

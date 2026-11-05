@@ -1,10 +1,10 @@
 # FclEx.Serilog
 
-Serilog helpers for FclEx.
+Serilog configuration and container-owned logging helpers for FclEx.
 
 ## What Is Included
 
-- Serilog configuration helpers and service registration.
+- Serilog configuration helpers and lazy, container-owned service registration.
 - Enrichers and structured-property helpers.
 - Excluder/filter types for source, message, property, and exception filtering.
 - JSON formatter and exception formatting options.
@@ -20,8 +20,8 @@ Serilog helpers for FclEx.
   `destructureObjects` overloads prefix scope property names with `@` to request object
   destructuring; this convention is specific to the Serilog provider.
 - `ConfigureLogging` and `ConfigureLoggingBuilder` append Microsoft logging builder
-  actions in registration order. `AddSerilog` runs them after Serilog configuration
-  actions have completed, including actions added inside its configuration callback.
+  actions in registration order. Configure them on the options before calling
+  `AddSerilog`. They run during service registration, before deferred logger creation.
 - `ApplyMicrosoftLoggingFilter` reads provider-independent level rules from the
   `Logging` section. Category matching ignores case and supports one `*` wildcard.
   The longest matching category wins, with later rules winning ties. Configuration
@@ -43,6 +43,47 @@ Serilog helpers for FclEx.
 1. Replace calls to `MatchMaxLeveOrNull` with `MatchMaxLevelOrNull`.
 2. The `LogstashInputType` enum has been removed. Select the transport using the
    `tcp` or `udp` scheme in `LogstashSinkOptions.Uri`.
+3. `CreateLogger()` returns `Serilog.Core.Logger`. The caller owns the returned
+   logger and disposes it with `using`, or `await using` on supported targets.
+4. Replace the mixed `ConfigureAction` delegate and two-parameter configuration
+   callbacks with `Configure(Action<LoggerConfiguration>)`. Set integration options
+   and register Microsoft logging builder actions before calling `AddSerilog`.
+   `Configure` is now an instance method, so use `options.Configure(action)` for
+   former static calls to `SerilogConfigurationExtensions.Configure`.
+5. `AddSerilog` creates a separate singleton logger for each root service provider
+   when logging is first resolved. Applications choose when to assign `Log.Logger`.
+
+For example, prepare the configuration before registration.
+
+```csharp
+var options = new SerilogConfiguration()
+    .Configure(logger => logger.MinimumLevel.Debug())
+    .ConfigureLogging(builder => builder.SetMinimumLevel(LogLevel.Warning));
+
+services.AddSerilog(options);
+```
+
+## Logger Ownership
+
+`CreateLogger()` creates a caller-owned logger. `AddSerilog()` registers a factory
+whose logger is owned by the root service provider. Disposing a child scope preserves
+the root logger. Asynchronous root-provider disposal awaits asynchronous sink cleanup
+on supported targets.
+
+Serilog configuration actions run once for each created root logger. Create
+per-container disposable sinks inside those actions when building multiple providers
+from the same service collection. Complete configuration before registration.
+
+To use the container-owned logger globally, assign it explicitly after building
+the application or root provider.
+
+```csharp
+Log.Logger = provider.GetRequiredService<Serilog.ILogger>();
+```
+
+The root provider retains ownership of that logger. If a configuration action fails,
+registered sinks are released before the error is propagated. Failures in both
+configuration and cleanup are reported together as an `AggregateException`.
 
 ## Exception Log Levels
 

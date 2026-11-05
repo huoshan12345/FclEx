@@ -13,11 +13,6 @@ public static class SerilogConfigurationExtensions
             .Exclude(SourceExcluder.CommonItems);
     }
 
-    public static SerilogConfiguration Configure(this SerilogConfiguration configuration, Action<LoggerConfiguration> action)
-    {
-        return configuration.Configure((m, _) => action(m));
-    }
-
     /// <inheritdoc cref="ConfigureLogging"/>
     public static SerilogConfiguration ConfigureLoggingBuilder(this SerilogConfiguration configuration, Action<ILoggingBuilder> action)
     {
@@ -62,11 +57,12 @@ public static class SerilogConfigurationExtensions
 
     /// <summary>Appends an action to configure Microsoft's logging builder during service registration.</summary>
     /// <param name="configuration">The Serilog configuration that stores the action.</param>
-    /// <param name="action">The action to run after all Serilog configuration actions have completed.</param>
+    /// <param name="action">The action to run while Microsoft logging services are registered.</param>
     /// <returns>The same configuration for further customization.</returns>
     /// <remarks>
     /// Actions run in registration order when <see cref="ServiceCollectionExtensions.AddSerilog(IServiceCollection, SerilogConfiguration)"/>
-    /// configures Microsoft's logging services. This method and <see cref="ConfigureLoggingBuilder"/> share the same behavior.
+    /// configures Microsoft's logging services, before deferred Serilog logger creation.
+    /// This method and <see cref="ConfigureLoggingBuilder"/> share the same behavior.
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="configuration"/> or <paramref name="action"/> is null.</exception>
     public static SerilogConfiguration ConfigureLogging(this SerilogConfiguration configuration, Action<ILoggingBuilder> action)

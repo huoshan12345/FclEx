@@ -5,41 +5,34 @@ namespace FclEx.Serilog;
 
 public static class ServiceCollectionExtensions
 {
-    /// <summary>Configures and registers a Serilog logger as the Microsoft logging provider.</summary>
+    /// <summary>Registers a lazily created, container-owned Serilog logger as the Microsoft logging provider.</summary>
     /// <param name="services">The service collection whose logging registrations will be replaced.</param>
-    /// <param name="configure">The action that configures the Serilog logger, with common exclusions enabled.</param>
+    /// <param name="configure">The action that configures each root logger, with common exclusions enabled.</param>
     /// <returns>The same service collection.</returns>
-    /// <remarks>The created logger is also assigned to <see cref="Log.Logger"/>.</remarks>
+    /// <remarks>The action runs when a container first resolves logging services.</remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> or <paramref name="configure"/> is null.</exception>
     public static IServiceCollection AddSerilog(this IServiceCollection services, Action<LoggerConfiguration> configure)
     {
-        return services.AddSerilog((m, _) => configure(m));
+        Check.NotNull(services);
+        Check.NotNull(configure);
+        return services.AddSerilog(new SerilogConfiguration().AddCommonExcluders().Configure(configure));
     }
 
-    /// <summary>Configures Serilog and its Microsoft logging integration before registering the logger.</summary>
+    /// <summary>Registers a lazily created Serilog logger owned by each root service provider.</summary>
     /// <param name="services">The service collection whose logging registrations will be replaced.</param>
-    /// <param name="configure">The action that customizes the Serilog logger and its integration options.</param>
+    /// <param name="options">The completed configuration, or null to use defaults with common exclusions.</param>
     /// <returns>The same service collection.</returns>
     /// <remarks>
-    /// Common exclusions are enabled by default. Logging builder actions registered by the callback run
-    /// after the Serilog configuration actions complete. The created logger is also assigned to <see cref="Log.Logger"/>.
+    /// Microsoft logging builder actions run during registration. Each root provider creates its own
+    /// Serilog logger on first resolution and disposes it during shutdown. Use asynchronous provider
+    /// disposal on supported targets for asynchronous sink cleanup. Complete configuration before
+    /// registration, and create per-container disposable sinks inside Serilog configuration actions.
+    /// Assign <see cref="Log.Logger"/> explicitly in the application when global logging is needed.
     /// </remarks>
-    public static IServiceCollection AddSerilog(this IServiceCollection services, Action<LoggerConfiguration, SerilogConfiguration> configure)
-    {
-        var options = new SerilogConfiguration().AddCommonExcluders();
-        options.Configure((m, n) => configure(m, n));
-        return services.AddSerilog(options);
-    }
-
-    /// <summary>Creates a Serilog logger and registers it as the Microsoft logging provider.</summary>
-    /// <param name="services">The service collection whose logging registrations will be replaced.</param>
-    /// <param name="options">The Serilog configuration, or null to use defaults with common exclusions.</param>
-    /// <returns>The same service collection.</returns>
-    /// <remarks>
-    /// Serilog configuration actions complete before Microsoft logging builder actions run.
-    /// The created logger is also assigned to <see cref="Log.Logger"/>.
-    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> is null.</exception>
     public static IServiceCollection AddSerilog(this IServiceCollection services, SerilogConfiguration? options = null)
     {
+        Check.NotNull(services);
         options ??= new SerilogConfiguration().AddCommonExcluders();
 
         var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
@@ -48,26 +41,17 @@ public static class ServiceCollectionExtensions
         services.RemoveLogging();
         services.RemoveAll<global::Serilog.ILogger>();
 
-        var logger = options.CreateLogger();
-        try
+        services.AddLogging(builder =>
         {
-            services.AddLogging(builder =>
-            {
-                builder.SetMinimumLevel(LogLevel.Trace);
-                options.LoggingBuilderConfigure?.Invoke(builder);
-            });
-        }
-        catch
-        {
-            (logger as IDisposable)?.Dispose();
-            throw;
-        }
+            builder.SetMinimumLevel(LogLevel.Trace);
+            options.LoggingBuilderConfigure?.Invoke(builder);
+        });
 
-        Log.Logger = logger;
-
-        services.AddSingleton(logger);
-        services.AddSingleton<ILoggerProvider>(new SerilogLoggerProviderWithoutExternalScope(logger));
-        services.AddSingletonBy<Microsoft.Extensions.Logging.ILogger, ILoggerFactory>(m => m.CreateLogger(name));
+        // Factory registration transfers ownership of each created root logger to its container.
+        services.AddSingleton<global::Serilog.ILogger>(_ => options.CreateLogger());
+        services.AddSingleton<ILoggerProvider>(provider => new SerilogLoggerProviderWithoutExternalScope(
+            provider.GetRequiredService<global::Serilog.ILogger>(), dispose: false));
+        services.AddSingletonBy<Microsoft.Extensions.Logging.ILogger, ILoggerFactory>(factory => factory.CreateLogger(name));
 
         return services;
     }
