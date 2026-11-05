@@ -2,6 +2,81 @@ namespace FclEx.Serilog.Sinks;
 
 public class FormatExceptionSinkTests
 {
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void DisposeLogger_ExtensionRegistration_DisposesAllInnerSinksOnce(int sinkCount)
+    {
+        var sinks = Enumerable.Range(0, sinkCount).Select(_ => new Mock<ILogEventSink>()).ToArray();
+        foreach (var sink in sinks)
+            sink.As<IDisposable>();
+        var logger = new LoggerConfiguration().WriteTo.FormatException(writeTo =>
+        {
+            foreach (var sink in sinks)
+                writeTo.Sink(sink.Object);
+        }).CreateLogger();
+
+        logger.Dispose();
+
+        foreach (var sink in sinks)
+            sink.As<IDisposable>().Verify(disposable => disposable.Dispose(), Times.Once);
+    }
+
+    [Fact]
+    public void Constructor_NullSink_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() => new FormatExceptionSink(null!));
+    }
+
+    [Fact]
+    public async Task DisposeAsync_SynchronousOnlySink_DisposesInnerSink()
+    {
+        var sink = new Mock<ILogEventSink>();
+        sink.As<IDisposable>();
+        var wrapper = new FormatExceptionSink(sink.Object);
+
+        await wrapper.DisposeAsync();
+
+        sink.As<IDisposable>().Verify(disposable => disposable.Dispose(), Times.Once);
+    }
+
+    [Fact]
+    public async Task Dispose_NonDisposableSink_Completes()
+    {
+        new FormatExceptionSink(new CollectingSink()).Dispose();
+        await new FormatExceptionSink(new CollectingSink()).DisposeAsync();
+    }
+
+    [Fact]
+    public async Task DisposeAsync_WaitsForInnerSink()
+    {
+        var completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var sink = new Mock<ILogEventSink>();
+        sink.As<IAsyncDisposable>().Setup(disposable => disposable.DisposeAsync()).Returns(new ValueTask(completion.Task));
+        var wrapper = new FormatExceptionSink(sink.Object);
+
+        var disposal = wrapper.DisposeAsync().AsTask();
+
+        Assert.False(disposal.IsCompleted);
+        completion.SetResult(true);
+        await disposal;
+        sink.As<IAsyncDisposable>().Verify(disposable => disposable.DisposeAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task DisposeAsync_InnerSinkFailure_Propagates()
+    {
+        var failure = new IOException("cleanup failed");
+        var sink = new Mock<ILogEventSink>();
+        sink.As<IAsyncDisposable>().Setup(disposable => disposable.DisposeAsync())
+            .Returns(new ValueTask(Task.FromException(failure)));
+        var wrapper = new FormatExceptionSink(sink.Object);
+
+        var actual = await Assert.ThrowsAsync<IOException>(() => wrapper.DisposeAsync().AsTask());
+
+        Assert.Same(failure, actual);
+    }
+
     [Fact]
     public void DisposeLogger_DirectWrapperRegistration_DisposesInnerSink()
     {
@@ -15,6 +90,38 @@ public class FormatExceptionSinkTests
     }
 
 #if NET6_0_OR_GREATER
+    [Theory]
+    [InlineData(true, 1)]
+    [InlineData(true, 2)]
+    [InlineData(false, 1)]
+    public async Task DisposeLoggerAsync_PrefersAsyncDisposal(bool useExtension, int sinkCount)
+    {
+        var sinks = Enumerable.Range(0, sinkCount).Select(_ => new Mock<ILogEventSink>()).ToArray();
+        foreach (var sink in sinks)
+        {
+            sink.As<IDisposable>();
+            sink.As<IAsyncDisposable>().Setup(disposable => disposable.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        }
+        var configuration = new LoggerConfiguration();
+        if (useExtension)
+            configuration.WriteTo.FormatException(writeTo =>
+            {
+                foreach (var sink in sinks)
+                    writeTo.Sink(sink.Object);
+            });
+        else
+            configuration.WriteTo.Sink(new FormatExceptionSink(sinks[0].Object));
+        var logger = configuration.CreateLogger();
+
+        await logger.DisposeAsync();
+
+        foreach (var sink in sinks)
+        {
+            sink.As<IAsyncDisposable>().Verify(disposable => disposable.DisposeAsync(), Times.Once);
+            sink.As<IDisposable>().Verify(disposable => disposable.Dispose(), Times.Never);
+        }
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

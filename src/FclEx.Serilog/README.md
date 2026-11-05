@@ -70,6 +70,13 @@ whose logger is owned by the root service provider. Disposing a child scope pres
 the root logger. Asynchronous root-provider disposal awaits asynchronous sink cleanup
 on supported targets.
 
+`FormatExceptionSink` owns its inner sink and forwards synchronous and asynchronous
+disposal, including when registered directly with `WriteTo.Sink`. The `FormatException`
+sink configuration helper preserves the same ownership for its configured sinks.
+`SerilogLoggerProviderWithoutExternalScope` forwards asynchronous disposal on supported
+targets; its `dispose` constructor argument determines whether it owns the destination
+logger. Use `dispose: false` when another owner, such as the root container, disposes it.
+
 Serilog configuration actions run once for each created root logger. Create
 per-container disposable sinks inside those actions when building multiple providers
 from the same service collection. Complete configuration before registration.

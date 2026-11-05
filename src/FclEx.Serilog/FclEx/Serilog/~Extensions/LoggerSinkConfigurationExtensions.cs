@@ -2,16 +2,27 @@ namespace FclEx.Serilog;
 
 public static class LoggerSinkConfigurationExtensions
 {
-    public static LoggerConfiguration Wrap(this LoggerSinkConfiguration configuration,
-        Func<ILogEventSink, ILogEventSink> wrapSink, Action<LoggerSinkConfiguration> configureWrappedSink)
+    public static LoggerConfiguration Wrap(
+        this LoggerSinkConfiguration configuration,
+        Func<ILogEventSink, ILogEventSink> wrapSink,
+        Action<LoggerSinkConfiguration> configureWrappedSink)
     {
         var logEventSink = LoggerSinkConfiguration.Wrap(wrapSink, configureWrappedSink);
         return configuration.Sink(logEventSink);
     }
 
+    /// <summary>Formats event exceptions once before dispatching to the specified sinks.</summary>
+    /// <param name="configuration">The parent logger's sink configuration.</param>
+    /// <param name="configureWrappedSink">Configures sinks owned by the formatting wrapper.</param>
+    /// <returns>The parent logger configuration for further customization.</returns>
+    /// <remarks>Logger disposal releases the inner sinks. Use asynchronous disposal on supported targets for asynchronous sinks.</remarks>
+    /// <exception cref="ArgumentNullException">Either argument is null.</exception>
     public static LoggerConfiguration FormatException(this LoggerSinkConfiguration configuration, Action<LoggerSinkConfiguration> configureWrappedSink)
     {
-        return configuration.Wrap(m => new FormatExceptionSink(m), configureWrappedSink);
+        Check.NotNull(configuration);
+        // The wrapper owns disposal. Native Wrap would add another disposal path via interface forwarding.
+        var inner = LoggerSinkConfiguration.CreateSink(configureWrappedSink);
+        return configuration.Sink(new FormatExceptionSink(inner));
     }
 
     /// <summary>Sends buffered log events to New Relic Logs in gzip-compressed JSON batches.</summary>
