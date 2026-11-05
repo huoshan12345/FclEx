@@ -23,6 +23,9 @@ internal class TcpInput : ILogstashInput
         // Start before connecting so synchronous completions cannot delay the start of the deadline.
         using var timeout = new CancellationTokenSource(_sendTimeout);
         // Closing the socket also interrupts I/O on older targets without cancellable ConnectAsync.
+#if NET5_0_OR_GREATER
+        await
+#endif
         using var abort = timeout.Token.Register(static state => ((TcpClient)state!).Dispose(), client);
         var sending = SendCoreAsync(client, list, timeout.Token);
         try

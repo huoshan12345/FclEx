@@ -5,7 +5,7 @@ public partial class LoggerSinkConfigurationExtensionsTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void FormatException_FallbackChain_ForwardsFailureNotifications(bool useFormattingWrapper)
+    public void Wrap_FallbackChain_ForwardsFailureNotifications(bool useFormattingWrapper)
     {
         var primary = new Mock<ILogEventSink>();
         ILoggingFailureListener? listener = null;
@@ -17,7 +17,7 @@ public partial class LoggerSinkConfigurationExtensionsTests
             first =>
             {
                 if (useFormattingWrapper)
-                    first.FormatException(inner => inner.Sink(primary.Object));
+                    first.Wrap(inner => new LogEventMutateSink(inner, value => value.FormatException()), inner => inner.Sink(primary.Object));
                 else
                     first.Sink(primary.Object);
             },
@@ -31,15 +31,13 @@ public partial class LoggerSinkConfigurationExtensionsTests
         Assert.Same(logEvent, Assert.Single(fallback.Events));
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void Wrap_DisposableWrapper_DisposesInnerOnce(bool formatException)
+    [Fact]
+    public void Wrap_DisposableWrapper_DisposesInnerOnce()
     {
         var sink = new Mock<ILogEventSink>();
         sink.As<IDisposable>();
         var logger = new LoggerConfiguration().WriteTo.Wrap(
-            inner => formatException ? new FormatExceptionSink(inner) : new LogEventMutateSink(inner, null),
+            inner => new LogEventMutateSink(inner, null),
             inner => inner.Sink(sink.Object)).CreateLogger();
 
         logger.Dispose();

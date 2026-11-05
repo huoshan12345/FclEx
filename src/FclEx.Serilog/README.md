@@ -80,15 +80,20 @@ Serilog configuration and container-owned logging helpers for FclEx.
    together with `Include` (including old `Default`) become `WhenBranched`.
    The old conditional flags alone never enabled indexes; choose the corresponding
    new policy to enable the intended condition directly.
-7. `WriteTo.Wrap` passes a borrowed entry point to the wrapper factory. Its emission
-   and failure-listener interfaces are available, but disposal and concrete sink
-   types must not be required. The returned pipeline owns wrapper cleanup and
-   inner-sink cleanup independently.
+7. `WriteTo.Wrap` and `WrapSinkPipeline` pass an owned aggregate sink to the wrapper
+   factory and register the returned wrapper directly. Custom wrappers must forward
+   disposal to that aggregate, implement asynchronous disposal when needed, and
+   forward failure listeners for fallback support. `LogEventMutateSink` already
+   fulfills these responsibilities.
 8. Formatter subclasses should override `GetPropertyCandidates` to customize
    event/linking-metadata properties before naming and conflict resolution.
    This replaces the `WriteLinkingMetadataProperties` writing hook.
    `WriteFormattedJsonData` now receives the final JSON name and must not apply
    the naming policy again.
+9. `FormatExceptionSink` and `WriteTo.FormatException(...)` have been removed.
+   Configure all sinks, then use `WrapSinkPipeline` with `LogEventMutateSink` to
+   normalize and format exceptions once before dispatching to the whole group.
+   `SerilogConfiguration.CreateLogger()` already adds this stage automatically.
 
 For example, prepare the configuration before registration.
 
@@ -107,18 +112,38 @@ whose logger is owned by the root service provider. Disposing a child scope pres
 the root logger. Asynchronous root-provider disposal awaits asynchronous sink cleanup
 on supported targets.
 
-`FormatExceptionSink` owns its inner sink and forwards synchronous and asynchronous
-disposal, including when registered directly with `WriteTo.Sink`. The `FormatException`
-sink configuration helper preserves the same ownership for its configured sinks.
+`LogEventMutateSink` owns its directly supplied inner sink. `WrapSinkPipeline`
+transfers all current `WriteTo` sinks into one aggregate and passes ownership to
+the wrapper factory. The ownership chain is wrapper -> aggregate -> actual sinks.
+Each layer releases its directly owned resources and forwards failure notifications.
 `SerilogLoggerProviderWithoutExternalScope` forwards asynchronous disposal on supported
 targets; its `dispose` constructor argument determines whether it owns the destination
 logger. Use `dispose: false` when another owner, such as the root container, disposes it.
 
-`WriteTo.Wrap` and `WriteTo.FormatException` preserve failure notifications for
-fallback chains, including groups of multiple sinks. Their owning pipeline disposes
-the wrapper's resources before the inner sinks, without asking two layers to dispose
-the same sink. All registered sinks receive a cleanup attempt even if another sink
-fails during cleanup. Cleanup failures propagate, with multiple failures aggregated.
+With an owning wrapper such as `LogEventMutateSink`, `WriteTo.Wrap` and
+`WrapSinkPipeline` preserve failure notifications for fallback chains, including
+groups of multiple sinks. The aggregate releases its sinks once and attempts all
+registered sink cleanups even if one fails. Cleanup failures propagate, with multiple
+failures aggregated. A custom wrapper is responsible for releasing its aggregate
+even when cleanup of the wrapper's own resources fails.
+
+Call `WrapSinkPipeline` after registering all sinks and before `CreateLogger`.
+It wraps the current `WriteTo` group once per event. `AuditTo` sinks and later sink
+registrations are outside that group. Global filters run before the wrapper, and
+per-sink level restrictions run after it. `WrapAllSinks` remains the separate API
+for wrapping each currently registered sink individually.
+
+For example, normalize and format exceptions for every configured `WriteTo` sink:
+
+```csharp
+using var logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WrapSinkPipeline(inner => new LogEventMutateSink(inner, e => e.FormatException()))
+    .CreateLogger();
+```
+
+This generic wrapping helper does not add exception-level filtering. Use
+`SerilogConfiguration` for the minimum-level recheck described below.
 
 Serilog configuration actions run once for each created root logger. Create
 per-container disposable sinks inside those actions when building multiple providers

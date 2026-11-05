@@ -2,16 +2,17 @@ namespace FclEx.Serilog;
 
 public static class LoggerSinkConfigurationExtensions
 {
-    /// <summary>Wraps a group of sinks while retaining their disposal and failure-notification support.</summary>
+    /// <summary>Creates one owning sink wrapper around the configured group of sinks.</summary>
     /// <param name="configuration">The parent logger's sink configuration.</param>
-    /// <param name="wrapSink">Creates a wrapper around a borrowed sink entry point that exposes emission and failure notifications, but no disposal interfaces.</param>
-    /// <param name="configureWrappedSink">Registers the inner sinks owned by the resulting pipeline.</param>
+    /// <param name="wrapSink">Creates a wrapper that takes ownership of the supplied aggregate sink.</param>
+    /// <param name="configureWrappedSink">Registers the sinks owned by that aggregate.</param>
     /// <returns>The parent logger configuration.</returns>
     /// <remarks>
-    /// The pipeline disposes the wrapper's own resources, then the inner sinks, each once. Async disposal
-    /// prefers IAsyncDisposable and falls back to IDisposable. Failure listeners go through the wrapper
-    /// when it supports them, or directly to the inner sinks otherwise. Construction failures release
-    /// previously registered sinks. Wrappers must not require ownership or a concrete type for the borrowed sink.
+    /// The returned wrapper is registered directly. It must forward disposal to its aggregate sink,
+    /// including asynchronous disposal when needed, and forward ISetLoggingFailureListener to support
+    /// fallback chains. The aggregate disposes each registered sink once and attempts all cleanups even
+    /// if one fails. Construction failures release previously registered sinks before propagating.
+    /// No additional layer compensates for a wrapper that does not fulfill this ownership contract.
     /// </remarks>
     /// <exception cref="ArgumentNullException">Any argument is null.</exception>
     /// <exception cref="InvalidOperationException">The wrapper factory returns null.</exception>
@@ -24,19 +25,31 @@ public static class LoggerSinkConfigurationExtensions
         Check.NotNull(configuration);
         Check.NotNull(wrapSink);
         Check.NotNull(configureWrappedSink);
-        var logEventSink = SinkPipeline.Wrap(wrapSink, configureWrappedSink);
-        return configuration.Sink(logEventSink);
-    }
-
-    /// <summary>Formats event exceptions once before dispatching to the specified sinks.</summary>
-    /// <param name="configuration">The parent logger's sink configuration.</param>
-    /// <param name="configureWrappedSink">Configures sinks owned by the formatting wrapper.</param>
-    /// <returns>The parent logger configuration for further customization.</returns>
-    /// <remarks>Logger disposal releases the inner sinks. Failure notifications are forwarded to support fallback chains. Use asynchronous disposal on supported targets for asynchronous sinks.</remarks>
-    /// <exception cref="ArgumentNullException">Either argument is null.</exception>
-    public static LoggerConfiguration FormatException(this LoggerSinkConfiguration configuration, Action<LoggerSinkConfiguration> configureWrappedSink)
-    {
-        return configuration.Wrap(inner => new FormatExceptionSink(inner), configureWrappedSink);
+        var capturing = new LoggerConfiguration();
+        var sinks = Fields.LoggerConfiguration_Sinks.GetRequiredValue<List<ILogEventSink>>(capturing);
+        AggregateSink? aggregate = null;
+        try
+        {
+            configureWrappedSink(capturing.WriteTo);
+            aggregate = new AggregateSink(sinks.ToArray());
+            var wrapper = wrapSink(aggregate)
+                ?? throw new InvalidOperationException("The sink wrapper factory returned null.");
+            return configuration.Sink(wrapper);
+        }
+        catch (Exception configurationError)
+        {
+            try
+            {
+                // Failed construction still owns the sinks; cleanup may need to await asynchronous resources.
+                var cleanup = aggregate ?? new AggregateSink(sinks.ToArray());
+                Task.Run(async () => await cleanup.DisposeAsync().ConfigureAwait(false)).GetAwaiter().GetResult();
+            }
+            catch (Exception cleanupError)
+            {
+                throw new AggregateException("Sink configuration and cleanup both failed.", configurationError, cleanupError);
+            }
+            throw;
+        }
     }
 
     /// <summary>Sends buffered log events to New Relic Logs in gzip-compressed JSON batches.</summary>

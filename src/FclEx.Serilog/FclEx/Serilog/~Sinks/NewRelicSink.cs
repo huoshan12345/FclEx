@@ -79,21 +79,15 @@ public class NewRelicSink : IBatchedLogEventSink, IDisposable
 
     /// <summary>Releases the sink and disposes its HTTP client when the sink owns that client.</summary>
     /// <remarks>Disposal is idempotent. Disposing an owned client cancels its pending requests.</remarks>
-    public void Dispose()
+    public virtual void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>Releases managed resources owned by this sink.</summary>
-    /// <param name="disposing">True to dispose managed resources.</param>
-    protected virtual void Dispose(bool disposing)
-    {
-        if (!disposing || Interlocked.Exchange(ref _disposed, 1) != 0)
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
             return;
 
         if (_disposeHttpClient)
             _httpClient.Dispose();
+
+        GC.SuppressFinalize(this);
     }
 
     protected internal static string Serialize(IEnumerable<LogEvent> events, ITextFormatter textFormatter)

@@ -4,12 +4,11 @@ internal static class LogstashInputFactory
 {
     public static ILogstashInput Create(Uri uri, TimeSpan tcpSendTimeout)
     {
-        switch (uri.Scheme)
+        return uri.Scheme switch
         {
-            case "udp": return new UdpInput(uri);
-            case "tcp": return new TcpInput(uri, tcpSendTimeout);
-            default:
-                throw new ArgumentException("Logstash supports only tcp:// and udp:// endpoint URIs.", nameof(uri));
-        }
+            "udp" => new UdpInput(uri),
+            "tcp" => new TcpInput(uri, tcpSendTimeout),
+            _ => throw new ArgumentException("Logstash supports only tcp:// and udp:// endpoint URIs.", nameof(uri))
+        };
     }
 }

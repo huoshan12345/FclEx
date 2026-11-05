@@ -1,3 +1,5 @@
+using System.Threading;
+
 namespace FclEx.Serilog.Extensions;
 
 public partial class LoggerSinkConfigurationExtensionsTests
@@ -7,7 +9,7 @@ public partial class LoggerSinkConfigurationExtensionsTests
     [InlineData(2, false)]
     [InlineData(1, true)]
     [InlineData(2, true)]
-    public void FormatException_GroupFallback_ReceivesEachSinkFailure(int sinkCount, bool restricted)
+    public void Wrap_GroupFallback_ReceivesEachSinkFailure(int sinkCount, bool restricted)
     {
         var listeners = new ILoggingFailureListener?[sinkCount];
         var sinks = Enumerable.Range(0, sinkCount).Select(index =>
@@ -19,7 +21,7 @@ public partial class LoggerSinkConfigurationExtensionsTests
         }).ToArray();
         var fallback = new CollectingSink();
         using var logger = new LoggerConfiguration().WriteTo.FallbackChain(
-            first => first.FormatException(inner =>
+            first => first.Wrap(inner => new LogEventMutateSink(inner, value => value.FormatException()), inner =>
             {
                 foreach (var sink in sinks)
                     inner.Sink(sink.Object, restrictedToMinimumLevel: restricted ? LogEventLevel.Warning : LogEventLevel.Verbose);
@@ -37,14 +39,20 @@ public partial class LoggerSinkConfigurationExtensionsTests
     }
 
     [Fact]
-    public void Wrap_NonDisposableWrapper_PreservesFailureNotificationsAndDisposal()
+    public void Wrap_OwningWrapper_PreservesFailureNotificationsAndDisposal()
     {
         var sink = new Mock<ILogEventSink>();
         sink.As<IDisposable>();
         var listener = new Mock<ILoggingFailureListener>();
         var forwarding = sink.As<ISetLoggingFailureListener>();
         var logger = new LoggerConfiguration().WriteTo.Fallible(
-            first => first.Wrap(inner => new ForwardingSink(inner), group => group.Sink(sink.Object)), listener.Object).CreateLogger();
+            first => first.Wrap(inner =>
+            {
+                Assert.IsAssignableFrom<IDisposable>(inner);
+                Assert.IsAssignableFrom<IAsyncDisposable>(inner);
+                Assert.IsAssignableFrom<ISetLoggingFailureListener>(inner);
+                return new LogEventMutateSink(inner, null);
+            }, group => group.Sink(sink.Object)), listener.Object).CreateLogger();
 
         logger.Dispose();
 
@@ -93,16 +101,14 @@ public partial class LoggerSinkConfigurationExtensionsTests
 #endif
 
     [Fact]
-    public void Wrap_WrapperDisposalFails_StillDisposesAllInnerSinks()
+    public void Wrap_InnerSinkDisposalFails_StillDisposesOtherSinks()
     {
-        var failure = new IOException("wrapper cleanup failed");
-        var wrapper = new Mock<ILogEventSink>();
-        wrapper.As<IDisposable>().Setup(value => value.Dispose()).Throws(failure);
+        var failure = new IOException("inner cleanup failed");
         var first = new Mock<ILogEventSink>();
-        first.As<IDisposable>();
+        first.As<IDisposable>().Setup(value => value.Dispose()).Throws(failure);
         var second = new Mock<ILogEventSink>();
         second.As<IDisposable>();
-        var logger = new LoggerConfiguration().WriteTo.Wrap(_ => wrapper.Object,
+        var logger = new LoggerConfiguration().WriteTo.Wrap(inner => new LogEventMutateSink(inner, null),
             group => group.Sink(first.Object).WriteTo.Sink(second.Object)).CreateLogger();
 
         var actual = Assert.Throws<IOException>(() => logger.Dispose());
@@ -135,24 +141,25 @@ public partial class LoggerSinkConfigurationExtensionsTests
         sink.As<IAsyncDisposable>().Verify(value => value.DisposeAsync(), Times.Once);
     }
 
-    private sealed class ForwardingSink(ILogEventSink inner) : ILogEventSink
-    {
-        public void Emit(LogEvent logEvent) => inner.Emit(logEvent);
-    }
-
     private sealed class ResourceOwningWrapper(ILogEventSink inner, List<string> order, Task? completion = null)
         : ILogEventSink, IDisposable, IAsyncDisposable
     {
+        private int _disposed;
+
         public void Emit(LogEvent logEvent) => inner.Emit(logEvent);
 
         public void Dispose()
         {
+            if (Interlocked.Exchange(ref _disposed, 1) != 0)
+                return;
             order.Add("wrapper");
             (inner as IDisposable)?.Dispose();
         }
 
         public async ValueTask DisposeAsync()
         {
+            if (Interlocked.Exchange(ref _disposed, 1) != 0)
+                return;
             if (completion != null)
                 await completion;
             order.Add("wrapper async");

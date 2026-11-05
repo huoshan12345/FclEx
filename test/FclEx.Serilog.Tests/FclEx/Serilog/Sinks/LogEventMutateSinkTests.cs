@@ -2,6 +2,27 @@ namespace FclEx.Serilog.Sinks;
 
 public class LogEventMutateSinkTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Dispose_RepeatedMixedCalls_ReleaseInnerSinkOnce(bool asyncFirst)
+    {
+        var sink = new Mock<ILogEventSink>();
+        sink.As<IDisposable>();
+        sink.As<IAsyncDisposable>().Setup(value => value.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var wrapper = new LogEventMutateSink(sink.Object, null);
+
+        if (asyncFirst)
+            await wrapper.DisposeAsync();
+        else
+            wrapper.Dispose();
+        wrapper.Dispose();
+        await wrapper.DisposeAsync();
+
+        sink.As<IDisposable>().Verify(value => value.Dispose(), asyncFirst ? Times.Never() : Times.Once());
+        sink.As<IAsyncDisposable>().Verify(value => value.DisposeAsync(), asyncFirst ? Times.Once() : Times.Never());
+    }
+
     [Fact]
     public void Dispose_DisposesWrappedSink()
     {

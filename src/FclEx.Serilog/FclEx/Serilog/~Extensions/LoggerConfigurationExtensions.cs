@@ -7,6 +7,36 @@ namespace FclEx.Serilog;
 
 public static class LoggerConfigurationExtensions
 {
+    /// <summary>Wraps all currently registered WriteTo sinks as one pipeline, invoking the wrapper once per event before fan-out.</summary>
+    /// <param name="configuration">The logger configuration whose existing WriteTo sinks will be replaced.</param>
+    /// <param name="wrapSink">Creates a wrapper that owns the aggregate of captured sinks.</param>
+    /// <returns>The same logger configuration.</returns>
+    /// <remarks>
+    /// Call after all sink registrations and before CreateLogger. AuditTo sinks and sinks registered later
+    /// are outside this wrapper. Global event filters run before the wrapper; individual sink restrictions
+    /// run after it. The wrapper must forward disposal, asynchronous disposal when needed, and failure
+    /// notifications to its aggregate sink. LogEventMutateSink fulfills this contract.
+    /// If wrapper construction fails, captured sinks are released and removed from the configuration.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">Either argument is null.</exception>
+    /// <exception cref="InvalidOperationException">The wrapper factory returns null.</exception>
+    /// <exception cref="AggregateException">Wrapper construction and cleanup both fail.</exception>
+    public static LoggerConfiguration WrapSinkPipeline(this LoggerConfiguration configuration, Func<ILogEventSink, ILogEventSink> wrapSink)
+    {
+        Check.NotNull(configuration);
+        Check.NotNull(wrapSink);
+        var sinks = Fields.LoggerConfiguration_Sinks.GetRequiredValue<List<ILogEventSink>>(configuration);
+        var captured = sinks.ToArray();
+
+        // Transfer ownership before wrapping: failure cleanup must not leave disposed sinks registered here.
+        sinks.Clear();
+        return configuration.WriteTo.Wrap(wrapSink, wrapped =>
+        {
+            foreach (var sink in captured)
+                wrapped.Sink(sink);
+        });
+    }
+
     public static LoggerConfiguration WrapAllSinks(this LoggerConfiguration configuration, Func<ILogEventSink, ILogEventSink> wrapSink)
     {
         var sinks = Fields.LoggerConfiguration_Sinks.GetRequiredValue<List<ILogEventSink>>(configuration);

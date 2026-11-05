@@ -134,19 +134,10 @@ public class SerilogConfiguration
             throw;
         }
 
-        var sinks = Fields.LoggerConfiguration_Sinks.GetRequiredValue<List<ILogEventSink>>(configuration);
-
-        // Normalize once before fan-out, so later sinks cannot unwrap another exception or change its level.
-        // The group preserves each sink's restrictions, failure isolation, disposal, and failure notifications.
-        var aggregateSink = SinkPipeline.CreateGroup(sinks);
-
-        // The mutation sink owns this group directly; no extra disposal-forwarding layer is needed.
-        var mutationSink = new LogEventMutateSink(aggregateSink, FormatException ? logEvent => logEvent.FormatException() : null);
-
-        // The wrapper now owns the captured sinks; remove the original registrations to avoid double dispatch/disposal.
-        sinks.Clear();
-        configuration.WriteTo.Sink(mutationSink);
-        logger = configuration.CreateLogger();
+        // Normalize once before fan-out; keep exception-level filtering in the earlier global filter.
+        logger = configuration
+            .WrapSinkPipeline(inner => new LogEventMutateSink(inner, FormatException ? logEvent => logEvent.FormatException() : null))
+            .CreateLogger();
         return logger;
     }
 }
