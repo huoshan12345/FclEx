@@ -113,7 +113,8 @@ public partial class JsonFormatter : ITextFormatter
             return;
 
         output.Write(',');
-        JsonValueFormatter.WriteQuotedJsonString(key, output);
+        var k = Options.PropertyNamingPolicy.ConvertName(key);
+        JsonValueFormatter.WriteQuotedJsonString(k, output);
         output.Write(':');
         Options.ValueFormatter.Format(value, output);
     }

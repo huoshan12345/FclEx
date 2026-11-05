@@ -8,6 +8,7 @@ public class JsonFormatterOptions
     public string MessageName { get; set; } = "@m";
     public string LogLevelName { get; set; } = "@l";
     public string ExceptionName { get; set; } = "@x";
+    public JsonNamingPolicy PropertyNamingPolicy { get; set; } = JsonNamingPolicy.CamelCase;
 
     /// <summary>
     /// Indicates whether enable formatting for exception. <br/>
