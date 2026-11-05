@@ -7,20 +7,26 @@ public partial class JsonFormatter : ITextFormatter
     protected JsonFormatterOptions Options { get; }
     protected ExceptionFormatOptions ExceptionOptions => Options.ExceptionFormatOptions;
 
+    /// <summary>Creates a formatter with the supplied options or a new, independent set of defaults.</summary>
+    /// <param name="options">Options retained by this formatter, or null to create independent defaults.</param>
+    /// <remarks>Complete configuration before concurrent formatting. Explicitly sharing options also shares subsequent changes.</remarks>
     public JsonFormatter(JsonFormatterOptions? options = null)
     {
-        Options = options ?? JsonFormatterOptions.Default;
+        Options = options ?? new JsonFormatterOptions();
         // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
-        Options.ExceptionFormatOptions ??= ExceptionFormatOptions.Default;
+        Options.ExceptionFormatOptions ??= new ExceptionFormatOptions();
     }
 
     /// <summary>
     /// Writes one JSON object followed by a newline, omitting fields whose configured names are empty.
+    /// Event and linking-metadata properties whose final JSON names match a configured basic field are omitted.
     /// </summary>
     /// <param name="logEvent">The event to format.</param>
     /// <param name="output">The output.</param>
+    /// <exception cref="InvalidOperationException">Two nonempty configured basic field names are identical.</exception>
     public virtual void Format(LogEvent logEvent, TextWriter output)
     {
+        ValidateBasicFieldNames();
         // Omitting the first field leaves a leading separator in the existing field writers.
         // Buffer this case so the first separator can be removed before the members are written.
         using var buffer = Options.UtcTimeName.IsNullOrEmpty() ? StringBuilder.GetCached() : null;
@@ -39,6 +45,20 @@ public partial class JsonFormatter : ITextFormatter
         }
         output.Write('}');
         output.WriteLine();
+    }
+
+    private void ValidateBasicFieldNames()
+    {
+        // Options are mutable, so validate before each event and before writing any JSON.
+        if (Collides(Options.UtcTimeName, Options.LogLevelName)
+            || Collides(Options.UtcTimeName, Options.MessageName)
+            || Collides(Options.UtcTimeName, Options.ExceptionName)
+            || Collides(Options.LogLevelName, Options.MessageName)
+            || Collides(Options.LogLevelName, Options.ExceptionName)
+            || Collides(Options.MessageName, Options.ExceptionName))
+            throw new InvalidOperationException("Nonempty JSON basic field names must be distinct.");
+
+        static bool Collides(string? first, string? second) => !string.IsNullOrEmpty(first) && first == second;
     }
 
     protected virtual void WriteBasicData(LogEvent logEvent, TextWriter output)
@@ -138,8 +158,13 @@ public partial class JsonFormatter : ITextFormatter
         if (key.IsNullOrEmpty())
             return;
 
-        output.Write(',');
         var k = Options.PropertyNamingPolicy.ConvertName(key);
+        // Reserve basic field names after applying the naming policy, including flattened linking metadata.
+        // A configured exception field stays reserved even when this event has no exception.
+        if (k == Options.UtcTimeName || k == Options.LogLevelName || k == Options.MessageName || k == Options.ExceptionName)
+            return;
+
+        output.Write(',');
         JsonValueFormatter.WriteQuotedJsonString(k, output);
         output.Write(':');
         Options.ValueFormatter.Format(value, output);

@@ -1,12 +1,12 @@
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text.Json.Nodes;
-using static FclEx.Serilog.ExceptionIndexOptions;
+using static FclEx.Serilog.ExceptionIndexPolicy;
 
 namespace FclEx.Serilog.Formatting;
 
 [Collection(nameof(Console))]
-public class JsonFormatterTests
+public partial class JsonFormatterTests
 {
     [Theory]
     [InlineData(true)]
@@ -31,6 +31,7 @@ public class JsonFormatterTests
 
         using var document = System.Text.Json.JsonDocument.Parse(output.ToString());
         Assert.Equal(System.Text.Json.JsonValueKind.Array, document.RootElement.GetProperty("@x").ValueKind);
+        Assert.StartsWith(exceptionType.Name, document.RootElement.GetProperty("@x")[0].GetString());
     }
 
     [Fact]
@@ -44,6 +45,7 @@ public class JsonFormatterTests
 
         using var document = System.Text.Json.JsonDocument.Parse(output.ToString());
         Assert.Equal("Error", document.RootElement.GetProperty("level").GetString());
+        Assert.Single(document.RootElement.EnumerateObject(), property => property.Name == "level");
     }
 
     public static readonly TheoryData<bool, bool, bool, bool> IncludedFields =
@@ -182,17 +184,17 @@ public class JsonFormatterTests
 
     public ITestOutputHelper? Output => TestContext.Current.TestOutputHelper;
 
-    public static readonly TheoryData<int?, bool, ExceptionIndexOptions> TestCases =
+    public static readonly TheoryData<int?, bool, ExceptionIndexPolicy> TestCases =
     (
         from len in new int?[] { null, 5 }
         from omitParams in new[] { true, false }
-        from indexOp in new[] { None, Default }
+        from indexOp in new[] { None, WhenBranched }
         select (len, omitParams, indexOp)
     ).ToTheoryData();
 
     [Theory]
     [MemberData(nameof(TestCases))]
-    public async Task Format_Test(int? maxLen, bool omitParams, ExceptionIndexOptions indexOptions)
+    public async Task Format_Test(int? maxLen, bool omitParams, ExceptionIndexPolicy indexPolicy)
     {
         var options = new JsonFormatterOptions
         {
@@ -200,7 +202,7 @@ public class JsonFormatterTests
             {
                 MaxMessageLength = maxLen,
                 OmitParametersInStackTrace = omitParams,
-                IndexOptions = indexOptions,
+                IndexPolicy = indexPolicy,
             }
         };
         try

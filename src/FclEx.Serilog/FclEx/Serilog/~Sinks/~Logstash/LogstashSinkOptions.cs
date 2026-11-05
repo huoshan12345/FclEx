@@ -24,6 +24,14 @@ public class LogstashSinkOptions
     /// </summary>
     public TimeSpan Period { get; set; } = TimeSpan.FromSeconds(3);
 
+    /// <summary>The total TCP connection and send deadline for one serialized batch. Defaults to 30 seconds.</summary>
+    /// <remarks>
+    /// Must be at least one millisecond and at most Int32.MaxValue milliseconds. Does not apply to UDP.
+    /// Expiry closes the TCP connection and raises TimeoutException so batching can retry.
+    /// A partially sent batch may be delivered again on retry. Formatting time is outside this deadline.
+    /// </remarks>
+    public TimeSpan TcpSendTimeout { get; set; } = TimeSpan.FromSeconds(30);
+
     /// <summary>
     /// The maximum number of events that will be held in-memory while waiting to ship them to Logstash.
     /// Beyond this limit, events will be dropped. The default is 100,000.

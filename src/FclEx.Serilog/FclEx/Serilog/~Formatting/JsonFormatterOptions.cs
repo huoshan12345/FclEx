@@ -1,5 +1,10 @@
 namespace FclEx.Serilog;
 
+/// <summary>Configures JSON output. Nonempty basic field names are reserved against event and linking-metadata properties.</summary>
+/// <remarks>
+/// Nonempty basic field names must be distinct. Property collisions are checked after the naming policy
+/// and any @ escaping are applied; colliding properties are omitted even when an event has no exception.
+/// </remarks>
 [SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Global")]
 public class JsonFormatterOptions
 {
@@ -34,11 +39,12 @@ public class JsonFormatterOptions
     /// </summary>
     public bool EnableExceptionFormat { get; set; } = true;
     /// <summary>
-    /// Specifies the formatting options for exceptions when logging or rendering them.
+    /// Specifies the formatting options for exceptions when logging or rendering them. Each new options instance owns independent defaults.
     /// </summary>
     public ExceptionFormatOptions ExceptionFormatOptions { get; set; } = new();
     /// <summary>
-    /// The default instance of <see cref="JsonFormatterOptions"/>.
+    /// A shared, mutable options instance for callers that explicitly choose shared configuration.
+    /// Default-constructed formatters create their own options instead of using this instance.
     /// </summary>
     public static readonly JsonFormatterOptions Default = new();
 }

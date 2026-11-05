@@ -37,6 +37,21 @@ Serilog configuration and container-owned logging helpers for FclEx.
   destination port from 1 through 65535. The sink validates the URI during construction.
 - Empty JSON formatter field names omit those fields. Exception formatting failures
   produce a diagnostic string after the incomplete exception fragment is discarded.
+- Default-constructed JSON formatters own independent options, including nested
+  exception options. Passing the same options explicitly shares configuration;
+  finish configuring it before concurrent use.
+- Nonempty basic JSON field names must be distinct. Event properties and flattened
+  New Relic linking metadata cannot override them: colliding properties are omitted
+  after the naming policy and `@` escaping are applied. A configured exception field
+  remains reserved even for events without exceptions.
+- Destructured scope property names use a thread-safe LRU cache of at most 1024
+  entries, allowing old dynamic names to be collected after eviction.
+- `LogstashSinkOptions.TcpSendTimeout` defaults to 30 seconds and covers connecting
+  and sending one serialized TCP batch. On expiry the connection closes and a
+  `TimeoutException` reaches batching for retry. Formatting time is excluded; UDP
+  is unaffected. Retries can duplicate events from a partially sent batch.
+- `ExceptionFormatOptions.IndexPolicy` selects when exception indexes are included:
+  `None`, `Always`, `WhenMultiple`, or `WhenBranched`. The default is `WhenBranched`.
 
 ## API Migration
 
@@ -52,6 +67,13 @@ Serilog configuration and container-owned logging helpers for FclEx.
    former static calls to `SerilogConfigurationExtensions.Configure`.
 5. `AddSerilog` creates a separate singleton logger for each root service provider
    when logging is first resolved. Applications choose when to assign `Log.Logger`.
+6. Replace `ExceptionIndexOptions` and `ExceptionFormatOptions.IndexOptions` with
+   `ExceptionIndexPolicy` and `IndexPolicy`. These are mutually exclusive policies:
+   old `None` becomes `None`, `Include` becomes `Always`, `Include | IncludeForMultiple`
+   becomes `WhenMultiple`, and combinations containing `IncludeForMultiBranched`
+   together with `Include` (including old `Default`) become `WhenBranched`.
+   The old conditional flags alone never enabled indexes; choose the corresponding
+   new policy to enable the intended condition directly.
 
 For example, prepare the configuration before registration.
 

@@ -26,11 +26,12 @@ public class ExceptionFormatOptions
     /// </summary>
     public bool UseSimpleTypeName { get; set; } = true;
     /// <summary>
-    /// Specifies whether the indexes of an exception should be included.
+    /// Determines when exception indexes and parent indexes are included. Defaults to trees with multiple branches.
     /// </summary>
-    public ExceptionIndexOptions IndexOptions { get; set; } = ExceptionIndexOptions.Default;
+    public ExceptionIndexPolicy IndexPolicy { get; set; } = ExceptionIndexPolicy.WhenBranched;
     /// <summary>
-    /// The default instance of <see cref="ExceptionFormatOptions"/>.
+    /// A shared, mutable options instance for callers that explicitly choose shared configuration.
+    /// New JsonFormatterOptions instances create independent exception options instead of using this instance.
     /// </summary>
     public static readonly ExceptionFormatOptions Default = new();
 }

@@ -1,5 +1,3 @@
-using static FclEx.Serilog.ExceptionIndexOptions;
-
 namespace FclEx.Serilog;
 
 partial class JsonFormatter
@@ -28,7 +26,7 @@ partial class JsonFormatter
             ? type.SimpleName()
             : type.FullName ?? type.Name;
 
-        output.Write(name); // we assume "name" doesn't need to escape. 
+        WriteJsonString(name, output);
 
         if (ExceptionOptions.OmitMessageIfExists == false
             || ExceptionOptions.OmitMessageIfExists && logEventMessage.Contains(message) == false)
@@ -61,8 +59,14 @@ partial class JsonFormatter
         output.Write(":[");
 
         var (infos, multiBranched) = ex.BuildTree();
-        var indexOp = ExceptionOptions.IndexOptions;
-        var writeIndexes = IfWriteIndexes();
+        var writeIndexes = ExceptionOptions.IndexPolicy switch
+        {
+            ExceptionIndexPolicy.None => false,
+            ExceptionIndexPolicy.Always => true,
+            ExceptionIndexPolicy.WhenMultiple => infos.Count > 1,
+            ExceptionIndexPolicy.WhenBranched => multiBranched,
+            _ => throw new ArgumentOutOfRangeException(nameof(ExceptionFormatOptions.IndexPolicy), ExceptionOptions.IndexPolicy, "Unknown exception index policy.")
+        };
 
         foreach (var (_, info, isFirst, _) in infos.IndexEx())
         {
@@ -72,20 +76,5 @@ partial class JsonFormatter
             WriteExceptionInfo(logEventMessage, info, output, writeIndexes);
         }
         output.Write(']');
-
-        bool IfWriteIndexes()
-        {
-            if (indexOp.IsSet(Include) == false)
-                return false;
-
-            if (indexOp.IsSet(IncludeForMultiple) && infos.Count <= 1)
-                return false;
-
-            // ReSharper disable once ConvertIfStatementToReturnStatement
-            if (indexOp.IsSet(IncludeForMultiBranched) && multiBranched == false)
-                return false;
-
-            return true;
-        }
     }
 }

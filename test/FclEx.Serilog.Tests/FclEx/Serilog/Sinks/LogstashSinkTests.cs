@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using Serilog.Sinks.XUnit3;
@@ -8,6 +9,66 @@ namespace FclEx.Serilog.Sinks;
 
 public class LogstashSinkTests
 {
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(0)]
+    [InlineData(0.5)]
+    [InlineData(2147483648d)]
+    public void Constructor_InvalidTcpSendTimeout_Throws(double milliseconds)
+    {
+        var options = new LogstashSinkOptions("tcp://127.0.0.1:5050")
+        {
+            TcpSendTimeout = TimeSpan.FromTicks((long)(milliseconds * TimeSpan.TicksPerMillisecond))
+        };
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => new LogstashSink(options));
+    }
+
+    [Fact]
+    public async Task EmitBatchAsync_TcpPeerStopsReading_TimesOutAndCanSendNextBatch()
+    {
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Server.ReceiveBufferSize = 4096;
+        listener.Start();
+        try
+        {
+            var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+            var sink = new LogstashSink(new LogstashSinkOptions($"tcp://127.0.0.1:{port}")
+            {
+                TcpSendTimeout = TimeSpan.FromSeconds(1),
+                Formatter = new MessageOnlyFormatter()
+            });
+            var logEvent = new LogEvent(DateTimeOffset.UtcNow, LogEventLevel.Information, null,
+                MessageTemplate.Empty, []);
+            var payload = new string('x', 64 * 1024);
+            logEvent.SetMessageTemplate(new MessageTemplate(payload, new[] { new TextToken(payload) }));
+            Assert.Equal(payload.Length, logEvent.RenderMessage().Length);
+            var elapsed = Stopwatch.StartNew();
+            var sending = sink.EmitBatchAsync(Enumerable.Repeat(logEvent, 512).ToArray());
+            using (var stalled = await listener.AcceptTcpClientAsync().WaitAsync(TimeSpan.FromSeconds(5)))
+            {
+                // Do not read: this batch must exceed the socket buffers and hit the sink's own deadline.
+                await Assert.ThrowsAsync<TimeoutException>(() => sending.WaitAsync(TimeSpan.FromSeconds(10)));
+                Assert.True(elapsed.Elapsed < TimeSpan.FromSeconds(5), "The sink must enforce its own deadline.");
+            }
+
+            var retry = sink.EmitBatchAsync(new[] { SerilogHelper.CreateLogEvent(LogEventLevel.Information, null, "recovered") });
+            using var connection = await listener.AcceptTcpClientAsync().WaitAsync(TimeSpan.FromSeconds(5));
+            using var reader = new StreamReader(connection.GetStream(), Encoding.UTF8);
+            Assert.Equal("recovered", await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(5)));
+            await retry.WaitAsync(TimeSpan.FromSeconds(5));
+        }
+        finally
+        {
+            listener.Stop();
+        }
+    }
+
+    private sealed class MessageOnlyFormatter : global::Serilog.Formatting.ITextFormatter
+    {
+        public void Format(LogEvent logEvent, TextWriter output) => output.Write(logEvent.RenderMessage());
+    }
+
     [Theory]
     [InlineData("https://localhost:5050")]
     [InlineData("tpc://localhost:5050")]

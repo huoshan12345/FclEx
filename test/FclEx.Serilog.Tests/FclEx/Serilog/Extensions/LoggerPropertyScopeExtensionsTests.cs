@@ -5,10 +5,35 @@ namespace FclEx.Serilog.Extensions;
 
 public class LoggerPropertyScopeExtensionsTests
 {
-    [Fact]
-    public void DisposeScope_ReleasesDynamicPropertyName()
+    // These two tests inspect retention in the shared cache; eviction must not race the reuse assertion.
+    [Fact(DisableParallelization = true)]
+    public void Push_RepeatedName_ReusesPrefixedString()
+    {
+        var names = new List<string>();
+        var logger = new Mock<Microsoft.Extensions.Logging.ILogger>();
+        logger.Setup(value => value.BeginScope(It.IsAny<KeyValuePair<string, object?>[]>()))
+            .Callback<KeyValuePair<string, object?>[]>(state => names.Add(Assert.Single(state).Key));
+        var name = "CachedProperty_" + Guid.NewGuid().ToString("N");
+
+        using (var first = global::FclEx.Serilog.LoggerExtensions.Properties(logger.Object, name, null, true)) { }
+        using (var second = global::FclEx.Serilog.LoggerExtensions.Properties(logger.Object, name, null, true)) { }
+
+        Assert.Equal("@" + name, names[0]);
+        Assert.Same(names[0], names[1]);
+    }
+
+    [Fact(DisableParallelization = true)]
+    public void DisposeScope_EvictedDynamicPropertyNameCanBeCollected()
     {
         var reference = CreateDisposedPropertyNameReference();
+
+        // A bounded cache may retain recent names; churn beyond its 1024-entry capacity must release old names.
+        for (var i = 0; i < 2048; i++)
+        {
+            using var scope = global::FclEx.Serilog.LoggerExtensions.Properties(
+                Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance, "Eviction_" + Guid.NewGuid().ToString("N"),
+                null, destructureObjects: true);
+        }
 
         GC.Collect();
         GC.WaitForPendingFinalizers();
