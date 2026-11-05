@@ -44,6 +44,12 @@ Serilog configuration and container-owned logging helpers for FclEx.
   New Relic linking metadata cannot override them: colliding properties are omitted
   after the naming policy and `@` escaping are applied. A configured exception field
   remains reserved even for events without exceptions.
+- `JsonFormatterOptions.PropertyCollisionPolicy` controls other top-level property
+  collisions after naming and escaping: `KeepFirst` (default), `KeepLast`, or `Throw`.
+  Event properties and flattened linking metadata are considered in enumeration
+  order. `KeepLast` replaces the value at the first occurrence's output position.
+  `Throw` raises `InvalidOperationException` without appending a partial event.
+  Nested value formatting is unaffected, and basic field names remain reserved.
 - Destructured scope property names use a thread-safe LRU cache of at most 1024
   entries, allowing old dynamic names to be collected after eviction.
 - `LogstashSinkOptions.TcpSendTimeout` defaults to 30 seconds and covers connecting
@@ -74,6 +80,15 @@ Serilog configuration and container-owned logging helpers for FclEx.
    together with `Include` (including old `Default`) become `WhenBranched`.
    The old conditional flags alone never enabled indexes; choose the corresponding
    new policy to enable the intended condition directly.
+7. `WriteTo.Wrap` passes a borrowed entry point to the wrapper factory. Its emission
+   and failure-listener interfaces are available, but disposal and concrete sink
+   types must not be required. The returned pipeline owns wrapper cleanup and
+   inner-sink cleanup independently.
+8. Formatter subclasses should override `GetPropertyCandidates` to customize
+   event/linking-metadata properties before naming and conflict resolution.
+   This replaces the `WriteLinkingMetadataProperties` writing hook.
+   `WriteFormattedJsonData` now receives the final JSON name and must not apply
+   the naming policy again.
 
 For example, prepare the configuration before registration.
 
@@ -98,6 +113,12 @@ sink configuration helper preserves the same ownership for its configured sinks.
 `SerilogLoggerProviderWithoutExternalScope` forwards asynchronous disposal on supported
 targets; its `dispose` constructor argument determines whether it owns the destination
 logger. Use `dispose: false` when another owner, such as the root container, disposes it.
+
+`WriteTo.Wrap` and `WriteTo.FormatException` preserve failure notifications for
+fallback chains, including groups of multiple sinks. Their owning pipeline disposes
+the wrapper's resources before the inner sinks, without asking two layers to dispose
+the same sink. All registered sinks receive a cleanup attempt even if another sink
+fails during cleanup. Cleanup failures propagate, with multiple failures aggregated.
 
 Serilog configuration actions run once for each created root logger. Create
 per-container disposable sinks inside those actions when building multiple providers

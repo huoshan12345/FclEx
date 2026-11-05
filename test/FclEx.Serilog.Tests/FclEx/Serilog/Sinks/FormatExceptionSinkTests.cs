@@ -2,6 +2,25 @@ namespace FclEx.Serilog.Sinks;
 
 public class FormatExceptionSinkTests
 {
+    [Fact]
+    public void FormatException_DoesNotMutateSiblingSinkException()
+    {
+        var exception = new InvalidOperationException("failure");
+        Exception? formatted = null;
+        Exception? sibling = null;
+        var first = new Mock<ILogEventSink>();
+        first.Setup(sink => sink.Emit(It.IsAny<LogEvent>())).Callback<LogEvent>(logEvent => formatted = logEvent.Exception);
+        var second = new Mock<ILogEventSink>();
+        second.Setup(sink => sink.Emit(It.IsAny<LogEvent>())).Callback<LogEvent>(logEvent => sibling = logEvent.Exception);
+        using var logger = new LoggerConfiguration().WriteTo.FormatException(inner => inner.Sink(first.Object))
+            .WriteTo.Sink(second.Object).CreateLogger();
+
+        logger.Error(exception, "message");
+
+        Assert.IsType<FormattedException>(formatted);
+        Assert.Same(exception, sibling);
+    }
+
     [Theory]
     [InlineData(1)]
     [InlineData(2)]

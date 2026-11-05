@@ -7,7 +7,7 @@ namespace FclEx.Serilog;
 /// Use asynchronous disposal when the inner sink requires asynchronous cleanup.
 /// </remarks>
 /// <exception cref="ArgumentNullException"><paramref name="sink"/> is null.</exception>
-public class FormatExceptionSink(ILogEventSink sink) : ILogEventSink, IDisposable, IAsyncDisposable
+public class FormatExceptionSink(ILogEventSink sink) : ILogEventSink, IDisposable, IAsyncDisposable, ISetLoggingFailureListener
 {
     protected readonly ILogEventSink _sink = sink ?? throw new ArgumentNullException(nameof(sink));
 
@@ -20,6 +20,15 @@ public class FormatExceptionSink(ILogEventSink sink) : ILogEventSink, IDisposabl
     protected internal virtual void FormatException(LogEvent logEvent)
     {
         logEvent.FormatException();
+    }
+
+    /// <summary>Forwards a failure listener to the inner sink when it supports failure notifications.</summary>
+    /// <param name="failureListener">The listener installed during initialization, before logging begins.</param>
+    public void SetFailureListener(ILoggingFailureListener failureListener)
+    {
+        Check.NotNull(failureListener);
+        if (_sink is ISetLoggingFailureListener forwarding)
+            forwarding.SetFailureListener(failureListener);
     }
 
     /// <summary>Disposes the inner sink when it implements <see cref="IDisposable"/>.</summary>

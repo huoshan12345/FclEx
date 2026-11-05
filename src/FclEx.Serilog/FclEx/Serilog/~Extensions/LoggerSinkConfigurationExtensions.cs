@@ -2,12 +2,29 @@ namespace FclEx.Serilog;
 
 public static class LoggerSinkConfigurationExtensions
 {
+    /// <summary>Wraps a group of sinks while retaining their disposal and failure-notification support.</summary>
+    /// <param name="configuration">The parent logger's sink configuration.</param>
+    /// <param name="wrapSink">Creates a wrapper around a borrowed sink entry point that exposes emission and failure notifications, but no disposal interfaces.</param>
+    /// <param name="configureWrappedSink">Registers the inner sinks owned by the resulting pipeline.</param>
+    /// <returns>The parent logger configuration.</returns>
+    /// <remarks>
+    /// The pipeline disposes the wrapper's own resources, then the inner sinks, each once. Async disposal
+    /// prefers IAsyncDisposable and falls back to IDisposable. Failure listeners go through the wrapper
+    /// when it supports them, or directly to the inner sinks otherwise. Construction failures release
+    /// previously registered sinks. Wrappers must not require ownership or a concrete type for the borrowed sink.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">Any argument is null.</exception>
+    /// <exception cref="InvalidOperationException">The wrapper factory returns null.</exception>
+    /// <exception cref="AggregateException">Construction and cleanup both fail.</exception>
     public static LoggerConfiguration Wrap(
         this LoggerSinkConfiguration configuration,
         Func<ILogEventSink, ILogEventSink> wrapSink,
         Action<LoggerSinkConfiguration> configureWrappedSink)
     {
-        var logEventSink = LoggerSinkConfiguration.Wrap(wrapSink, configureWrappedSink);
+        Check.NotNull(configuration);
+        Check.NotNull(wrapSink);
+        Check.NotNull(configureWrappedSink);
+        var logEventSink = SinkPipeline.Wrap(wrapSink, configureWrappedSink);
         return configuration.Sink(logEventSink);
     }
 
@@ -15,14 +32,11 @@ public static class LoggerSinkConfigurationExtensions
     /// <param name="configuration">The parent logger's sink configuration.</param>
     /// <param name="configureWrappedSink">Configures sinks owned by the formatting wrapper.</param>
     /// <returns>The parent logger configuration for further customization.</returns>
-    /// <remarks>Logger disposal releases the inner sinks. Use asynchronous disposal on supported targets for asynchronous sinks.</remarks>
+    /// <remarks>Logger disposal releases the inner sinks. Failure notifications are forwarded to support fallback chains. Use asynchronous disposal on supported targets for asynchronous sinks.</remarks>
     /// <exception cref="ArgumentNullException">Either argument is null.</exception>
     public static LoggerConfiguration FormatException(this LoggerSinkConfiguration configuration, Action<LoggerSinkConfiguration> configureWrappedSink)
     {
-        Check.NotNull(configuration);
-        // The wrapper owns disposal. Native Wrap would add another disposal path via interface forwarding.
-        var inner = LoggerSinkConfiguration.CreateSink(configureWrappedSink);
-        return configuration.Sink(new FormatExceptionSink(inner));
+        return configuration.Wrap(inner => new FormatExceptionSink(inner), configureWrappedSink);
     }
 
     /// <summary>Sends buffered log events to New Relic Logs in gzip-compressed JSON batches.</summary>

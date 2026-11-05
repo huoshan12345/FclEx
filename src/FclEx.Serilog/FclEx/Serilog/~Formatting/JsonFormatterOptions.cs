@@ -32,6 +32,13 @@ public class JsonFormatterOptions
     /// Specifies the naming policy for JSON properties.
     /// </summary>
     public JsonNamingPolicy PropertyNamingPolicy { get; set; } = JsonNamingPolicy.CamelCase;
+    /// <summary>Resolves duplicate top-level names after applying the naming policy and @ escaping. Defaults to KeepFirst.</summary>
+    /// <remarks>
+    /// Applies to event properties and flattened New Relic linking metadata in their enumeration order.
+    /// Basic field names remain reserved; matching properties are omitted under every policy.
+    /// Nested object and dictionary members are handled by ValueFormatter and are outside this policy.
+    /// </remarks>
+    public JsonPropertyCollisionPolicy PropertyCollisionPolicy { get; set; } = JsonPropertyCollisionPolicy.KeepFirst;
     /// <summary>
     /// Indicates whether enable formatting for exception. <br/>
     /// <see langword="true" /> to format exception according to <see cref="ExceptionFormatOptions"/>, <br/>

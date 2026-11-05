@@ -1,7 +1,52 @@
 namespace FclEx.Serilog.Extensions;
 
-public class LoggerSinkConfigurationExtensionsTests
+public partial class LoggerSinkConfigurationExtensionsTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void FormatException_FallbackChain_ForwardsFailureNotifications(bool useFormattingWrapper)
+    {
+        var primary = new Mock<ILogEventSink>();
+        ILoggingFailureListener? listener = null;
+        primary.As<ISetLoggingFailureListener>()
+            .Setup(sink => sink.SetFailureListener(It.IsAny<ILoggingFailureListener>()))
+            .Callback<ILoggingFailureListener>(value => listener = value);
+        var fallback = new CollectingSink();
+        using var logger = new LoggerConfiguration().WriteTo.FallbackChain(
+            first =>
+            {
+                if (useFormattingWrapper)
+                    first.FormatException(inner => inner.Sink(primary.Object));
+                else
+                    first.Sink(primary.Object);
+            },
+            second => second.Sink(fallback)).CreateLogger();
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Error, null, "recover this event");
+        logger.Write(logEvent);
+
+        // Batching sinks report failed batches through this listener after Emit returns.
+        listener?.OnLoggingFailed(primary.Object, LoggingFailureKind.Permanent, "batch failed", new[] { logEvent }, null);
+
+        Assert.Same(logEvent, Assert.Single(fallback.Events));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Wrap_DisposableWrapper_DisposesInnerOnce(bool formatException)
+    {
+        var sink = new Mock<ILogEventSink>();
+        sink.As<IDisposable>();
+        var logger = new LoggerConfiguration().WriteTo.Wrap(
+            inner => formatException ? new FormatExceptionSink(inner) : new LogEventMutateSink(inner, null),
+            inner => inner.Sink(sink.Object)).CreateLogger();
+
+        logger.Dispose();
+
+        sink.As<IDisposable>().Verify(disposable => disposable.Dispose(), Times.Once);
+    }
+
     [Fact(Explicit = true)]
     public async Task NewRelic_Test()
     {

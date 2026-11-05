@@ -23,21 +23,28 @@ public partial class JsonFormatter : ITextFormatter
     /// </summary>
     /// <param name="logEvent">The event to format.</param>
     /// <param name="output">The output.</param>
-    /// <exception cref="InvalidOperationException">Two nonempty configured basic field names are identical.</exception>
+    /// <exception cref="InvalidOperationException">Basic field names are not distinct, or duplicate properties are encountered under the Throw policy.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">The property collision policy is not defined.</exception>
     public virtual void Format(LogEvent logEvent, TextWriter output)
     {
         ValidateBasicFieldNames();
+        if (Options.PropertyCollisionPolicy is not (JsonPropertyCollisionPolicy.KeepFirst or JsonPropertyCollisionPolicy.KeepLast or JsonPropertyCollisionPolicy.Throw))
+            throw new ArgumentOutOfRangeException(nameof(JsonFormatterOptions.PropertyCollisionPolicy), Options.PropertyCollisionPolicy, "Unknown property collision policy.");
         // Omitting the first field leaves a leading separator in the existing field writers.
         // Buffer this case so the first separator can be removed before the members are written.
-        using var buffer = Options.UtcTimeName.IsNullOrEmpty() ? StringBuilder.GetCached() : null;
+        // Throw mode buffers the event so a property conflict cannot leave a partial JSON object in the output.
+        using var buffer = Options.UtcTimeName.IsNullOrEmpty() || Options.PropertyCollisionPolicy == JsonPropertyCollisionPolicy.Throw
+            ? StringBuilder.GetCached() : null;
         using var bufferWriter = buffer == null ? null : new StringWriter(buffer.Value, output.FormatProvider);
         var writer = bufferWriter ?? output;
 
-        output.Write('{');
+        if (buffer == null)
+            output.Write('{');
         WriteBasicData(logEvent, writer);
         WriteProperties(logEvent, writer);
         if (buffer != null)
         {
+            output.Write('{');
             var builder = buffer.Value;
             if (builder.Length > 0 && builder[0] == ',')
                 builder.Remove(0, 1);
@@ -108,13 +115,60 @@ public partial class JsonFormatter : ITextFormatter
         output.Write(buffer.Value.ToString());
     }
 
+    /// <summary>Resolves final property names and collisions, then writes each selected value once.</summary>
+    /// <param name="logEvent">The event whose top-level and linking-metadata properties are collected.</param>
+    /// <param name="output">The writer receiving comma-prefixed JSON members.</param>
     protected virtual void WriteProperties(LogEvent logEvent, TextWriter output)
+    {
+        var properties = new List<KeyValuePair<string, LogEventPropertyValue>>();
+        var positions = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var (key, value) in GetPropertyCandidates(logEvent))
+        {
+            if (key.IsNullOrEmpty())
+                continue;
+
+            var name = Options.PropertyNamingPolicy.ConvertName(key);
+            // Reserve configured basic names even when this event has no exception.
+            if (name == Options.UtcTimeName || name == Options.LogLevelName || name == Options.MessageName || name == Options.ExceptionName)
+                continue;
+
+            if (positions.TryGetValue(name, out var position))
+            {
+                switch (Options.PropertyCollisionPolicy)
+                {
+                    case JsonPropertyCollisionPolicy.KeepFirst:
+                        continue;
+                    case JsonPropertyCollisionPolicy.KeepLast:
+                        properties[position] = new(name, value);
+                        continue;
+                    case JsonPropertyCollisionPolicy.Throw:
+                        throw new InvalidOperationException($"Multiple log properties map to the JSON name '{name}'.");
+                }
+            }
+
+            positions.Add(name, properties.Count);
+            properties.Add(new(name, value));
+        }
+
+        foreach (var (name, value) in properties)
+            WriteFormattedJsonData(name, value, output);
+    }
+
+    /// <summary>Enumerates event properties in their original order, expanding linking metadata at its original position.</summary>
+    /// <param name="logEvent">The source event.</param>
+    /// <returns>Names after event-property @ escaping but before the naming policy, together with their values.</returns>
+    /// <remarks>Override this method to customize candidate properties before collision resolution.</remarks>
+    protected virtual IEnumerable<KeyValuePair<string, LogEventPropertyValue>> GetPropertyCandidates(LogEvent logEvent)
     {
         foreach (var (key, value) in logEvent.Properties)
         {
             if (key == LinkingMetadataKey)
             {
-                WriteLinkingMetadataProperties(value, output);
+                if (value is DictionaryValue metadata)
+                {
+                    foreach (var (metadataKey, metadataValue) in metadata.Elements)
+                        yield return new(metadataKey.Value?.ToString() ?? "", metadataValue);
+                }
                 continue;
             }
 
@@ -125,18 +179,7 @@ public partial class JsonFormatter : ITextFormatter
                 name = '@' + name;
             }
 
-            WriteFormattedJsonData(name, value, output);
-        }
-    }
-
-    protected virtual void WriteLinkingMetadataProperties(LogEventPropertyValue nrPropValues, TextWriter output)
-    {
-        if (nrPropValues is not DictionaryValue dictionaryValue)
-            return;
-
-        foreach (var (key, value) in dictionaryValue.Elements)
-        {
-            WriteFormattedJsonData(key.Value?.ToString(), value, output);
+            yield return new(name, value);
         }
     }
 
@@ -153,19 +196,17 @@ public partial class JsonFormatter : ITextFormatter
         JsonValueFormatter.WriteQuotedJsonString(value, output);
     }
 
+    /// <summary>Writes a selected property whose final name has already passed naming, reserved-field, and collision checks.</summary>
+    /// <param name="key">The final JSON member name; this method does not apply a naming policy again.</param>
+    /// <param name="value">The selected structured property value.</param>
+    /// <param name="output">The writer receiving a comma-prefixed JSON member.</param>
     protected virtual void WriteFormattedJsonData(string? key, LogEventPropertyValue value, TextWriter output)
     {
         if (key.IsNullOrEmpty())
             return;
 
-        var k = Options.PropertyNamingPolicy.ConvertName(key);
-        // Reserve basic field names after applying the naming policy, including flattened linking metadata.
-        // A configured exception field stays reserved even when this event has no exception.
-        if (k == Options.UtcTimeName || k == Options.LogLevelName || k == Options.MessageName || k == Options.ExceptionName)
-            return;
-
         output.Write(',');
-        JsonValueFormatter.WriteQuotedJsonString(k, output);
+        JsonValueFormatter.WriteQuotedJsonString(key, output);
         output.Write(':');
         Options.ValueFormatter.Format(value, output);
     }

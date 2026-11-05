@@ -1,6 +1,6 @@
 namespace FclEx.Serilog;
 
-public class LogEventMutateSink : ILogEventSink, IDisposable, IAsyncDisposable
+public class LogEventMutateSink : ILogEventSink, IDisposable, IAsyncDisposable, ISetLoggingFailureListener
 {
     protected readonly ILogEventSink _sink;
     protected readonly Action<LogEvent>? _mutator;
@@ -22,6 +22,15 @@ public class LogEventMutateSink : ILogEventSink, IDisposable, IAsyncDisposable
         logEvent.HandleLogException();
         logEvent.HandleSimpleException();
         _mutator?.Invoke(logEvent);
+    }
+
+    /// <summary>Forwards a failure listener to the wrapped sink when it supports failure notifications.</summary>
+    /// <param name="failureListener">The listener installed during initialization, before logging begins.</param>
+    public void SetFailureListener(ILoggingFailureListener failureListener)
+    {
+        Check.NotNull(failureListener);
+        if (_sink is ISetLoggingFailureListener forwarding)
+            forwarding.SetFailureListener(failureListener);
     }
 
     /// <summary>Disposes the wrapped sink when it implements <see cref="IDisposable"/>.</summary>
