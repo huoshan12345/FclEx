@@ -14,16 +14,16 @@ public static class LoggerSinkConfigurationExtensions
         return configuration.Wrap(m => new FormatExceptionSink(m), configureWrappedSink);
     }
 
-    /// <summary>
-    /// </summary>
+    /// <summary>Sends buffered log events to New Relic Logs in gzip-compressed JSON batches.</summary>
     /// <param name="loggerSinkConfiguration">The logger configuration.</param>
-    /// <param name="formatter">Supplies culture-specific formatting information.</param>
+    /// <param name="formatter">The formatter used for each event in the JSON batch, or null to use the default JSON formatter.</param>
     /// <param name="endpointUrl">The NewRelic Logs API endpoint URL. Default is set to https://log-api.newrelic.com/log/v1 located in the US.</param>
     /// <param name="licenseKey">New Relic APM License key. </param>
     /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
-    /// <param name="batchSizeLimit">The maximum number of events to include in a single batch. Default is 1000 entries.</param>
+    /// <param name="batchSizeLimit">The maximum number of events to include in a single batch. Default is 100 entries.</param>
     /// <param name="period">The time to wait between checking for event batches. TimeSpan with a default value of 2 seconds.</param>
-    /// <returns></returns>
+    /// <returns>The logger configuration for further customization.</returns>
+    /// <remarks>Serialization failures, request failures, and responses other than HTTP 202 Accepted are handled by Serilog's batching diagnostics and retry policy.</remarks>
     public static LoggerConfiguration NewRelic(
         this LoggerSinkConfiguration loggerSinkConfiguration,
         string? licenseKey = null,

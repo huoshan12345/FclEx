@@ -27,26 +27,27 @@ public class NewRelicSink : IBatchedLogEventSink
         };
     }
 
+    /// <summary>Sends a gzip-compressed JSON batch to the configured New Relic Logs endpoint.</summary>
+    /// <param name="events">The events to serialize and send in one request.</param>
+    /// <returns>An operation that completes when the endpoint returns HTTP 202 Accepted.</returns>
+    /// <exception cref="HttpRequestException">The request fails or the endpoint returns a status other than HTTP 202 Accepted.</exception>
+    /// <remarks>
+    /// Serialization, transport, and timeout failures propagate to Serilog's batching infrastructure,
+    /// which handles diagnostics and retries.
+    /// </remarks>
     public virtual async Task EmitBatchAsync(IReadOnlyCollection<LogEvent> events)
     {
-        try
+        var body = Serialize(events, _formatter);
+        using var requestMessage = new HttpRequestMessage(HttpMethod.Post, _endpointUrl)
         {
-            var body = Serialize(events, _formatter);
-            var requestMessage = new HttpRequestMessage(HttpMethod.Post, _endpointUrl)
-            {
-                Content = HttpContent.GZip(body, MediaTypeNames.Application.Json),
-            };
+            Content = HttpContent.GZip(body, MediaTypeNames.Application.Json),
+        };
 
-            using var response = await _httpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead);
-            if (response.StatusCode == HttpStatusCode.Accepted)
-                return;
+        using var response = await _httpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead);
+        if (response.StatusCode == HttpStatusCode.Accepted)
+            return;
 
-            SelfLog.WriteLine("Response from NewRelic Logs is missing or negative: {0}", response.StatusCode);
-        }
-        catch (Exception ex)
-        {
-            SelfLog.WriteLine("Failed to parse response from NewRelic Logs: {0} {1}", ex.Message, ex.StackTrace);
-        }
+        throw new HttpRequestException($"New Relic Logs returned HTTP {(int)response.StatusCode} ({response.ReasonPhrase}). Expected HTTP 202 Accepted.");
     }
 
     public virtual Task OnEmptyBatchAsync()

@@ -21,6 +21,16 @@ public static class LoggerConfigurationExtensions
 
     private static readonly ConcurrentDictionary<(LoggerConfiguration, LoggerFilterOptions, string), LogEventLevel> _levelCache = [];
 
+    /// <summary>Filters events using provider-independent Microsoft logging level rules.</summary>
+    /// <param name="config">The Serilog configuration receiving the filter.</param>
+    /// <param name="configuration">The Logging configuration section containing LogLevel rules.</param>
+    /// <returns>The same Serilog configuration.</returns>
+    /// <remarks>
+    /// Configuration is read once when this method is called. Categories use case-insensitive prefix
+    /// matching and support one wildcard. The longest matching category wins, with later rules winning ties.
+    /// Serilog's minimum level determines which events reach this filter.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">A configured log level is invalid or a category contains multiple wildcards.</exception>
     public static LoggerConfiguration ApplyMicrosoftLoggingFilter(this LoggerConfiguration config, IConfiguration configuration)
     {
         var options = CreateLoggerFilterOptions(configuration);
@@ -45,42 +55,46 @@ public static class LoggerConfigurationExtensions
             .CastTo<IConfigureOptions<LoggerFilterOptions>>()!;
 
         var factory = new OptionsFactory<LoggerFilterOptions>([configure], []);
-        return factory.Create("");
+        var options = factory.Create("");
+        foreach (var rule in options.Rules)
+        {
+            if (rule.ProviderName == null && rule.CategoryName is { } category
+                && category.IndexOf('*') != category.LastIndexOf('*'))
+                throw new InvalidOperationException("Only one wildcard character is allowed in a category name.");
+        }
+        return options;
     }
 
     private static LogEventLevel GetLogLevel(LoggerFilterOptions options, string category)
     {
         LoggerFilterRule? best = null;
-        var bestLength = -1;
-
         foreach (var rule in options.Rules)
         {
             if (rule.ProviderName != null)
-                continue; // Serilog does not support provider name filtering, so skip rules that specify a provider name
-
-            if (rule.CategoryName == null)
-            {
-                if (bestLength < 0)
-                {
-                    best = rule;
-                    bestLength = 0;
-                }
-
-                continue;
-            }
-
-            if (category.StartsWith(rule.CategoryName, StringComparison.Ordinal) == false)
                 continue;
 
-            if (rule.CategoryName.Length <= bestLength)
+            if (rule.CategoryName is { } ruleCategory && !MatchesCategory(ruleCategory, category))
+                continue;
+
+            if (best?.CategoryName is { } bestCategory
+                && (rule.CategoryName == null || bestCategory.Length > rule.CategoryName.Length))
                 continue;
 
             best = rule;
-            bestLength = rule.CategoryName.Length;
         }
 
         var minLevel = best?.LogLevel ?? options.MinLevel;
 
         return minLevel.ToSerilogLevel();
+    }
+
+    private static bool MatchesCategory(string ruleCategory, string category)
+    {
+        var wildcardIndex = ruleCategory.IndexOf('*');
+        if (wildcardIndex < 0)
+            return category.StartsWith(ruleCategory, StringComparison.OrdinalIgnoreCase);
+
+        return category.StartsWith(ruleCategory[..wildcardIndex], StringComparison.OrdinalIgnoreCase)
+            && category.EndsWith(ruleCategory[(wildcardIndex + 1)..], StringComparison.OrdinalIgnoreCase);
     }
 }

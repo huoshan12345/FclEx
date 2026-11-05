@@ -19,6 +19,16 @@ Serilog helpers for FclEx.
 - The Microsoft logger property helpers return `LoggerPropertyScope`. Serilog's
   `destructureObjects` overloads prefix scope property names with `@` to request object
   destructuring; this convention is specific to the Serilog provider.
+- `ConfigureLogging` and `ConfigureLoggingBuilder` append Microsoft logging builder
+  actions in registration order. `AddSerilog` runs them after Serilog configuration
+  actions have completed, including actions added inside its configuration callback.
+- `ApplyMicrosoftLoggingFilter` reads provider-independent level rules from the
+  `Logging` section. Category matching ignores case and supports one `*` wildcard.
+  The longest matching category wins, with later rules winning ties. Configuration
+  is read once when the filter is added.
+- New Relic batches succeed on HTTP 202 Accepted. Serialization, transport, timeout,
+  and other HTTP response failures propagate to Serilog's batching infrastructure
+  for diagnostics and retries.
 
 ## Exception Log Levels
 

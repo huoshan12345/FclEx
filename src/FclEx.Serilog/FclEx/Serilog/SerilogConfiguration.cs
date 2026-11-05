@@ -13,6 +13,12 @@ public class SerilogConfiguration
 
     public LogEventLevel MinimumLevel { get; set; } = LogEventLevel.Information;
     public bool FormatException { get; set; } = true;
+    /// <summary>Configures Microsoft's logging builder after all Serilog logger configuration actions complete.</summary>
+    /// <remarks>
+    /// Assigning this property replaces previously registered callbacks.
+    /// <see cref="SerilogConfigurationExtensions.ConfigureLogging"/> and
+    /// <see cref="SerilogConfigurationExtensions.ConfigureLoggingBuilder"/> append callbacks in registration order.
+    /// </remarks>
     public Action<ILoggingBuilder>? LoggingBuilderConfigure { get; set; }
 
     public SerilogConfiguration()

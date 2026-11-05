@@ -23,9 +23,17 @@ public class ApplyMicrosoftLoggingFilterTests
     }
 
     [Theory]
-    [InlineData("MYAPP", "myapp.Service")]
-    [InlineData("MyApp.*.Worker", "MyApp.Background.Worker")]
-    public void CategoryOverride_UsesMicrosoftMatchingRules(string categoryRule, string category)
+    [InlineData("MYAPP", "myapp.Service", true)]
+    [InlineData("MyApp.*.Worker", "MyApp.Background.Worker", true)]
+    [InlineData("MyApp.*.Worker", "myapp.background.WORKER", true)]
+    [InlineData("MyApp.*.Worker", "MyApp..Worker", true)]
+    [InlineData("MyApp.*.Worker", "MyApp.Background.Worker.Other", false)]
+    [InlineData("MyApp.*.Worker", "Other.Background.Worker", false)]
+    [InlineData("*Worker", "MyApp.Background.Worker", true)]
+    [InlineData("MyApp.*", "MyApp.Service", true)]
+    [InlineData("*", "Any.Category", true)]
+    [InlineData("Ab*Bc", "Abc", true)]
+    public void CategoryOverride_UsesMicrosoftMatchingRules(string categoryRule, string category, bool matches)
     {
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -38,14 +46,52 @@ public class ApplyMicrosoftLoggingFilterTests
             .AddConfiguration(config.GetSection("Logging"))
             .AddProvider(new global::Serilog.Extensions.Logging.SerilogLoggerProvider(
                 new LoggerConfiguration().MinimumLevel.Verbose().CreateLogger(), dispose: true)));
-        Assert.False(microsoftFactory.CreateLogger(category).IsEnabled(LogLevel.Warning));
+        Assert.Equal(!matches, microsoftFactory.CreateLogger(category).IsEnabled(LogLevel.Warning));
 
         var (logger, sink) = CreateLogger(config);
         using (logger)
         {
             logger.ForContext("SourceContext", category).Warning("must be filtered");
-            Assert.Empty(sink.Events);
+            Assert.Equal(matches ? 0 : 1, sink.Events.Count);
         }
+    }
+
+    [Fact]
+    public void CategoryOverride_EqualLengthMatches_UsesLastRule()
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Logging:LogLevel:Default"] = "Error",
+                ["Logging:LogLevel:*Work"] = "Warning",
+                ["Logging:LogLevel:App.*"] = "Error"
+            })
+            .Build();
+        using var microsoftFactory = LoggerFactory.Create(builder => builder
+            .AddConfiguration(config.GetSection("Logging"))
+            .AddProvider(new global::Serilog.Extensions.Logging.SerilogLoggerProvider(
+                new LoggerConfiguration().MinimumLevel.Verbose().CreateLogger(), dispose: true)));
+        Assert.True(microsoftFactory.CreateLogger("App.Work").IsEnabled(LogLevel.Warning));
+
+        var (logger, sink) = CreateLogger(config);
+        using (logger)
+        {
+            logger.ForContext("SourceContext", "App.Work").Warning("must be recorded");
+            Assert.Single(sink.Events);
+        }
+    }
+
+    [Fact]
+    public void CategoryOverride_MultipleWildcards_Throws()
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Logging:LogLevel:MyApp.*.*"] = "Warning"
+            })
+            .Build();
+
+        Assert.Throws<InvalidOperationException>(() => CreateLogger(config));
     }
 
     [Fact]
