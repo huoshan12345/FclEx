@@ -38,8 +38,6 @@ public class SerilogConfiguration
         return this;
     }
 
-    private static readonly ConcurrentDictionary<string, ILogger> _sourceLoggers = new(StringComparer.Ordinal);
-
     /// <summary>Creates a logger with the configured enrichers, filters, sinks, and exception handling.</summary>
     /// <returns>The configured Serilog logger.</returns>
     /// <remarks>
@@ -52,8 +50,16 @@ public class SerilogConfiguration
     /// </remarks>
     public ILogger CreateLogger()
     {
+        // The filter runs after construction, when this variable refers to the configured root logger.
         ILogger? logger = null;
 
+        // Context loggers retain their root's thresholds and switches, so each root owns its own cache.
+        var sourceLoggers = new ConcurrentDictionary<string, ILogger>(StringComparer.Ordinal);
+
+        // Create the factory delegate once to avoid allocating it for each log event, including cache hits.
+        Func<string, ILogger> createSourceLogger = source => (logger ?? Logger.None).ForContext(Constants.SourceContext, source);
+
+        // Register this filter first so subsequent event filters and sink restrictions see the exception level.
         var configuration = new LoggerConfiguration()
             .Filter.ByIncludingOnly(logEvent =>
             {
@@ -70,9 +76,11 @@ public class SerilogConfiguration
 
                 if (logEvent.GetSourceContext() is { } source)
                 {
-                    sourceLogger = _sourceLoggers.GetOrAdd(source, m => sourceLogger.ForContext(Constants.SourceContext, m));
+                    sourceLogger = sourceLoggers.GetOrAdd(source, createSourceLogger);
                 }
 
+                // Recheck the final level with source overrides and the current level-switch values.
+                // Events rejected by the original level check never reach this filter.
                 return sourceLogger.IsEnabled(logEvent.Level);
             });
 

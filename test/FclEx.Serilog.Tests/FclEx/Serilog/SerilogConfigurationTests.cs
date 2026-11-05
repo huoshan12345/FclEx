@@ -95,6 +95,7 @@ public class SerilogConfigurationTests
     [Fact]
     public void CreateLogger_SourceCachesUseTheirOwnLoggerConfiguration()
     {
+        var source = nameof(CreateLogger_SourceCachesUseTheirOwnLoggerConfiguration);
         var errorSink = new CollectingSink();
         var warningSink = new CollectingSink();
         using var errorLogger = (Logger)new SerilogConfiguration { MinimumLevel = LogEventLevel.Error }
@@ -102,9 +103,9 @@ public class SerilogConfigurationTests
         using var warningLogger = (Logger)new SerilogConfiguration { MinimumLevel = LogEventLevel.Warning }
             .WriteTo(warningSink).CreateLogger();
 
-        errorLogger.ForContext(Constants.SourceContext, "MyApp.Service")
+        errorLogger.ForContext(Constants.SourceContext, source)
             .Error(new LogException("failure", LogLevel.Warning), "message");
-        warningLogger.ForContext(Constants.SourceContext, "MyApp.Service")
+        warningLogger.ForContext(Constants.SourceContext, source)
             .Error(new LogException("failure", LogLevel.Warning), "message");
 
         Assert.Empty(errorSink.Events);
