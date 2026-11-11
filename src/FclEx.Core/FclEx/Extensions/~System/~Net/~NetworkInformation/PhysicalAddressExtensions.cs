@@ -17,9 +17,9 @@ public static class PhysicalAddressExtensions
     public static ReadOnlySpan<byte> AddressBytes(this PhysicalAddress obj)
     {
 #if NET8_0_OR_GREATER
-        return FieldInfos.PhysicalAddress.GetAddress(obj);
+        return UnsafeAccessors.PhysicalAddress_Address(obj);
 #else
-        return FieldInfos.PhysicalAddress.Address.GetRequiredValue<byte[]>(obj);
+        return FieldInfos.PhysicalAddress_Address.GetRequiredValue<byte[]>(obj);
 #endif
     }
 

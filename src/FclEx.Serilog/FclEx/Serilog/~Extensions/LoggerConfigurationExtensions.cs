@@ -8,6 +8,16 @@ namespace FclEx.Serilog;
 /// <summary>Wraps registered Serilog sinks and applies provider-independent Microsoft logging filters.</summary>
 public static class LoggerConfigurationExtensions
 {
+    public static List<ILogEventSink> GetSinks(this LoggerConfiguration configuration)
+    {
+#if NET8_0_OR_GREATER
+        return UnsafeAccessors.LoggerConfiguration_Sinks(configuration);
+#else
+        return FieldInfos.LoggerConfiguration_Sinks.GetRequiredValue<List<ILogEventSink>>(configuration);
+#endif
+
+    }
+
     /// <summary>Wraps all currently registered WriteTo sinks as one pipeline, invoking the wrapper once per event before fan-out.</summary>
     /// <param name="configuration">The logger configuration whose existing WriteTo sinks will be replaced.</param>
     /// <param name="wrapSink">Creates a wrapper that owns the aggregate of captured sinks.</param>
@@ -26,7 +36,7 @@ public static class LoggerConfigurationExtensions
     {
         Check.NotNull(configuration);
         Check.NotNull(wrapSink);
-        var sinks = Fields.LoggerConfiguration_Sinks.GetRequiredValue<List<ILogEventSink>>(configuration);
+        var sinks = configuration.GetSinks();
         var captured = sinks.ToArray();
 
         // Transfer ownership before wrapping: failure cleanup must not leave disposed sinks registered here.
@@ -49,7 +59,7 @@ public static class LoggerConfigurationExtensions
     /// </remarks>
     public static LoggerConfiguration WrapAllSinks(this LoggerConfiguration configuration, Func<ILogEventSink, ILogEventSink> wrapSink)
     {
-        var sinks = Fields.LoggerConfiguration_Sinks.GetRequiredValue<List<ILogEventSink>>(configuration);
+        var sinks = configuration.GetSinks();
 
         for (var i = 0; i < sinks.Count; i++)
         {

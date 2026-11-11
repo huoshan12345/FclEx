@@ -27,19 +27,19 @@ public static class HttpMessageInvokerExtensions
     public static HttpMessageHandler GetHandler(this HttpMessageInvoker invoker)
     {
 #if NET8_0_OR_GREATER
-        return FieldInfos.HttpMessageInvoker.GetHandler(invoker);
+        return UnsafeAccessors.HttpMessageInvoker_Handler(invoker);
 #else
-        return FieldInfos.HttpMessageInvoker.Handler.GetRequiredValue<HttpMessageHandler>(invoker);
+        return FieldInfos.HttpMessageInvoker_Handler.GetRequiredValue<HttpMessageHandler>(invoker);
 #endif
     }
 
     public static T SetHandler<T>(this T invoker, HttpMessageHandler handler) where T : HttpMessageInvoker
     {
 #if NET8_0_OR_GREATER
-        ref var handlerRef = ref FieldInfos.HttpMessageInvoker.GetHandler(invoker);
+        ref var handlerRef = ref UnsafeAccessors.HttpMessageInvoker_Handler(invoker);
         handlerRef = handler;
 #else
-        FieldInfos.HttpMessageInvoker.Handler.SetValue(invoker, handler);
+        FieldInfos.HttpMessageInvoker_Handler.SetValue(invoker, handler);
 #endif
         return invoker;
     }

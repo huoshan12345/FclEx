@@ -11,7 +11,7 @@ public static partial class StringBuilderExtensions
         /// <returns>The resulting string.</returns>
         public static string Build(Action<StringBuilder> action)
         {
-            using var disposable = GetCached();
+            using var disposable = StringBuilder.GetCached();
             var builder = disposable.Value;
             action(builder);
             return builder.ToString();

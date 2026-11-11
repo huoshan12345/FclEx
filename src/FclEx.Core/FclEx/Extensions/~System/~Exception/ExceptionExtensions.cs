@@ -197,10 +197,10 @@ public static partial class ExceptionExtensions
     public static Exception SetMessage(this Exception ex, string? message)
     {
 #if NET8_0_OR_GREATER
-        ref var m = ref FieldInfos.Exception.GetMessage(ex);
+        ref var m = ref UnsafeAccessors.Exception_Message(ex);
         m = message;
 #else
-        FieldInfos.Exception.Message.SetValue(ex, message);
+        FieldInfos.Exception_Message.SetValue(ex, message);
 #endif
         return ex;
     }
@@ -226,9 +226,9 @@ public static partial class ExceptionExtensions
     public static string? GetMessage(this Exception ex)
     {
 #if NET8_0_OR_GREATER
-        return FieldInfos.Exception.GetMessage(ex);
+        return UnsafeAccessors.Exception_Message(ex);
 #else
-        return FieldInfos.Exception.Message.GetValue<string?>(ex);
+        return FieldInfos.Exception_Message.GetValue<string?>(ex);
 #endif
     }
 
@@ -247,10 +247,10 @@ public static partial class ExceptionExtensions
     {
         stackTrace ??= new StackTrace(1, true).ToString();
 #if NET8_0_OR_GREATER
-        ref var m = ref FieldInfos.Exception.GetStackTrace(ex);
+        ref var m = ref UnsafeAccessors.Exception_StackTrace(ex);
         m = stackTrace;
 #else
-        FieldInfos.Exception.StackTrace.SetValue(ex, stackTrace);
+        FieldInfos.Exception_StackTrace.SetValue(ex, stackTrace);
 #endif
         return ex;
     }
@@ -264,9 +264,9 @@ public static partial class ExceptionExtensions
     public static string? GetStackTrace(this Exception ex)
     {
 #if NET8_0_OR_GREATER
-        return FieldInfos.Exception.GetStackTrace(ex);
+        return UnsafeAccessors.Exception_StackTrace(ex);
 #else
-        return FieldInfos.Exception.StackTrace.GetValue<string?>(ex);
+        return FieldInfos.Exception_StackTrace.GetValue<string?>(ex);
 #endif
     }
 }

@@ -1,5 +1,5 @@
+using FclEx.Web;
 using Serilog.Parsing;
-using static FclEx.Serilog.Fields;
 
 namespace FclEx.Serilog;
 
@@ -14,7 +14,11 @@ public static class LogEventExtensions
     /// <param name="formatProvider">Formats property values, or null to use Serilog's default provider.</param>
     public static void RenderMessage(this LogEvent logEvent, TextWriter output, string? format = null, IFormatProvider? formatProvider = null)
     {
-        Methods.MessageTemplateRenderer_Render.Invoke(null, [logEvent.MessageTemplate, logEvent.Properties, output, format, formatProvider]);
+#if NET8_0_OR_GREATER
+        UnsafeAccessors.MessageTemplateRenderer_Render(null, logEvent.MessageTemplate, logEvent.Properties, output, format, formatProvider);
+#else
+        MethodInfos.MessageTemplateRenderer_Render.Invoke(null, [logEvent.MessageTemplate, logEvent.Properties, output, format, formatProvider]);
+#endif
     }
 
     /// <summary>Returns the message rendered with Serilog's message-token formatting rules.</summary>
@@ -26,7 +30,7 @@ public static class LogEventExtensions
     {
         using var disposable = StringBuilder.GetCached();
         var sw = new StringWriter(disposable.Value);
-        RenderMessage(logEvent, sw, format, formatProvider);
+        logEvent.RenderMessage(sw, format, formatProvider);
         return sw.ToString();
     }
 
@@ -36,7 +40,12 @@ public static class LogEventExtensions
     /// <returns>The same event.</returns>
     public static LogEvent SetException(this LogEvent logEvent, Exception? ex)
     {
-        LogEvent_Exception.SetValue(logEvent, ex);
+#if NET8_0_OR_GREATER
+        ref var exceptionRef = ref UnsafeAccessors.LogEvent_Exception(logEvent);
+        exceptionRef = ex;
+#else
+        FieldInfos.LogEvent_Exception.SetValue(logEvent, ex);
+#endif
         return logEvent;
     }
 
@@ -46,7 +55,14 @@ public static class LogEventExtensions
     /// <returns>The same event.</returns>
     public static LogEvent SetLevel(this LogEvent logEvent, LogEventLevel level)
     {
-        LogEvent_Level.SetValue(logEvent, level);
+
+#if NET8_0_OR_GREATER
+        ref var levelRef = ref UnsafeAccessors.LogEvent_Level(logEvent);
+        levelRef = level;
+#else
+        FieldInfos.LogEvent_Level.SetValue(logEvent, level);
+#endif
+        FieldInfos.LogEvent_Level.SetValue(logEvent, level);
         return logEvent;
     }
 
@@ -56,7 +72,12 @@ public static class LogEventExtensions
     /// <returns>The same event.</returns>
     public static LogEvent SetMessageTemplate(this LogEvent logEvent, MessageTemplate template)
     {
-        LogEvent_MessageTemplate.SetValue(logEvent, template);
+#if NET8_0_OR_GREATER
+        ref var messageTemplateRef = ref UnsafeAccessors.LogEvent_MessageTemplate(logEvent);
+        messageTemplateRef = template;
+#else
+        FieldInfos.LogEvent_MessageTemplate.SetValue(logEvent, template);
+#endif
         return logEvent;
     }
 
@@ -80,7 +101,7 @@ public static class LogEventExtensions
     public static bool MatchStructure(this LogEvent logEvent, string propertyName, object? scalarValue)
     {
         return logEvent.Properties.Any(m => m.Value is StructureValue structureValue
-                                            && Match(structureValue, propertyName, scalarValue));
+                                            && structureValue.Match(propertyName, scalarValue));
     }
 
     /// <summary>Checks a structure's immediate scalar members using object equality.</summary>

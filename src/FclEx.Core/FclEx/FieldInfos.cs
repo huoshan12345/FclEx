@@ -2,88 +2,50 @@ namespace FclEx;
 
 public static class FieldInfos
 {
-    public static class Exception
-    {
-        private static readonly Lazy<FieldInfo> _message = new(() => typeof(System.Exception).GetRequiredField("_message"));
-        private static readonly Lazy<FieldInfo> _stackTrace = new(() => typeof(System.Exception).GetRequiredField("_stackTraceString"));
+    private static readonly Lazy<FieldInfo> _Exception_Message = new(() => typeof(Exception).GetRequiredField("_message"));
+    private static readonly Lazy<FieldInfo> _Exception_StackTrace = new(() => typeof(Exception).GetRequiredField("_stackTraceString"));
 
-        public static FieldInfo Message => _message.Value;
-        public static FieldInfo StackTrace => _stackTrace.Value;
+    public static FieldInfo Exception_Message => _Exception_Message.Value;
+    public static FieldInfo Exception_StackTrace => _Exception_StackTrace.Value;
 
-#if NET8_0_OR_GREATER
-        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_message")]
-        public static extern ref string? GetMessage(System.Exception ex);
-
-        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_stackTraceString")]
-        public static extern ref string? GetStackTrace(System.Exception ex);
-#endif
-    }
-
-    public static class PhysicalAddress
-    {
-        private static readonly Lazy<FieldInfo> _address = new(() => typeof(System.Net.NetworkInformation.PhysicalAddress).GetRequiredField(
+    private static readonly Lazy<FieldInfo> _PhysicalAddress_Address = new(() => typeof(PhysicalAddress).GetRequiredField(
 #if NETFRAMEWORK
             "address"
 #else
-            "_address"
+    "_address"
 #endif
-        ));
+));
 
-        public static FieldInfo Address => _address.Value;
+    public static FieldInfo PhysicalAddress_Address => _PhysicalAddress_Address.Value;
 
-#if NET8_0_OR_GREATER
-        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_address")]
-        public static extern ref byte[] GetAddress(System.Net.NetworkInformation.PhysicalAddress obj);
-#endif
-    }
-
-    public static class IPAddress
-    {
-        private static readonly Lazy<FieldInfo> _numbers = new(() => typeof(System.Net.IPAddress).GetRequiredField(
+    private static readonly Lazy<FieldInfo> _IPAddress_Numbers = new(() => typeof(IPAddress).GetRequiredField(
 #if NETFRAMEWORK
             "m_Numbers"
 #else
-            "_numbers"
+        "_numbers"
 #endif
-        ));
+    ));
 
-        public static FieldInfo Numbers => _numbers.Value;
+    public static FieldInfo IPAddress_Numbers => _IPAddress_Numbers.Value;
 
-#if NET8_0_OR_GREATER
-        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_numbers")]
-        public static extern ref ushort[] GetNumbers(System.Net.IPAddress obj);
-#endif
-    }
 
-    public static class HttpMessageInvoker
-    {
-        private static readonly Lazy<FieldInfo> _handler = new(() => typeof(System.Net.Http.HttpMessageInvoker).GetRequiredField(
+    private static readonly Lazy<FieldInfo> _HttpMessageInvoker_Handler = new(() => typeof(HttpMessageInvoker).GetRequiredField(
 #if NETFRAMEWORK
             "handler"
 #else
-            "_handler"
+        "_handler"
 #endif
-        ));
+    ));
 
-        public static FieldInfo Handler => _handler.Value;
+    public static FieldInfo HttpMessageInvoker_Handler => _HttpMessageInvoker_Handler.Value;
 
-#if NET8_0_OR_GREATER
-        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_handler")]
-        public static extern ref HttpMessageHandler GetHandler(System.Net.Http.HttpMessageInvoker obj);
-#endif
-    }
-
-    public static class HttpRequestMessage
-    {
 #if NET11_0_OR_GREATER
-        private static readonly Lazy<FieldInfo> _flags = new(() => typeof(System.Net.Http.HttpRequestMessage).GetRequiredField("_flags"));
+    private static readonly Lazy<FieldInfo> _HttpRequestMessage_Flags = new(() => typeof(HttpRequestMessage).GetRequiredField("_flags"));
 
-        public static FieldInfo Flags => _flags.Value;
-
-        // NOTE: _flags is a private enum type that cannot be accessed using UnsafeAccessor and UnsafeAccessorType.
+    public static FieldInfo HttpRequestMessage_Flags => _HttpRequestMessage_Flags.Value;
 
 #else
-        private static readonly Lazy<FieldInfo> _sendStatus = new(() => typeof(System.Net.Http.HttpRequestMessage).GetRequiredField(
+        private static readonly Lazy<FieldInfo> _HttpRequestMessage_SendStatus = new(() => typeof(HttpRequestMessage).GetRequiredField(
 #if NETFRAMEWORK
             "sendStatus"
 #else
@@ -91,12 +53,6 @@ public static class FieldInfos
 #endif
         ));
 
-        public static FieldInfo SendStatus => _sendStatus.Value;
+        public static FieldInfo HttpRequestMessage_SendStatus => _HttpRequestMessage_SendStatus.Value;
 #endif
-
-#if NET8_0_OR_GREATER
-        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_sendStatus")]
-        public static extern ref int GetSendStatus(System.Net.Http.HttpRequestMessage request);
-#endif
-    }
 }

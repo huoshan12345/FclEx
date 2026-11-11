@@ -16,9 +16,9 @@ public static class IPAddressExtensions
     public static ReadOnlySpan<ushort> AddressNumbers(this IPAddress obj)
     {
 #if NET8_0_OR_GREATER
-        return FieldInfos.IPAddress.GetNumbers(obj);
+        return UnsafeAccessors.IPAddress_Numbers(obj);
 #else
-        return FieldInfos.IPAddress.Numbers.GetRequiredValue<ushort[]>(obj);
+        return FieldInfos.IPAddress_Numbers.GetRequiredValue<ushort[]>(obj);
 #endif
     }
 
