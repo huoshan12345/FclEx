@@ -12,9 +12,10 @@ public static class LogEventExtensions
     /// <param name="output">Receives the rendered message without an added newline.</param>
     /// <param name="format">Serilog message-token formatting, such as l for literal strings or j for JSON values, or null for defaults.</param>
     /// <param name="formatProvider">Formats property values, or null to use Serilog's default provider.</param>
+    /// <remarks>Uses Serilog's internal renderer. .NET 10 and later bind directly; older targets invoke it through reflection.</remarks>
     public static void RenderMessage(this LogEvent logEvent, TextWriter output, string? format = null, IFormatProvider? formatProvider = null)
     {
-#if NET8_0_OR_GREATER
+#if NET10_0_OR_GREATER
         UnsafeAccessors.MessageTemplateRenderer_Render(null, logEvent.MessageTemplate, logEvent.Properties, output, format, formatProvider);
 #else
         MethodInfos.MessageTemplateRenderer_Render.Invoke(null, [logEvent.MessageTemplate, logEvent.Properties, output, format, formatProvider]);
@@ -26,6 +27,7 @@ public static class LogEventExtensions
     /// <param name="format">Serilog message-token formatting, or null for defaults.</param>
     /// <param name="formatProvider">Formats property values, or null to use Serilog's default provider.</param>
     /// <returns>The rendered message without an added newline.</returns>
+    /// <remarks>Uses the same internal renderer and compatibility path as the writer overload.</remarks>
     public static string RenderMessage(this LogEvent logEvent, string? format = null, IFormatProvider? formatProvider = null)
     {
         using var disposable = StringBuilder.GetCached();
@@ -55,14 +57,12 @@ public static class LogEventExtensions
     /// <returns>The same event.</returns>
     public static LogEvent SetLevel(this LogEvent logEvent, LogEventLevel level)
     {
-
 #if NET8_0_OR_GREATER
         ref var levelRef = ref UnsafeAccessors.LogEvent_Level(logEvent);
         levelRef = level;
 #else
         FieldInfos.LogEvent_Level.SetValue(logEvent, level);
 #endif
-        FieldInfos.LogEvent_Level.SetValue(logEvent, level);
         return logEvent;
     }
 

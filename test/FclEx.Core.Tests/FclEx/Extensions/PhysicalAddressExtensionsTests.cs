@@ -5,6 +5,12 @@ namespace FclEx.Extensions;
 public class PhysicalAddressExtensionsTests
 {
     [Fact]
+    public void AddressBytes_EmptyAddress_ReturnsEmptySpan()
+    {
+        Assert.True(new PhysicalAddress([]).AddressBytes().IsEmpty);
+    }
+
+    [Fact]
     public void AddressBytes_ShouldReturnUnderlyingBytes()
     {
         var address = PhysicalAddress.Parse("001122AABBCC");

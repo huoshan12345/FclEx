@@ -7,8 +7,9 @@ public static partial class StringBuilderExtensions
         /// <summary>
         /// Builds a string using a thread-local cached <see cref="StringBuilder"/> instance.
         /// </summary>
-        /// <param name="action">The action that operates on the <see cref="StringBuilder"/>.</param>
+        /// <param name="action">Synchronously populates an initially empty builder. Do not retain the builder after returning.</param>
         /// <returns>The resulting string.</returns>
+        /// <remarks>The builder is released to the cache even if the callback throws; callback exceptions propagate.</remarks>
         public static string Build(Action<StringBuilder> action)
         {
             using var disposable = StringBuilder.GetCached();

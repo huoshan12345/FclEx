@@ -2,6 +2,17 @@ namespace FclEx.Serilog;
 
 public class LogEnricherTests
 {
+    [Fact]
+    public void GetOs_ReturnsCurrentPlatformFamily()
+    {
+        var expected = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows) ? "Windows"
+            : System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux) ? "Linux"
+            : System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX) ? "OSX"
+            : System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.FreeBSD) ? "FreeBSD"
+            : System.Runtime.InteropServices.RuntimeInformation.OSDescription;
+        Assert.Equal(expected, LogEnricher.GetOs());
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("orders")]

@@ -35,6 +35,12 @@ public static class DatabaseTestSettings
         TestHelper.IsGithubAction,
         TestHelper.IsWindows);
 
+    /// <summary>Selects database drivers from an explicit list or from the test host's defaults.</summary>
+    /// <param name="selection">Comma-separated, case-insensitive enum names, or null to use host defaults. Numeric values are rejected.</param>
+    /// <param name="isGithubAction">Whether to use the CI matrix instead of the local default set.</param>
+    /// <param name="isWindows">For CI, selects Npgsql and SQLite on Windows; other hosts use Oracle, MySqlConnector, and SQL Server.</param>
+    /// <returns>Distinct selected drivers. Local defaults include SQL Server, SQLite, Npgsql, MySqlConnector, and Oracle when supported.</returns>
+    /// <exception cref="ArgumentException">An explicit selection is empty or contains an unsupported driver.</exception>
     public static DbDriver[] SelectDrivers(string? selection, bool isGithubAction, bool isWindows)
     {
         if (selection is null)

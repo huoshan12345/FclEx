@@ -76,3 +76,15 @@ Use `HtmlActionContext.Document` to access the parsed document; `Element` is obs
 The default HTML action pipeline disposes the context after result conversion, including error and exception paths. Materialize values during `GetResult`; do not return document nodes or deferred queries over them.
 When constructing a context or calling `CreateContext` directly, dispose each successfully created context after use. Context copies share the same document.
 CSS selectors are evaluated against the document, so selectors such as `html` and `:root` can select the root element.
+
+### Inspecting and replacing HTTP handlers
+
+`GetHandler()` returns an invoker's root handler, including the outermost delegating handler.
+It also works on `HttpClient`; the generic overload converts only that root and does not search the chain.
+The former static `HttpClientExtensions.GetHandler(client)` call is now
+`HttpMessageInvokerExtensions.GetHandler(client)`; extension-call syntax stays `client.GetHandler()`.
+`SetHandler(replacement)` returns the same invoker and leaves the previous handler undisposed.
+The invoker's original `disposeHandler` setting applies to the replacement. Replace handlers only when
+no sends or disposal are in progress, and arrange cleanup of the old handler yourself. These methods
+access private runtime storage. `SetNotSend()` also depends on runtime internals and does not rewind
+content; on .NET 11 it clears all internal request flags. Prefer `CloneAsync()` for request reuse.

@@ -184,15 +184,15 @@ public static partial class ExceptionExtensions
     }
 
     /// <summary>
-    /// Sets the message of an exception through reflection.
+    /// Replaces the raw message stored by the base Exception implementation.
     /// </summary>
     /// <param name="ex">The exception to modify.</param>
-    /// <param name="message">The new message to set.</param>
+    /// <param name="message">The raw message to store, including null to restore the base getter's default message.</param>
     /// <returns>The exception with its message modified.</returns>
     /// <remarks>
-    /// This method writes a non-public runtime field on <see cref="Exception"/> through reflection. Field names and
-    /// layout are runtime implementation details, so this API is not supported for trimmed, Native AOT, or future
-    /// runtimes that do not expose the expected field.
+    /// This method accesses a non-public runtime field using an unsafe accessor on .NET 8 and later and reflection
+    /// on older targets. It bypasses virtual property overrides and depends on the runtime's field layout.
+    /// Reflection paths require the field to be preserved when trimming. Custom exception getters may ignore this field.
     /// </remarks>
     public static Exception SetMessage(this Exception ex, string? message)
     {
@@ -211,18 +211,18 @@ public static partial class ExceptionExtensions
     /// <param name="ex">The exception to modify.</param>
     /// <param name="func">A function that takes the exception and returns a new message string.</param>
     /// <returns>The exception with its message modified.</returns>
-    /// <remarks>Uses <see cref="SetMessage(Exception, string?)"/> and has the same reflection dependency.</remarks>
+    /// <remarks>Uses <see cref="SetMessage(Exception, string?)"/> and has the same private-field dependency.</remarks>
     public static Exception SetMessage(this Exception ex, Func<Exception, string> func)
     {
         return ex.SetMessage(func(ex));
     }
 
     /// <summary>
-    /// Gets the message of an exception through reflection.
+    /// Reads the nullable raw message stored by the base Exception implementation.
     /// </summary>
     /// <param name="ex">The exception to examine.</param>
-    /// <returns>The message of the exception.</returns>
-    /// <remarks>Reads a non-public runtime field on <see cref="Exception"/> through reflection; see <see cref="SetMessage(Exception, string?)"/> for compatibility limitations.</remarks>
+    /// <returns>The raw message, or null when unset; this may differ from the virtual Message getter.</returns>
+    /// <remarks>Reads a non-public runtime field on <see cref="Exception"/>; see <see cref="SetMessage(Exception, string?)"/> for compatibility limitations.</remarks>
     public static string? GetMessage(this Exception ex)
     {
 #if NET8_0_OR_GREATER
@@ -233,15 +233,15 @@ public static partial class ExceptionExtensions
     }
 
     /// <summary>
-    /// Sets the stack trace of an exception through reflection.
+    /// Replaces the cached stack-trace string stored by the base Exception implementation.
     /// </summary>
     /// <param name="ex">The exception to modify.</param>
     /// <param name="stackTrace">The new stack trace to set. If null, a new stack trace starting from the caller will be generated.</param>
     /// <returns>The exception with its stack trace modified.</returns>
     /// <remarks>
-    /// This method writes a non-public runtime field on <see cref="Exception"/> through reflection. Field names and
-    /// layout are runtime implementation details, so this API is not supported for trimmed, Native AOT, or future
-    /// runtimes that do not expose the expected field.
+    /// Uses an unsafe accessor on .NET 8 and later and reflection on older targets, depending on private runtime layout.
+    /// This changes the cached string without clearing other captured stack data or changing virtual property overrides.
+    /// A later throw can replace the cached string. Reflection paths require preserving the field when trimming.
     /// </remarks>
     public static Exception SetStackTrace(this Exception ex, string? stackTrace = null)
     {
@@ -256,11 +256,11 @@ public static partial class ExceptionExtensions
     }
 
     /// <summary>
-    /// Gets the stack trace of an exception through reflection.
+    /// Reads the cached stack-trace string stored by the base Exception implementation.
     /// </summary>
     /// <param name="ex">The exception to examine.</param>
-    /// <returns>The stack trace of the exception.</returns>
-    /// <remarks>Reads a non-public runtime field on <see cref="Exception"/> through reflection; see <see cref="SetStackTrace(Exception, string?)"/> for compatibility limitations.</remarks>
+    /// <returns>The cached string, or null when unset, even if the public StackTrace getter can render captured stack data.</returns>
+    /// <remarks>Reads a non-public runtime field on <see cref="Exception"/>; see <see cref="SetStackTrace(Exception, string?)"/> for compatibility limitations.</remarks>
     public static string? GetStackTrace(this Exception ex)
     {
 #if NET8_0_OR_GREATER

@@ -8,6 +8,15 @@ namespace FclEx.Serilog;
 /// <summary>Wraps registered Serilog sinks and applies provider-independent Microsoft logging filters.</summary>
 public static class LoggerConfigurationExtensions
 {
+    /// <summary>Returns the live, mutable list of sinks registered through WriteTo.</summary>
+    /// <param name="configuration">The configuration to inspect or update before CreateLogger is called.</param>
+    /// <returns>The internal list, including per-sink restriction wrappers; AuditTo sinks are excluded.</returns>
+    /// <remarks>
+    /// This is not a snapshot. Adding, removing, or replacing entries changes subsequent logger construction.
+    /// Removing an entry does not dispose it; the caller must arrange cleanup. Do not mutate the list concurrently.
+    /// Changes do not reconfigure a logger already created from this configuration. Access depends on Serilog's
+    /// private implementation and may fail after incompatible package changes.
+    /// </remarks>
     public static List<ILogEventSink> GetSinks(this LoggerConfiguration configuration)
     {
 #if NET8_0_OR_GREATER
