@@ -31,6 +31,13 @@ public class LogEnricher : ILogEventEnricher
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return nameof(OSPlatform.Linux);
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return nameof(OSPlatform.Windows);
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) return nameof(OSPlatform.OSX);
+        // ReSharper disable once ConvertIfStatementToReturnStatement
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD))
+#if NET5_0_OR_GREATER
+            return nameof(OSPlatform.FreeBSD);
+#else
+            return "FreeBSD";
+#endif
         return RuntimeInformation.OSDescription;
     }
 

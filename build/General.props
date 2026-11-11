@@ -10,7 +10,7 @@
     <IsWindows>$([MSBuild]::IsOSPlatform('Windows'))</IsWindows>
     <Is64BitOS>$([System.Environment]::Is64BitOperatingSystem)</Is64BitOS>
   </PropertyGroup>
-  <PropertyGroup Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), 6.0))">
+  <PropertyGroup Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), 5.0))">
     <SupportOracle>true</SupportOracle>
     <DefineConstants>$(DefineConstants);SUPPORT_ORACLE</DefineConstants>
   </PropertyGroup>
