@@ -12,7 +12,7 @@ public class DapperTests(DapperTestsFixture fixture) : DatabaseTests
 
     public static readonly TheoryData<DbDriver, string?, int> BulkInsertTestCases =
     (
-        from pair in DatabaseTestSettings.GetDriverSchemaCases(Schemas)
+        from pair in GetDriverSchemaCases(Schemas)
         from z in Counts
         select (pair.Driver, pair.Schema, z)
     ).ToTheoryData();
@@ -22,5 +22,5 @@ public class DapperTests(DapperTestsFixture fixture) : DatabaseTests
         .ToTheoryData();
 
     public static readonly TheoryData<string?> SchemaCases = Schemas.ToTheoryData();
-    public static readonly TheoryData<DbDriver, string?> DbSchemaTestCases = DatabaseTestSettings.GetDriverSchemaCases(Schemas).ToTheoryData();
+    public static readonly TheoryData<DbDriver, string?> DbSchemaTestCases = GetDriverSchemaCases(Schemas).ToTheoryData();
 }

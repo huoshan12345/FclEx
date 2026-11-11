@@ -30,8 +30,8 @@ public static class HttpRequestMessageExtensions
     public static HttpRequestMessage SetNotSend(this HttpRequestMessage request)
     {
 #if NET11_0_OR_GREATER
-        ref var status = ref FieldInfos.HttpRequestMessage.GetFlags(request);
-        status = MessageNotYetSent;
+        var field = FieldInfos.HttpRequestMessage.Flags;
+        field.SetValue(request, Enum.ToObject(field.FieldType, MessageNotYetSent));
 #elif NET8_0_OR_GREATER
         ref var status = ref FieldInfos.HttpRequestMessage.GetSendStatus(request);
         status = MessageNotYetSent;

@@ -1,3 +1,4 @@
+// ReSharper disable ShortLivedHttpClient
 namespace FclEx.Http.Extensions;
 
 public class HttpRequestMessageExtensionsTests
@@ -75,8 +76,10 @@ public class HttpRequestMessageExtensionsTests
     [Fact]
     public async Task CloneAsync_BuffersContentFromCurrentPositionAndKeepsCloneReadable()
     {
-        var source = new MemoryStream(Encoding.UTF8.GetBytes("prefix-payload"));
-        source.Position = "prefix-".Length;
+        var source = new MemoryStream("prefix-payload"u8.ToArray())
+        {
+            Position = "prefix-".Length
+        };
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://example.com/api")
         {
             Content = new StreamContent(source),

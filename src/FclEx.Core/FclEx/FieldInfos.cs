@@ -4,8 +4,8 @@ public static class FieldInfos
 {
     public static class Exception
     {
-        private static readonly Lazy<FieldInfo> _message = new(() => typeof(Exception).GetRequiredField("_message"));
-        private static readonly Lazy<FieldInfo> _stackTrace = new(() => typeof(Exception).GetRequiredField("_stackTraceString"));
+        private static readonly Lazy<FieldInfo> _message = new(() => typeof(System.Exception).GetRequiredField("_message"));
+        private static readonly Lazy<FieldInfo> _stackTrace = new(() => typeof(System.Exception).GetRequiredField("_stackTraceString"));
 
         public static FieldInfo Message => _message.Value;
         public static FieldInfo StackTrace => _stackTrace.Value;
@@ -21,7 +21,7 @@ public static class FieldInfos
 
     public static class PhysicalAddress
     {
-        private static readonly Lazy<FieldInfo> _address = new(() => typeof(PhysicalAddress).GetRequiredField(
+        private static readonly Lazy<FieldInfo> _address = new(() => typeof(System.Net.NetworkInformation.PhysicalAddress).GetRequiredField(
 #if NETFRAMEWORK
             "address"
 #else
@@ -39,7 +39,7 @@ public static class FieldInfos
 
     public static class IPAddress
     {
-        private static readonly Lazy<FieldInfo> _numbers = new(() => typeof(PhysicalAddress).GetRequiredField(
+        private static readonly Lazy<FieldInfo> _numbers = new(() => typeof(System.Net.IPAddress).GetRequiredField(
 #if NETFRAMEWORK
             "m_Numbers"
 #else
@@ -57,7 +57,7 @@ public static class FieldInfos
 
     public static class HttpMessageInvoker
     {
-        private static readonly Lazy<FieldInfo> _handler = new(() => typeof(HttpMessageInvoker).GetRequiredField(
+        private static readonly Lazy<FieldInfo> _handler = new(() => typeof(System.Net.Http.HttpMessageInvoker).GetRequiredField(
 #if NETFRAMEWORK
             "handler"
 #else
@@ -76,14 +76,14 @@ public static class FieldInfos
     public static class HttpRequestMessage
     {
 #if NET11_0_OR_GREATER
-        private static readonly Lazy<FieldInfo> _flags = new(() => typeof(HttpRequestMessage).GetRequiredField("_flags"));
+        private static readonly Lazy<FieldInfo> _flags = new(() => typeof(System.Net.Http.HttpRequestMessage).GetRequiredField("_flags"));
 
         public static FieldInfo Flags => _flags.Value;
 
-        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_flags")]
-        public static extern ref int GetFlags(System.Net.Http.HttpRequestMessage request);
+        // NOTE: _flags is a private enum type that cannot be accessed using UnsafeAccessor and UnsafeAccessorType.
+
 #else
-        private static readonly Lazy<FieldInfo> _sendStatus = new(() => typeof(HttpRequestMessage).GetRequiredField(
+        private static readonly Lazy<FieldInfo> _sendStatus = new(() => typeof(System.Net.Http.HttpRequestMessage).GetRequiredField(
 #if NETFRAMEWORK
             "sendStatus"
 #else
