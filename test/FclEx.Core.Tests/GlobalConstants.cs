@@ -1,5 +1,7 @@
 public static class GlobalConstants
 {
+    public static ITestOutputHelper? Output => TestContext.Current.TestOutputHelper;
+
     public static class Directories
     {
         public static DirectoryInfo TestData { get; } = new(Path.Combine(AppContext.BaseDirectory, "TestData"));

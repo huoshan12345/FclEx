@@ -2,8 +2,10 @@ using FclEx.Utils;
 
 namespace FclEx.EfCore;
 
-public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
+public class TestDbContextTests
 {
+    public static CancellationToken CancellationToken => TestContext.Current.CancellationToken;
+
     public static readonly string[] OSNames = ["windows", "linux"];
     public static readonly string[] AssemblyNames = ["efcore", "dapper"];
     public static readonly int[] DotNetVersions = [4, 8, 9, 10, 11];
@@ -21,7 +23,7 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     /// Set up databases for all test cases.
     /// Run this only when test entities are changed.
     /// </summary>
-    [Theory(Explicit = true, DisableParallelization = true)]
+    [Theory(Explicit = true)]
     [MemberData(nameof(SetupDatabaseCases))]
     public async Task SetupDatabase(DbDriver dbDriver, string assemblyName, int dotNetVersion, string os)
     {
@@ -195,7 +197,7 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [Fact(Explicit = true)]
     public void ExportSchema()
     {
-        Assert.SkipUnless(Environment.Version.Major == 10, "Only run this test on .NET 10");
+        Assert.SkipUnless(Environment.Version.Major == 11, "Only run this test on .NET 11");
 
         var path = Environment.GetEnvironmentVariable("FCLEX_SQLITE_SCHEMA_OUTPUT")
                    ?? Directories.SolutionRoot.File("test", typeof(DbDriver).Assembly.GetName().Name!, "Schemas", "Sqlite.sql").FullName;
