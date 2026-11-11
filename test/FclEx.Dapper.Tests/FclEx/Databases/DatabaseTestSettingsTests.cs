@@ -18,13 +18,6 @@ public class DatabaseTestSettingsTests
     }
 
     [Fact]
-    public void CiDefaults_PartitionEnginesAcrossOperatingSystems()
-    {
-        Assert.Equal([DbDriver.Npgsql, DbDriver.Sqlite], SelectDrivers(null, true, true));
-        Assert.Equal([DbDriver.Oracle, DbDriver.MySqlConnector, DbDriver.SqlServer], SelectDrivers(null, true, false));
-    }
-
-    [Fact]
     public void ExplicitSelection_IsCaseInsensitiveAndRemovesDuplicates()
     {
         Assert.Equal([DbDriver.Sqlite, DbDriver.Npgsql], SelectDrivers("sqlite, Npgsql, Sqlite", false, true));

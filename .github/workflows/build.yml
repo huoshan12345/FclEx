@@ -105,7 +105,7 @@ jobs:
 
       - name: Test Release
         timeout-minutes: 5
-        run: dotnet test --solution ${{ env.SOLUTION }} -c Release --no-restore --no-build --max-parallel-test-modules 8 --no-artifact-post-processing
+        run: dotnet test --solution ${{ env.SOLUTION }} -c Release --no-restore --no-build --max-parallel-test-modules 6 --no-artifact-post-processing
 
       - name: Test Report
         uses: dorny/test-reporter@main

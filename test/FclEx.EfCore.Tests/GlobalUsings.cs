@@ -18,6 +18,7 @@ global using FclEx.Xunit;
 global using Microsoft.Data.Sqlite;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.EntityFrameworkCore.Infrastructure;
+global using Microsoft.EntityFrameworkCore.Metadata;
 global using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 global using Microsoft.EntityFrameworkCore.Storage;
 global using Microsoft.Extensions.Configuration;

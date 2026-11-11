@@ -1,5 +1,4 @@
-using FclEx.Dapper;
-using Microsoft.EntityFrameworkCore.Metadata;
+// ReSharper disable AccessToDisposedClosure
 
 namespace FclEx.EfCore.Extensions.DbContextExtensions;
 
