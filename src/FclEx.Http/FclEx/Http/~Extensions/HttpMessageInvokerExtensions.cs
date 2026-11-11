@@ -14,7 +14,7 @@ public static class HttpMessageInvokerExtensions
     /// </remarks>
     public static T GetHandler<T>(this HttpMessageInvoker invoker) where T : HttpMessageHandler
     {
-        return FieldInfos.HttpMessageInvoker_Handler.GetRequiredValue<T>(invoker);
+        return invoker.GetHandler().CastTo<T>();
     }
 
     /// <summary>
@@ -26,6 +26,21 @@ public static class HttpMessageInvokerExtensions
     /// </remarks>
     public static HttpMessageHandler GetHandler(this HttpMessageInvoker invoker)
     {
-        return invoker.GetHandler<HttpMessageHandler>();
+#if NET8_0_OR_GREATER
+        return FieldInfos.HttpMessageInvoker.GetHandler(invoker);
+#else
+        return FieldInfos.HttpMessageInvoker.Handler.GetRequiredValue<HttpMessageHandler>(invoker);
+#endif
+    }
+
+    public static T SetHandler<T>(this T invoker, HttpMessageHandler handler) where T : HttpMessageInvoker
+    {
+#if NET8_0_OR_GREATER
+        ref var handlerRef = ref FieldInfos.HttpMessageInvoker.GetHandler(invoker);
+        handlerRef = handler;
+#else
+        FieldInfos.HttpMessageInvoker.Handler.SetValue(invoker, handler);
+#endif
+        return invoker;
     }
 }

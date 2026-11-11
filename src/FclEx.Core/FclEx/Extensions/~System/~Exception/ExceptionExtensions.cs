@@ -2,6 +2,12 @@ namespace FclEx.Extensions;
 
 public static partial class ExceptionExtensions
 {
+
+#if NET8_0_OR_GREATER
+    [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_sendStatus")]
+    private static extern ref int HttpRequestMessageSendStatus(HttpRequestMessage request);
+#endif
+
     /// <summary>
     /// Re-throws the exception while preserving the original stack trace.
     /// </summary>
@@ -190,7 +196,12 @@ public static partial class ExceptionExtensions
     /// </remarks>
     public static Exception SetMessage(this Exception ex, string? message)
     {
-        FieldInfos.Exception_Message.SetValue(ex, message);
+#if NET8_0_OR_GREATER
+        ref var m = ref FieldInfos.Exception.GetMessage(ex);
+        m = message;
+#else
+        FieldInfos.Exception.Message.SetValue(ex, message);
+#endif
         return ex;
     }
 
@@ -214,24 +225,33 @@ public static partial class ExceptionExtensions
     /// <remarks>Reads a non-public runtime field on <see cref="Exception"/> through reflection; see <see cref="SetMessage(Exception, string?)"/> for compatibility limitations.</remarks>
     public static string? GetMessage(this Exception ex)
     {
-        return FieldInfos.Exception_Message.GetValue<string>(ex);
+#if NET8_0_OR_GREATER
+        return FieldInfos.Exception.GetMessage(ex);
+#else
+        return FieldInfos.Exception.Message.GetValue<string?>(ex);
+#endif
     }
 
     /// <summary>
     /// Sets the stack trace of an exception through reflection.
     /// </summary>
     /// <param name="ex">The exception to modify.</param>
-    /// <param name="trace">The new stack trace to set. If null, a new stack trace starting from the caller will be generated.</param>
+    /// <param name="stackTrace">The new stack trace to set. If null, a new stack trace starting from the caller will be generated.</param>
     /// <returns>The exception with its stack trace modified.</returns>
     /// <remarks>
     /// This method writes a non-public runtime field on <see cref="Exception"/> through reflection. Field names and
     /// layout are runtime implementation details, so this API is not supported for trimmed, Native AOT, or future
     /// runtimes that do not expose the expected field.
     /// </remarks>
-    public static Exception SetStackTrace(this Exception ex, string? trace = null)
+    public static Exception SetStackTrace(this Exception ex, string? stackTrace = null)
     {
-        trace ??= new StackTrace(1, true).ToString();
-        FieldInfos.Exception_StackTrace.SetValue(ex, trace);
+        stackTrace ??= new StackTrace(1, true).ToString();
+#if NET8_0_OR_GREATER
+        ref var m = ref FieldInfos.Exception.GetStackTrace(ex);
+        m = stackTrace;
+#else
+        FieldInfos.Exception.StackTrace.SetValue(ex, stackTrace);
+#endif
         return ex;
     }
 
@@ -243,6 +263,10 @@ public static partial class ExceptionExtensions
     /// <remarks>Reads a non-public runtime field on <see cref="Exception"/> through reflection; see <see cref="SetStackTrace(Exception, string?)"/> for compatibility limitations.</remarks>
     public static string? GetStackTrace(this Exception ex)
     {
-        return FieldInfos.Exception_StackTrace.GetValue<string>(ex);
+#if NET8_0_OR_GREATER
+        return FieldInfos.Exception.GetStackTrace(ex);
+#else
+        return FieldInfos.Exception.StackTrace.GetValue<string?>(ex);
+#endif
     }
 }

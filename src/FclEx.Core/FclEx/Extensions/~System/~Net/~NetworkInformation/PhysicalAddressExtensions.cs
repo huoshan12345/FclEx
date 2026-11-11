@@ -2,10 +2,7 @@ namespace FclEx.Extensions;
 
 public static class PhysicalAddressExtensions
 {
-#if NET8_0_OR_GREATER
-    [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_address")]
-    private static extern ref byte[] Address(PhysicalAddress obj);
-#endif
+
     /// <summary>
     /// Returns a zero-allocation, read-only view of the bytes in the specified
     /// <see cref="PhysicalAddress"/> instance.
@@ -20,9 +17,9 @@ public static class PhysicalAddressExtensions
     public static ReadOnlySpan<byte> AddressBytes(this PhysicalAddress obj)
     {
 #if NET8_0_OR_GREATER
-        return Address(obj);
+        return FieldInfos.PhysicalAddress.GetAddress(obj);
 #else
-        return FieldInfos.PhysicalAddress_Address.GetRequiredValue<byte[]>(obj);
+        return FieldInfos.PhysicalAddress.Address.GetRequiredValue<byte[]>(obj);
 #endif
     }
 

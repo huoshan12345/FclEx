@@ -20,11 +20,6 @@ public static class HttpRequestMessageExtensions
 
     private const int MessageNotYetSent = 0;
 
-#if NET8_0_OR_GREATER
-    [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_sendStatus")]
-    private static extern ref int HttpRequestMessageSendStatus(HttpRequestMessage uri);
-#endif
-
     /// <summary>
     /// Resets the internal send status so the same request message can be sent again.
     /// </summary>
@@ -34,11 +29,14 @@ public static class HttpRequestMessageExtensions
     /// </remarks>
     public static HttpRequestMessage SetNotSend(this HttpRequestMessage request)
     {
-#if NET8_0_OR_GREATER
-        ref var status = ref HttpRequestMessageSendStatus(request);
+#if NET11_0_OR_GREATER
+        ref var status = ref FieldInfos.HttpRequestMessage.GetFlags(request);
+        status = MessageNotYetSent;
+#elif NET8_0_OR_GREATER
+        ref var status = ref FieldInfos.HttpRequestMessage.GetSendStatus(request);
         status = MessageNotYetSent;
 #else
-        FieldInfos.HttpRequestMessage_SendStatus.SetValue(request, MessageNotYetSent);
+        FieldInfos.HttpRequestMessage.SendStatus.SetValue(request, MessageNotYetSent);
 #endif
         return request;
     }
@@ -47,7 +45,7 @@ public static class HttpRequestMessageExtensions
     /// Creates a reusable copy of an HTTP request message, including headers, options/properties, and buffered content.
     /// </summary>
     /// <param name="request">The request message to clone.</param>
-    /// <returns>A new request message whose content can be sent independently from the original request.</returns>
+    /// <returns>A new request message whose content can be sent independently of the original request.</returns>
     /// <remarks>The original content is buffered into memory, so this is not suitable for very large streaming payloads.</remarks>
     public static async Task<HttpRequestMessage> CloneAsync(this HttpRequestMessage request)
     {

@@ -2,10 +2,7 @@ namespace FclEx.Extensions;
 
 public static class IPAddressExtensions
 {
-#if NET8_0_OR_GREATER
-    [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_numbers")]
-    private static extern ref ushort[] Numbers(IPAddress obj);
-#endif
+
     /// <summary>
     /// Returns the internal ushort array of the specified
     /// <see cref="IPAddress"/> instance.
@@ -19,9 +16,9 @@ public static class IPAddressExtensions
     public static ReadOnlySpan<ushort> AddressNumbers(this IPAddress obj)
     {
 #if NET8_0_OR_GREATER
-        return Numbers(obj);
+        return FieldInfos.IPAddress.GetNumbers(obj);
 #else
-        return FieldInfos.IPAddress_Numbers.GetRequiredValue<ushort[]>(obj);
+        return FieldInfos.IPAddress.Numbers.GetRequiredValue<ushort[]>(obj);
 #endif
     }
 
