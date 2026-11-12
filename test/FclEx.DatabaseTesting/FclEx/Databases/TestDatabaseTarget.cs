@@ -64,7 +64,7 @@ public sealed record TestDatabaseTarget(
             UserID = Login.UserName,
             Password = Login.Password,
             SslMode = MySqlConnector.MySqlSslMode.Required,
-            MaximumPoolSize = 16,
+            MaximumPoolSize = 8,
             ConnectionTimeout = 10,
         }.ConnectionString,
         DbDriver.Sqlite => new SqliteConnectionStringBuilder

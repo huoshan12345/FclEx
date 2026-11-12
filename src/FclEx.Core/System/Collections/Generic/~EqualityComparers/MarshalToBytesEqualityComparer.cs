@@ -5,8 +5,9 @@ namespace System.Collections.Generic;
 /// </summary>
 /// <remarks>
 /// <typeparamref name="T"/> is validated by <see cref="TypeExtensions.EnsureMarshalable(Type)"/> before each
-/// comparison or hash calculation. The native buffer is cleared before every marshal operation, so bytes in padding
-/// are consistently zero. This does not make the result a canonical value representation.
+/// comparison or hash calculation. The native buffer is cleared before every marshal operation, but the marshaler can
+/// overwrite padding when copying blittable data. Padding participates in both comparison and hashing, so equal field
+/// values do not guarantee equal representations or stable hash codes. Use a field-based comparer for value equality.
 ///
 /// The comparer is unreliable for structural equality when marshaling produces a pointer instead of inline data.
 /// This includes pointer-based <see cref="MarshalAsAttribute"/> forms such as <see cref="UnmanagedType.LPStr"/>,
