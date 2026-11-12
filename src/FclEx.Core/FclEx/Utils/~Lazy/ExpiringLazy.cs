@@ -14,6 +14,7 @@ public sealed class ExpiringLazy<T> : IDisposable
     private readonly Func<T> _valueFactory;
     private readonly Action<T>? _releaseValue;
     private readonly double _timeToLiveTimestampCount;
+    private readonly Func<long> _getTimestamp;
     private readonly object _lock = new();
 
     private T? _value;
@@ -35,11 +36,18 @@ public sealed class ExpiringLazy<T> : IDisposable
     /// <exception cref="ArgumentNullException"><paramref name="valueFactory"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="timeToLive"/> is not positive.</exception>
     public ExpiringLazy(Func<T> valueFactory, TimeSpan timeToLive, Action<T>? releaseValue = null)
+        : this(valueFactory, timeToLive, releaseValue, Stopwatch.GetTimestamp)
+    {
+    }
+
+    // The timestamp source must be monotonic and use Stopwatch.Frequency units.
+    internal ExpiringLazy(Func<T> valueFactory, TimeSpan timeToLive, Action<T>? releaseValue, Func<long> getTimestamp)
     {
         _valueFactory = Check.NotNull(valueFactory);
         _releaseValue = releaseValue;
         timeToLive = Check.GreaterThan(timeToLive, TimeSpan.Zero);
         _timeToLiveTimestampCount = timeToLive.TotalSeconds * Stopwatch.Frequency;
+        _getTimestamp = Check.NotNull(getTimestamp);
     }
 
     /// <summary>
@@ -94,7 +102,7 @@ public sealed class ExpiringLazy<T> : IDisposable
         }
     }
 
-    private bool IsCurrent() => Stopwatch.GetTimestamp() - _createdAtTimestamp <= _timeToLiveTimestampCount;
+    private bool IsCurrent() => _getTimestamp() - _createdAtTimestamp <= _timeToLiveTimestampCount;
 
     private T CreateAndPublishValue()
     {
@@ -109,7 +117,7 @@ public sealed class ExpiringLazy<T> : IDisposable
             throw;
         }
 
-        var createdAtTimestamp = Stopwatch.GetTimestamp();
+        var createdAtTimestamp = _getTimestamp();
         T? oldValue = default;
         var hasOldValue = false;
         var publishValue = false;
