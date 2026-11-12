@@ -9,7 +9,12 @@ public class DatabaseTestSettingsTests
     {
         var expected = new List<DbDriver>
         {
-            DbDriver.SqlServer, DbDriver.Sqlite, DbDriver.Npgsql, DbDriver.MySqlConnector,
+            DbDriver.SqlServer, 
+            DbDriver.Sqlite, 
+            DbDriver.MySqlConnector,
+#if SUPPORT_NPGSQL
+            DbDriver.Npgsql, 
+#endif
 #if SUPPORT_ORACLE
             DbDriver.Oracle,
 #endif
@@ -20,7 +25,7 @@ public class DatabaseTestSettingsTests
     [Fact]
     public void ExplicitSelection_IsCaseInsensitiveAndRemovesDuplicates()
     {
-        Assert.Equal([DbDriver.Sqlite, DbDriver.Npgsql], SelectDrivers("sqlite, Npgsql, Sqlite", false, true));
+        Assert.Equal([DbDriver.Sqlite, DbDriver.SqlServer], SelectDrivers("sqlite, SqlServer, Sqlite", false, true));
     }
 
     [Theory]
@@ -36,7 +41,9 @@ public class DatabaseTestSettingsTests
     public void ProvisioningSelection_IsIndependentOfRunSelectionAndDeduplicatesMySqlEngine()
     {
         Assert.Contains(DbDriver.SqlServer, ProvisioningDrivers);
+#if SUPPORT_NPGSQL
         Assert.Contains(DbDriver.Npgsql, ProvisioningDrivers);
+#endif
         Assert.Contains(DbDriver.MySqlConnector, ProvisioningDrivers);
         Assert.DoesNotContain(DbDriver.MySql, ProvisioningDrivers);
         Assert.DoesNotContain(DbDriver.Sqlite, ProvisioningDrivers);

@@ -1,5 +1,6 @@
 namespace FclEx.EfCore;
 
+#if SUPPORT_NPGSQL
 public class NpgsqlUnsignedIntegerMappingTests
 {
     [Theory]
@@ -7,13 +8,13 @@ public class NpgsqlUnsignedIntegerMappingTests
     [InlineData(nameof(UnsignedEntity.UInt16Value), "integer", typeof(int), ushort.MaxValue)]
     [InlineData(nameof(UnsignedEntity.UInt32Value), "bigint", typeof(long), uint.MaxValue)]
     [InlineData(nameof(UnsignedEntity.UInt64Value), "numeric(20,0)", typeof(decimal), ulong.MaxValue)]
-    public void DefaultMapping_UsesLosslessProviderType(
-        string propertyName, string storeType, Type providerType, object value)
+    public void DefaultMapping_UsesLosslessProviderType(string propertyName, string storeType, Type providerType, object value)
     {
         // Model construction does not open a database connection.
         var options = new DbContextOptionsBuilder<UnsignedMappingContext>()
             .UseNpgsql("Host=localhost;Database=unused")
             .Options;
+
         using var context = new UnsignedMappingContext(options);
         var property = context.Model.FindEntityType(typeof(UnsignedEntity))!.FindProperty(propertyName)!;
         var mapping = property.GetRelationalTypeMapping();
@@ -21,7 +22,7 @@ public class NpgsqlUnsignedIntegerMappingTests
         Assert.Equal(storeType, mapping.StoreType);
         var convertedValue = mapping.Converter is { } converter ? converter.ConvertToProvider(value) : value;
         Assert.IsType(providerType, convertedValue);
-        Assert.Equal(Convert.ToDecimal(value), Convert.ToDecimal(convertedValue));
+        Assert.Equal(Convert.ToDecimal(value, CultureInfo.InvariantCulture), Convert.ToDecimal(convertedValue, CultureInfo.InvariantCulture));
     }
 
     private sealed class UnsignedMappingContext(DbContextOptions<UnsignedMappingContext> options) : DbContext(options)
@@ -42,3 +43,4 @@ public class NpgsqlUnsignedIntegerMappingTests
         public ulong UInt64Value { get; set; }
     }
 }
+#endif

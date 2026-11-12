@@ -23,11 +23,16 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
         Assert.Equal(id, e.Id);
     }
 
+    private static readonly ConcurrentDictionary<(DbDriver, string?), AsyncLock> InsertGates = new();
+
     [Theory(DisableParallelization = true)]
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task InsertWithExplicitGeneratedKeysAsync_PreservesProvidedKey(DbDriver dbDriver, string? schema)
     {
         Assert.SkipIfInGithubAction();
+
+        var gate = InsertGates.GetOrAdd((dbDriver, schema), _ => new AsyncLock());
+        using var x = await gate.AcquireAsync(CancellationToken);
 
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
         await con.ReseedIdentityAsync<EntityWithAutoKey>(schema);
@@ -126,11 +131,16 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
         }
     }
 
-    [Theory(DisableParallelization = true)]
+    private static readonly ConcurrentDictionary<(DbDriver, string?), AsyncLock> BulkInsertGates = new();
+
+    [Theory]
     [MemberData(nameof(BulkInsertTestCases))]
     public async Task BulkInsertAsync_IncludeGeneratedKeys_PreservesProvidedKeysAndReturnsAffectedRowCount(DbDriver dbDriver, string? schema, int count)
     {
         Assert.SkipIfInGithubAction();
+
+        var gate = BulkInsertGates.GetOrAdd((dbDriver, schema), _ => new AsyncLock());
+        using var x = await gate.AcquireAsync(CancellationToken);
 
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
         await con.ReseedIdentityAsync<EntityWithAutoKey>(schema);

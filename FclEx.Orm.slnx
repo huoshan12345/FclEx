@@ -35,8 +35,7 @@
   <Folder Name="/test/">
     <File Path="test/.editorconfig" />
     <File Path="test/Directory.Build.props" />
-    <File Path="test/Directory.Build.targets" />
-    <File Path="test/DATABASE-TESTING.md" />	
+    <File Path="test/Directory.Build.targets" />	
     <Project Path="test/FclEx.Core.Tests/FclEx.Core.Tests.csproj" />
     <Project Path="test/FclEx.Dapper.Tests/FclEx.Dapper.Tests.csproj" />
     <Project Path="test/FclEx.EfCore.Tests/FclEx.EfCore.Tests.csproj" />
