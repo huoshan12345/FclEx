@@ -1,4 +1,5 @@
 // ReSharper disable AccessToDisposedClosure
+// ReSharper disable AccessToModifiedClosure
 namespace FclEx.Utils;
 
 public class ExpiringLazyTests
