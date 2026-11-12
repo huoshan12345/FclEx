@@ -105,15 +105,12 @@ jobs:
             nuget-${{ runner.os }}-${{ matrix.framework }}-v1-
             nuget-${{ runner.os }}-v1-
 
-      - name: Build
-        run: dotnet build ${{ env.SOLUTION }} -c Release -f ${{ matrix.framework }}
-
       - name: Test Release
         timeout-minutes: 5
         shell: pwsh
         run: |
           dotnet test --solution ${{ env.SOLUTION }} -c Release -f ${{ matrix.framework }} `
-          --no-restore --no-build --max-parallel-test-modules 4 --no-artifact-post-processing
+          --max-parallel-test-modules 4 --no-artifact-post-processing
 
       - name: Test Report
         uses: dorny/test-reporter@main
