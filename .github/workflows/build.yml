@@ -95,6 +95,7 @@ jobs:
         with:
           dotnet-version: |
             ${{ matrix.sdk }}
+            11.0.x
 
       - name: Cache NuGet packages
         uses: actions/cache@v6
