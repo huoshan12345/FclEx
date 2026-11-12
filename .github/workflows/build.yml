@@ -53,7 +53,7 @@ jobs:
               - test/**
 
   build:
-    name: Ubuntu (${{ matrix.framework }})
+    name: build-ubuntu-${{ matrix.framework }}
     runs-on: ubuntu-latest
     if: needs.changes.outputs.should-build == 'true'
 
@@ -105,11 +105,8 @@ jobs:
             nuget-${{ runner.os }}-${{ matrix.framework }}-v1-
             nuget-${{ runner.os }}-v1-
 
-      - name: Restore
-        run: dotnet restore ${{ env.SOLUTION }} -f ${{ matrix.framework }} -v q
-
       - name: Build
-        run: dotnet build ${{ env.SOLUTION }} -c Release -f ${{ matrix.framework }} --no-restore
+        run: dotnet build ${{ env.SOLUTION }} -c Release -f ${{ matrix.framework }}
 
       - name: Test Release
         timeout-minutes: 5
