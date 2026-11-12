@@ -139,6 +139,8 @@ jobs:
             sdk: 10.0.x
           - framework: net11.0
             sdk: 11.0.x
+          - framework: net472
+            sdk: ''
 
     needs:
       - changes
@@ -175,6 +177,7 @@ jobs:
           ./build/decrypt.ps1
 
       - name: Setup dotnet
+        if: ${{ matrix.sdk != '' }}
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: |
