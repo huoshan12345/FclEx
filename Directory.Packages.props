@@ -48,7 +48,6 @@
     <PackageVersion Include="System.Reflection.Emit" Version="4.7.0" />
     <PackageVersion Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
     <PackageVersion Include="System.Text.Encoding.CodePages" Version="11.0.0" />
-    <PackageVersion Include="System.Text.Json" Version="11.0.0" />
     <PackageVersion Include="Volo.Abp.Core" Version="10.7.1" />
     <PackageVersion Include="YamlDotNet" Version="18.1.0" />
     <PackageVersion Include="morelinq" Version="4.4.0" />
@@ -88,6 +87,12 @@
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="11.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Configuration" Version="11.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="11.0.0" />
+  </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 10.0))">
+    <PackageVersion Include="System.Text.Json" Version="[10.0.15, 11.0.0)" />
+  </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), 10.0))">
+    <PackageVersion Include="System.Text.Json" Version="11.0.0" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <PackageVersion Include="Npgsql" Version="[8.0.9, 9.0.0)" />

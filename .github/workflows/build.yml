@@ -80,9 +80,6 @@ jobs:
       - name: Setup sops
         uses: nhedger/setup-sops@v3
 
-      - name: Setup age
-        uses: alessiodionisi/setup-age-action@v1.4.0
-
       - name: Decrypt appsettings
         shell: pwsh
         env:
@@ -151,7 +148,6 @@ jobs:
       SOLUTION: ${{ matrix.solution || 'FclEx.slnx' }}
       TMP: D:\tmp
       TEMP: D:\tmp
-      DOTNET_INSTALL_DIR: D:\tools\dotnet
       NUGET_PACKAGES: D:\.nuget\packages
 
     steps:
@@ -163,14 +159,6 @@ jobs:
         run: |
           choco install sops -y --no-progress
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          sops --version
-
-      - name: Setup age
-        shell: pwsh
-        run: |
-          choco install age.portable -y --no-progress
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          age --version
 
       - name: Decrypt appsettings
         shell: pwsh
@@ -179,12 +167,29 @@ jobs:
         run: |
           ./build/decrypt.ps1
 
+      - name: Check target runtimes
+        id: target-runtimes
+        if: matrix.framework != 'net472' && matrix.framework != 'net11.0'
+        shell: pwsh
+        run: |
+          $runtimes = dotnet --list-runtimes
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $version = [regex]::Escape('${{ matrix.framework }}'.Substring(3))
+          $hasCore = [bool]($runtimes -match "^Microsoft\.NETCore\.App $version\.\d+ ")
+          $hasAspNetCore = [bool]($runtimes -match "^Microsoft\.AspNetCore\.App $version\.\d+ ")
+          "missing=$(-not ($hasCore -and $hasAspNetCore))" >> $env:GITHUB_OUTPUT
+
+      # Reuse the runner's runtimes; install the target SDK only when they are missing.
+      - name: Setup missing target runtimes
+        if: steps.target-runtimes.outputs.missing == 'true'
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ matrix.sdk }}
+
       - name: Setup dotnet
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: |
-            ${{ matrix.sdk }}
-            11.0.x
+          dotnet-version: 11.0.x
 
       - name: Create net472 test solution
         if: matrix.framework == 'net472'
@@ -195,8 +200,9 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ${{ env.NUGET_PACKAGES }}
-          key: nuget-${{ runner.os }}-pack-v1-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'NuGet.Config', 'global.json') }}
+          key: nuget-${{ runner.os }}-${{ matrix.framework }}-v1-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'NuGet.Config', 'global.json') }}
           restore-keys: |
+            nuget-${{ runner.os }}-${{ matrix.framework }}-v1-
             nuget-${{ runner.os }}-pack-v1-
             nuget-${{ runner.os }}-v1-
 

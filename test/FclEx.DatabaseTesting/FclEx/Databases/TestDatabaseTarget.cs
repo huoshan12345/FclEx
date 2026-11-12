@@ -80,6 +80,10 @@ public sealed record TestDatabaseTarget(
             DataSource = $"{Login.Host}:{Login.Port}/{Login.ServiceName}",
             UserID = Login.UserName.EnsureDoubleQuoted(),
             Password = Login.Password,
+            // Limit connection bursts across parallel CI processes and login-specific pools.
+            MinPoolSize = 0,
+            MaxPoolSize = 8,
+            IncrPoolSize = 1,
         }.ConnectionString,
 #endif
         _ => throw new ArgumentOutOfRangeException(nameof(Driver), Driver, null),
