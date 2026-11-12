@@ -72,6 +72,7 @@ jobs:
 
     needs:
       - changes
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -94,7 +95,6 @@ jobs:
         with:
           dotnet-version: |
             ${{ matrix.sdk }}
-            11.0.x
 
       - name: Cache NuGet packages
         uses: actions/cache@v6
@@ -123,8 +123,22 @@ jobs:
           list-tests: failed
 
   build-win:
+    name: build-win-${{ matrix.framework }}
     runs-on: windows-latest
     if: needs.changes.outputs.should-build == 'true'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - framework: net8.0
+            sdk: 8.0.x
+          - framework: net9.0
+            sdk: 9.0.x
+          - framework: net10.0
+            sdk: 10.0.x
+          - framework: net11.0
+            sdk: 11.0.x
 
     needs:
       - changes
@@ -164,26 +178,23 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: |
-            8.0.x
-            11.0.x
+            ${{ matrix.sdk }}
 
       - name: Cache NuGet packages
         uses: actions/cache@v6
         with:
           path: ${{ env.NUGET_PACKAGES }}
-          key: nuget-${{ runner.os }}-v1-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'NuGet.Config', 'global.json') }}
+          key: nuget-${{ runner.os }}-pack-v1-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'NuGet.Config', 'global.json') }}
           restore-keys: |
+            nuget-${{ runner.os }}-pack-v1-
             nuget-${{ runner.os }}-v1-
-
-      - name: Restore
-        run: dotnet restore ${{ env.SOLUTION }} -v q
-
-      - name: Build
-        run: dotnet build ${{ env.SOLUTION }} -c Release --no-restore
 
       - name: Test Release
         timeout-minutes: 5
-        run: dotnet test --solution ${{ env.SOLUTION }} -c Release --no-restore --no-build --max-parallel-test-modules 4 --no-artifact-post-processing
+        shell: pwsh
+        run: |
+          dotnet test --solution ${{ env.SOLUTION }} -c Release -f ${{ matrix.framework }} `
+          --max-parallel-test-modules 4 --no-artifact-post-processing
 
       - name: Test Report
         uses: dorny/test-reporter@main
