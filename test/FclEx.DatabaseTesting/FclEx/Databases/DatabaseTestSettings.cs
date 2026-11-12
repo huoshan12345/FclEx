@@ -17,7 +17,9 @@ public static class DatabaseTestSettings
     [
         DbDriver.SqlServer,
         DbDriver.Sqlite,
-        DbDriver.Npgsql,
+#if SUPPORT_NPGSQL
+            DbDriver.Npgsql, 
+#endif
         DbDriver.MySql,
         DbDriver.MySqlConnector,
 #if SUPPORT_ORACLE
@@ -48,19 +50,25 @@ public static class DatabaseTestSettings
             return isGithubAction
                 ? isWindows
                     ? [
-                        DbDriver.Npgsql,
+#if SUPPORT_NPGSQL
+                        DbDriver.Npgsql, 
+#endif
                         DbDriver.MySqlConnector,
                         DbDriver.Sqlite,
                     ]
                     : [
+#if SUPPORT_ORACLE
                         DbDriver.Oracle,
+#endif
                         DbDriver.SqlServer,
                     ]
                 : [
                     DbDriver.SqlServer,
                     DbDriver.Sqlite,
-                    DbDriver.Npgsql,
                     DbDriver.MySqlConnector,
+#if SUPPORT_NPGSQL
+                    DbDriver.Npgsql, 
+#endif
 #if SUPPORT_ORACLE
                     DbDriver.Oracle,
 #endif

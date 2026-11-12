@@ -31,7 +31,7 @@ public static class ConventionModelBuilderExtensions
 
         foreach (var index in type.GetIndexes().Where(index => index.IsUnique).ToArray())
         {
-            var properties = index.Properties.ToList();
+            var properties = index.Properties.Cast<IConventionProperty>().ToList();
 
             AddProperty(nameof(ISoftDeletable.IsDeleted), deletable);
             AddProperty(nameof(IHasDeletedAt.DeletedAt), hasDeleteAt);

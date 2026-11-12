@@ -17,7 +17,7 @@ public class TestDbContextTests
          select (db, assembly, ver, os))
         .ToTheoryData();
 
-    private static readonly ConcurrentDictionary<DbDriver, SemaphoreSlim> SetupGates = new();
+    private static readonly ConcurrentDictionary<DbDriver, AsyncLock> SetupGates = new();
 
     /// <summary>
     /// Set up databases for all test cases.
@@ -30,9 +30,8 @@ public class TestDbContextTests
         Assert.SkipUnless(Environment.Version.Major == 11, "Only run this test on .NET 11");
         Assert.SkipUnless(dotNetVersion == 11, "Only setup databases for .NET 11");
 
-        var gate = SetupGates.GetOrAdd(dbDriver, _ => new SemaphoreSlim(1, 1));
-        await gate.WaitAsync(CancellationToken);
-        await using var _ = AsyncDisposable.Create(() => gate.Release());
+        var gate = SetupGates.GetOrAdd(dbDriver, _ => new AsyncLock());
+        using var _ = await gate.AcquireAsync(CancellationToken);
 
         var defaultPassword = dbDriver is DbDriver.SqlServer
             ? SqlServerUserPassword

@@ -4,14 +4,19 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <SupportOracle>false</SupportOracle>
+    <SupportNpgsql>false</SupportNpgsql>
     <IsGithubAction>false</IsGithubAction>
     <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
     <IsWindows>$([MSBuild]::IsOSPlatform('Windows'))</IsWindows>
     <Is64BitOS>$([System.Environment]::Is64BitOperatingSystem)</Is64BitOS>
   </PropertyGroup>
-  <PropertyGroup Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), 5.0))">
+  <PropertyGroup Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), 5.0)) and $([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 11.0))">
     <SupportOracle>true</SupportOracle>
     <DefineConstants>$(DefineConstants);SUPPORT_ORACLE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 11.0))">
+    <SupportNpgsql>true</SupportNpgsql>
+    <DefineConstants>$(DefineConstants);SUPPORT_NPGSQL</DefineConstants>
   </PropertyGroup>
   <PropertyGroup>
     <IsGithubAction Condition="'$(GITHUB_ACTION)' != ''">true</IsGithubAction>

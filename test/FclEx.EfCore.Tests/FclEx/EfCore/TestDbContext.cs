@@ -1,4 +1,4 @@
-#if NET10_0_OR_GREATER
+#if NET10_0
 using Microting.EntityFrameworkCore.MySql.Infrastructure.Internal;
 using Microting.EntityFrameworkCore.MySql.Storage.Internal;
 using Microting.EntityFrameworkCore.MySql.Infrastructure;
@@ -56,18 +56,22 @@ public class TestDbContext(
             case DbDriver.Sqlite:
                 builder.UseSqlite(ConnectionString);
                 break;
+#if SUPPORT_NPGSQL
             case DbDriver.Npgsql:
                 builder.UseNpgsql(ConnectionString);
-                break;
+                break;                
+#endif
             case DbDriver.MySql:
                 builder.UseMySQL(ConnectionString);
                 break;
             case DbDriver.MySqlConnector:
                 ConfigureMySqlConnector(builder, ConnectionString);
                 break;
+#if SUPPORT_ORACLE
             case DbDriver.Oracle:
                 builder.UseOracle(ConnectionString);
                 break;
+#endif
             default:
                 throw new ArgumentOutOfRangeException(nameof(DbDriver), DbDriver, null);
         }
