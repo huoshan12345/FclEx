@@ -3,6 +3,36 @@ namespace FclEx.Extensions.StringBuilderExtensions;
 public class StringBuilderExtensionsTests
 {
     [Fact]
+    public void Build_ReturnsCallbackContentWithAnInitiallyEmptyBuilder()
+    {
+        Assert.Equal("first", StringBuilder.Build(builder => builder.Append("first")));
+        Assert.Equal("", StringBuilder.Build(builder => Assert.Equal(0, builder.Length)));
+    }
+
+    [Fact]
+    public void Build_NestedCallsUseIndependentBuilders()
+    {
+        var result = StringBuilder.Build(outer =>
+        {
+            outer.Append("outer:");
+            outer.Append(StringBuilder.Build(inner => inner.Append("inner")));
+        });
+        Assert.Equal("outer:inner", result);
+    }
+
+    [Fact]
+    public void Build_PropagatesCallbackFailureAndClearsBuilderForNextCall()
+    {
+        var failure = new InvalidOperationException("callback failed");
+        Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => StringBuilder.Build(builder =>
+        {
+            builder.Append("partial content");
+            throw failure;
+        })));
+        Assert.Equal("next", StringBuilder.Build(builder => builder.Append("next")));
+    }
+
+    [Fact]
     public void Equals_ShouldReturnTrue_WhenSubstringMatches()
     {
         var sb = new StringBuilder("HelloWorld");

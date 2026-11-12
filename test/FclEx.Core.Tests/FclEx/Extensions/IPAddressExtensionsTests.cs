@@ -3,6 +3,25 @@ namespace FclEx.Extensions;
 public class IPAddressExtensionsTests
 {
     [Theory]
+    [InlineData("::", new ushort[] { 0, 0, 0, 0, 0, 0, 0, 0 })]
+    [InlineData("2001:db8:1234:5678:90ab:cdef:1122:3344", new ushort[] { 0x2001, 0xdb8, 0x1234, 0x5678, 0x90ab, 0xcdef, 0x1122, 0x3344 })]
+    [InlineData("::ffff:192.168.1.2", new ushort[] { 0, 0, 0, 0, 0, 0xffff, 0xc0a8, 0x0102 })]
+    public void AddressNumbers_ReturnsIPv6SegmentsInNetworkOrder(string address, ushort[] expected)
+    {
+        Assert.Equal(expected, IPAddress.Parse(address).AddressNumbers().ToArray());
+    }
+
+    [Fact]
+    public void AddressNumbers_ForIPv4_HasNoSegmentArray()
+    {
+#if NET8_0_OR_GREATER
+        Assert.True(IPAddress.Loopback.AddressNumbers().IsEmpty);
+#else
+        Assert.Equal(new ushort[8], IPAddress.Loopback.AddressNumbers().ToArray());
+#endif
+    }
+
+    [Theory]
     [InlineData("1.1.1.1")] // Cloudflare DNS
     [InlineData("8.8.8.8")] // Google DNS
     [InlineData("20.112.52.29")] // microsoft.com

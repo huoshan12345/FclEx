@@ -181,3 +181,16 @@ All methods in this family reject a null source with `ArgumentNullException`, in
 the existing specific check and trim methods, which previously threw `NullReferenceException`.
 The string overloads reject a null `open` with `ArgumentNullException` and empty delimiters
 with `ArgumentException`. The existing specific methods delegate to these general methods.
+
+### Runtime storage helpers
+
+`FieldInfos` and `PropertyInfos.JsonTypeInfoResolver.Empty` cache descriptors for runtime internals.
+`UnsafeAccessors` exposes writable field references on .NET 8 and later. These APIs bypass validation,
+may invalidate cached state, and depend on the exact runtime field layout. Prefer the focused extension
+methods when direct mutation is unnecessary. `IPAddress.AddressNumbers()` exposes IPv6 segments;
+IPv4 returns an empty view on modern .NET and eight zero segments on .NET Framework. The
+`netstandard2.0` reflection path throws if the running runtime stores a null IPv4 segment array.
+
+The descriptor entries in `FieldInfos` are now lazy properties instead of static readonly fields;
+recompile consumers when upgrading. Replace `PropertyInfos.JsonTypeInfoResolver_Empty` with
+`PropertyInfos.JsonTypeInfoResolver.Empty`. The named parameter for `SetStackTrace` is now `stackTrace`.

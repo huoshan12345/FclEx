@@ -4,21 +4,24 @@ public static class IPAddressExtensions
 {
 
     /// <summary>
-    /// Returns the internal ushort array of the specified
+    /// Returns a read-only view of the IPv6 segments stored by the specified
     /// <see cref="IPAddress"/> instance.
     /// </summary>
     /// <param name="obj">
     /// The <see cref="IPAddress"/> instance.
     /// </param>
     /// <returns>
-    /// The underlying IP address ushort array.
+    /// Eight 16-bit segments in network order for IPv6; empty for IPv4 on .NET 8 and later.
+    /// On .NET Framework an IPv4 address returns eight zero segments. A netstandard2.0 consumer's behavior
+    /// depends on the runtime: a null IPv4 segment array causes InvalidOperationException.
     /// </returns>
+    /// <remarks>Accesses private runtime storage without copying; compatibility depends on the runtime field layout.</remarks>
     public static ReadOnlySpan<ushort> AddressNumbers(this IPAddress obj)
     {
 #if NET8_0_OR_GREATER
-        return FieldInfos.IPAddress.GetNumbers(obj);
+        return UnsafeAccessors.IPAddress_Numbers(obj);
 #else
-        return FieldInfos.IPAddress.Numbers.GetRequiredValue<ushort[]>(obj);
+        return FieldInfos.IPAddress_Numbers.GetRequiredValue<ushort[]>(obj);
 #endif
     }
 

@@ -191,3 +191,14 @@ Microsoft `ILoggerFactory` filters evaluate the original call level.
 An Error call carrying a Warning `LogException` is recorded as Warning only when
 the final level passes the Serilog minimum level, event filters, and sink restrictions.
 It is discarded when the applicable Serilog minimum is Error.
+
+### Inspecting sink registrations and runtime storage
+
+`LoggerConfiguration.GetSinks()` returns the live mutable `WriteTo` list, including restriction wrappers;
+`AuditTo` sinks are excluded. Finish changes before `CreateLogger()` and avoid concurrent access.
+Removing sinks does not dispose them, and changing this list does not reconfigure an existing logger.
+`FieldInfos`, `MethodInfos`, `Types`, and `UnsafeAccessors` expose Serilog implementation details and
+require a compatible Serilog version. The message renderer uses direct access on .NET 10 and later
+and reflection on older targets because .NET 8/9 do not support `UnsafeAccessorType`.
+The public descriptor containers previously named `Fields` and `Methods` are now `FieldInfos`
+and `MethodInfos`; update those type references and recompile consumers when upgrading.

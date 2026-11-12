@@ -2,11 +2,13 @@ using FclEx.Utils;
 
 namespace FclEx.EfCore;
 
-public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
+public class TestDbContextTests
 {
+    public static CancellationToken CancellationToken => TestContext.Current.CancellationToken;
+
     public static readonly string[] OSNames = ["windows", "linux"];
     public static readonly string[] AssemblyNames = ["efcore", "dapper"];
-    public static readonly int[] DotNetVersions = [4, 8, 9, 10];
+    public static readonly int[] DotNetVersions = [4, 8, 9, 10, 11];
     public static readonly TheoryData<DbDriver, string, int, string> SetupDatabaseCases =
         (from db in ProvisioningDrivers
          from assembly in AssemblyNames
@@ -21,11 +23,12 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     /// Set up databases for all test cases.
     /// Run this only when test entities are changed.
     /// </summary>
-    [Theory(Explicit = true, DisableParallelization = true)]
+    [Theory(Explicit = true)]
     [MemberData(nameof(SetupDatabaseCases))]
     public async Task SetupDatabase(DbDriver dbDriver, string assemblyName, int dotNetVersion, string os)
     {
-        Assert.SkipUnless(Environment.Version.Major == 10, "Only run this test on .NET 10");
+        Assert.SkipUnless(Environment.Version.Major == 11, "Only run this test on .NET 11");
+        Assert.SkipUnless(dotNetVersion == 11, "Only setup databases for .NET 11");
 
         var gate = SetupGates.GetOrAdd(dbDriver, _ => new SemaphoreSlim(1, 1));
         await gate.WaitAsync(CancellationToken);
@@ -194,11 +197,11 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [Fact(Explicit = true)]
     public void ExportSchema()
     {
-        Assert.SkipUnless(Environment.Version.Major == 10, "Only run this test on .NET 10");
+        Assert.SkipUnless(Environment.Version.Major == 11, "Only run this test on .NET 11");
 
         var path = Environment.GetEnvironmentVariable("FCLEX_SQLITE_SCHEMA_OUTPUT")
                    ?? Directories.SolutionRoot.File("test", typeof(DbDriver).Assembly.GetName().Name!, "Schemas", "Sqlite.sql").FullName;
-        
+
         using var context = new TestDbContext(DbDriver.Sqlite, "Data Source=:memory:");
         var sql = Normalize(context.Database.GenerateCreateScript()).Replace("\n", Environment.NewLine);
         File.WriteAllText(path, sql + Environment.NewLine, new UTF8Encoding(false));

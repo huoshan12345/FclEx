@@ -25,18 +25,23 @@ public static class HttpRequestMessageExtensions
     /// </summary>
     /// <remarks>
     /// This method relies on private runtime implementation details and may break when .NET changes
-    /// <see cref="HttpRequestMessage"/> internals. Prefer <see cref="CloneAsync"/> when a reusable request is needed.
+    /// <see cref="HttpRequestMessage"/> internals. On .NET 11 and later it clears the entire internal flags field,
+    /// including state other than the sent flag. It does not rewind content streams or synchronize concurrent sends.
+    /// .NET Framework's HttpClient disposes content after sending; replace that content before resending.
+    /// Do not use this method on a disposed request. Prefer <see cref="CloneAsync"/> when a reusable request is needed.
     /// </remarks>
+    /// <param name="request">A non-disposed request whose previous send has completed.</param>
+    /// <returns>The same request with its internal send state reset.</returns>
     public static HttpRequestMessage SetNotSend(this HttpRequestMessage request)
     {
 #if NET11_0_OR_GREATER
-        ref var status = ref FieldInfos.HttpRequestMessage.GetFlags(request);
-        status = MessageNotYetSent;
+        var field = FieldInfos.HttpRequestMessage_Flags;
+        field.SetValue(request, Enum.ToObject(field.FieldType, MessageNotYetSent));
 #elif NET8_0_OR_GREATER
-        ref var status = ref FieldInfos.HttpRequestMessage.GetSendStatus(request);
+        ref var status = ref UnsafeAccessors.HttpRequestMessage_SendStatus(request);
         status = MessageNotYetSent;
 #else
-        FieldInfos.HttpRequestMessage.SendStatus.SetValue(request, MessageNotYetSent);
+        FieldInfos.HttpRequestMessage_SendStatus.SetValue(request, MessageNotYetSent);
 #endif
         return request;
     }

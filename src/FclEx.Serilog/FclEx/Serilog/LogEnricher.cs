@@ -25,7 +25,7 @@ public class LogEnricher : ILogEventEnricher
     }
 
     /// <summary>Identifies the current OS family using RuntimeInformation.</summary>
-    /// <returns>Linux, Windows, or OSX on recognized platforms; otherwise RuntimeInformation.OSDescription.</returns>
+    /// <returns>Linux, Windows, OSX, or FreeBSD on recognized platforms; otherwise RuntimeInformation.OSDescription.</returns>
     public static string GetOs()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return nameof(OSPlatform.Linux);

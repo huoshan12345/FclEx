@@ -4,7 +4,7 @@
     <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="AngleSharp" Version="1.10.1" />
+    <PackageVersion Include="AngleSharp" Version="1.10.2" />
     <PackageVersion Include="AspectCore.Extensions.DependencyInjection" Version="3.0.0" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="Confluent.Kafka" Version="2.16.0" />
@@ -23,8 +23,8 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.1.1" />
     <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.23.0" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.1" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.5.2" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.5.3" />
     <PackageVersion Include="Moq" Version="4.21.0" />
     <PackageVersion Include="MySql.Data" Version="26.10.0" />
     <PackageVersion Include="MySql.EntityFrameworkCore" Version="10.0.12" />

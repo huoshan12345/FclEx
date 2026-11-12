@@ -1,102 +1,71 @@
 namespace FclEx;
 
+/// <summary>Provides cached descriptors for non-public fields used by runtime inspection and mutation helpers.</summary>
+/// <remarks>
+/// Each field is resolved independently on first access and the descriptor is then reused across threads.
+/// Names and types depend on runtime internals; resolution can fail when those internals change or are trimmed.
+/// Writing through a descriptor bypasses the declaring type's validation and synchronization.
+/// </remarks>
 public static class FieldInfos
 {
-    public static class Exception
-    {
-        private static readonly Lazy<FieldInfo> _message = new(() => typeof(Exception).GetRequiredField("_message"));
-        private static readonly Lazy<FieldInfo> _stackTrace = new(() => typeof(Exception).GetRequiredField("_stackTraceString"));
+    private static readonly Lazy<FieldInfo> _Exception_Message = new(() => typeof(Exception).GetRequiredField("_message"));
+    private static readonly Lazy<FieldInfo> _Exception_StackTrace = new(() => typeof(Exception).GetRequiredField("_stackTraceString"));
 
-        public static FieldInfo Message => _message.Value;
-        public static FieldInfo StackTrace => _stackTrace.Value;
+    /// <summary>The nullable raw message field on Exception, before any virtual Message getter or fallback text is applied.</summary>
+    public static FieldInfo Exception_Message => _Exception_Message.Value;
+    /// <summary>The nullable cached stack-trace string on Exception; this does not include all captured runtime stack data.</summary>
+    public static FieldInfo Exception_StackTrace => _Exception_StackTrace.Value;
 
-#if NET8_0_OR_GREATER
-        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_message")]
-        public static extern ref string? GetMessage(System.Exception ex);
-
-        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_stackTraceString")]
-        public static extern ref string? GetStackTrace(System.Exception ex);
-#endif
-    }
-
-    public static class PhysicalAddress
-    {
-        private static readonly Lazy<FieldInfo> _address = new(() => typeof(PhysicalAddress).GetRequiredField(
+    private static readonly Lazy<FieldInfo> _PhysicalAddress_Address = new(() => typeof(PhysicalAddress).GetRequiredField(
 #if NETFRAMEWORK
-            "address"
+        "address"
 #else
-            "_address"
+        "_address"
 #endif
-        ));
+    ));
 
-        public static FieldInfo Address => _address.Value;
+    /// <summary>The byte-array field storing a physical address; mutations change the address without updating cached state.</summary>
+    public static FieldInfo PhysicalAddress_Address => _PhysicalAddress_Address.Value;
 
-#if NET8_0_OR_GREATER
-        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_address")]
-        public static extern ref byte[] GetAddress(System.Net.NetworkInformation.PhysicalAddress obj);
-#endif
-    }
-
-    public static class IPAddress
-    {
-        private static readonly Lazy<FieldInfo> _numbers = new(() => typeof(PhysicalAddress).GetRequiredField(
+    private static readonly Lazy<FieldInfo> _IPAddress_Numbers = new(() => typeof(IPAddress).GetRequiredField(
 #if NETFRAMEWORK
-            "m_Numbers"
+        "m_Numbers"
 #else
-            "_numbers"
+        "_numbers"
 #endif
-        ));
+    ));
 
-        public static FieldInfo Numbers => _numbers.Value;
+    /// <summary>The eight network-order IPv6 segments; IPv4 storage is null on modern .NET and eight zero segments on .NET Framework.</summary>
+    public static FieldInfo IPAddress_Numbers => _IPAddress_Numbers.Value;
 
-#if NET8_0_OR_GREATER
-        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_numbers")]
-        public static extern ref ushort[] GetNumbers(System.Net.IPAddress obj);
-#endif
-    }
 
-    public static class HttpMessageInvoker
-    {
-        private static readonly Lazy<FieldInfo> _handler = new(() => typeof(HttpMessageInvoker).GetRequiredField(
+    private static readonly Lazy<FieldInfo> _HttpMessageInvoker_Handler = new(() => typeof(HttpMessageInvoker).GetRequiredField(
 #if NETFRAMEWORK
-            "handler"
+        "handler"
 #else
-            "_handler"
+        "_handler"
 #endif
-        ));
+    ));
 
-        public static FieldInfo Handler => _handler.Value;
+    /// <summary>The root handler field shared by HttpMessageInvoker and HttpClient; replacing it does not dispose the previous handler.</summary>
+    public static FieldInfo HttpMessageInvoker_Handler => _HttpMessageInvoker_Handler.Value;
 
-#if NET8_0_OR_GREATER
-        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_handler")]
-        public static extern ref HttpMessageHandler GetHandler(System.Net.Http.HttpMessageInvoker obj);
-#endif
-    }
-
-    public static class HttpRequestMessage
-    {
 #if NET11_0_OR_GREATER
-        private static readonly Lazy<FieldInfo> _flags = new(() => typeof(HttpRequestMessage).GetRequiredField("_flags"));
+    private static readonly Lazy<FieldInfo> _HttpRequestMessage_Flags = new(() => typeof(HttpRequestMessage).GetRequiredField("_flags"));
 
-        public static FieldInfo Flags => _flags.Value;
+    /// <summary>The private enum field containing request state flags in .NET 11 and later, including sent and disposed state.</summary>
+    public static FieldInfo HttpRequestMessage_Flags => _HttpRequestMessage_Flags.Value;
 
-        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_flags")]
-        public static extern ref int GetFlags(System.Net.Http.HttpRequestMessage request);
 #else
-        private static readonly Lazy<FieldInfo> _sendStatus = new(() => typeof(HttpRequestMessage).GetRequiredField(
+    private static readonly Lazy<FieldInfo> _HttpRequestMessage_SendStatus = new(() => typeof(HttpRequestMessage).GetRequiredField(
 #if NETFRAMEWORK
-            "sendStatus"
+        "sendStatus"
 #else
-            "_sendStatus"
+        "_sendStatus"
 #endif
-        ));
+    ));
 
-        public static FieldInfo SendStatus => _sendStatus.Value;
+    /// <summary>The integer send-state field on runtimes before .NET 11; zero denotes a request that has not been sent.</summary>
+    public static FieldInfo HttpRequestMessage_SendStatus => _HttpRequestMessage_SendStatus.Value;
 #endif
-
-#if NET8_0_OR_GREATER
-        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_sendStatus")]
-        public static extern ref int GetSendStatus(System.Net.Http.HttpRequestMessage request);
-#endif
-    }
 }

@@ -1,7 +1,33 @@
+// ReSharper disable ShortLivedHttpClient
 namespace FclEx.Http.Extensions;
 
 public class HttpRequestMessageExtensionsTests
 {
+    [Fact]
+    public async Task SetNotSend_ReturnsSameRequestAndSupportsRepeatedCompletedSends()
+    {
+        using var client = new HttpClient(new ContentEchoHandler());
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://example.com/api")
+        {
+#if !NETFRAMEWORK
+            Content = new StringContent("payload"),
+#endif
+        };
+        request.Headers.Add("X-Test", "value");
+        for (var i = 0; i < 3; i++)
+        {
+#if NETFRAMEWORK
+            // .NET Framework's HttpClient disposes request content after each completed send.
+            request.Content = new StringContent("payload");
+#endif
+            Assert.Same(request, request.SetNotSend());
+            using var response = await client.SendAsync(request, CancellationToken.None);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal("payload", await response.Content.ReadAsStringAsync());
+            Assert.Equal("value", Assert.Single(request.Headers.GetValues("X-Test")));
+        }
+    }
+
     [Fact]
     public void AddCookie_WhenCookieIsNullOrEmpty_DoesNotAddCookieHeader()
     {
@@ -75,8 +101,10 @@ public class HttpRequestMessageExtensionsTests
     [Fact]
     public async Task CloneAsync_BuffersContentFromCurrentPositionAndKeepsCloneReadable()
     {
-        var source = new MemoryStream(Encoding.UTF8.GetBytes("prefix-payload"));
-        source.Position = "prefix-".Length;
+        var source = new MemoryStream("prefix-payload"u8.ToArray())
+        {
+            Position = "prefix-".Length
+        };
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://example.com/api")
         {
             Content = new StreamContent(source),
@@ -114,6 +142,17 @@ public class HttpRequestMessageExtensionsTests
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("already sent", ex.Message);
+    }
+
+    private sealed class ContentEchoHandler : HttpMessageHandler
+    {
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(await request.Content!.ReadAsStringAsync()),
+            };
+        }
     }
 
     private sealed class CountingHandler : HttpMessageHandler

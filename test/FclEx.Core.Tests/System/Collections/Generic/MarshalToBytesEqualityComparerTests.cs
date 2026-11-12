@@ -12,8 +12,15 @@ public class MarshalToBytesEqualityComparerTests
         public string? Value;
     }
 
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    private struct PackedValue
+    {
+        public byte First;
+        public int Second;
+    }
+
     [StructLayout(LayoutKind.Sequential)]
-    private struct PaddedValue
+    private sealed class PaddedValue
     {
         public byte First;
         public int Second;
@@ -82,11 +89,11 @@ public class MarshalToBytesEqualityComparerTests
     }
 
     [Fact]
-    public void Equal_Values_With_Padding_Should_Produce_Stable_Comparison_And_Hash()
+    public void Equal_Values_Without_Padding_Should_Produce_Stable_Comparison_And_Hash()
     {
-        var comparer = MarshalToBytesEqualityComparer<PaddedValue>.Instance;
-        var x = new PaddedValue { First = 1, Second = 2 };
-        var y = new PaddedValue { First = 1, Second = 2 };
+        var comparer = MarshalToBytesEqualityComparer<PackedValue>.Instance;
+        var x = new PackedValue { First = 1, Second = 2 };
+        var y = new PackedValue { First = 1, Second = 2 };
 
         for (var i = 0; i < 100; i++)
         {
@@ -95,18 +102,40 @@ public class MarshalToBytesEqualityComparerTests
         }
     }
 
-    [Fact]
-    public void MarshalToBytes_ClearNativeBuffer_Should_Clear_Padding()
+    [Theory]
+    [InlineData(0x55, 0x55, true)]
+    [InlineData(0x55, 0xAA, false)]
+    public void Blittable_Padding_Should_Participate_In_Comparison(byte xPadding, byte yPadding, bool expectedEqual)
     {
-        var value = new PaddedValue { First = 1, Second = 2 };
-        var bytes = Marshal.ToBytes(value, clearNativeBuffer: true);
-        var secondOffset = Marshal.OffsetOf<PaddedValue>(nameof(PaddedValue.Second)).ToInt32();
+        var x = CreatePaddedValue(xPadding);
+        var y = CreatePaddedValue(yPadding);
+        var comparer = MarshalToBytesEqualityComparer<PaddedValue>.Instance;
 
+        Assert.Equal(x.First, y.First);
+        Assert.Equal(x.Second, y.Second);
+        Assert.Equal(expectedEqual, comparer.Equals(x, y));
+        if (expectedEqual)
+            Assert.Equal(comparer.GetHashCode(x), comparer.GetHashCode(y));
+    }
+
+    private static PaddedValue CreatePaddedValue(byte padding)
+    {
+        // A reference type avoids value-type argument copies that may change padding before marshaling.
+        var value = new PaddedValue { First = 1, Second = 2 };
+        var secondOffset = Marshal.OffsetOf<PaddedValue>(nameof(PaddedValue.Second)).ToInt32();
         Assert.True(secondOffset > 1);
-        for (var i = 1; i < secondOffset; i++)
+        var handle = GCHandle.Alloc(value, GCHandleType.Pinned);
+        try
         {
-            Assert.Equal(0, bytes[i]);
+            for (var i = 1; i < secondOffset; i++)
+                Marshal.WriteByte(handle.AddrOfPinnedObject(), i, padding);
         }
+        finally
+        {
+            handle.Free();
+        }
+
+        return value;
     }
 
     [Fact]

@@ -11,15 +11,16 @@ public static class PhysicalAddressExtensions
     /// The <see cref="PhysicalAddress"/> instance.
     /// </param>
     /// <returns>
-    /// A read-only span over the underlying MAC address bytes. The span must not be retained beyond
-    /// the lifetime of <paramref name="obj"/>.
+    /// A read-only span over the underlying address bytes, or an empty span for an empty address.
+    /// No array is copied; the span keeps its backing storage alive.
     /// </returns>
+    /// <remarks>Accesses private runtime storage; compatibility depends on the runtime field layout.</remarks>
     public static ReadOnlySpan<byte> AddressBytes(this PhysicalAddress obj)
     {
 #if NET8_0_OR_GREATER
-        return FieldInfos.PhysicalAddress.GetAddress(obj);
+        return UnsafeAccessors.PhysicalAddress_Address(obj);
 #else
-        return FieldInfos.PhysicalAddress.Address.GetRequiredValue<byte[]>(obj);
+        return FieldInfos.PhysicalAddress_Address.GetRequiredValue<byte[]>(obj);
 #endif
     }
 

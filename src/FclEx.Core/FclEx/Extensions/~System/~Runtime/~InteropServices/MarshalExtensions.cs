@@ -55,8 +55,9 @@ public static class MarshalExtensions
         /// <typeparam name="T">The type of object to marshal.</typeparam>
         /// <param name="obj">The object to marshal.</param>
         /// <param name="clearNativeBuffer">
-        /// Whether to initialize the native buffer to zero before marshaling. This prevents bytes left in structure padding
-        /// from a previous native allocation from appearing in the returned representation.
+        /// Whether to initialize the native buffer to zero before marshaling. Only bytes not subsequently written by the
+        /// marshaler remain zero. Blittable copies can overwrite padding with bytes from the managed object, so this option
+        /// does not normalize padding or guarantee a deterministic representation.
         /// </param>
         /// <returns>The unmanaged representation of <paramref name="obj"/>.</returns>
         /// <remarks>

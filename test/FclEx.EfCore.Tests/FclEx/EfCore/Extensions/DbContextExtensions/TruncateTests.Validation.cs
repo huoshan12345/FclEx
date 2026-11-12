@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore.Metadata;
-
 namespace FclEx.EfCore.Extensions.DbContextExtensions;
 
 public partial class TruncateTests

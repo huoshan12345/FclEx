@@ -1,3 +1,5 @@
+// ReSharper disable AccessToDisposedClosure
+// ReSharper disable AccessToModifiedClosure
 namespace FclEx.Utils;
 
 public class ExpiringLazyTests
@@ -97,9 +99,12 @@ public class ExpiringLazyTests
         Assert.All(values, value => Assert.Same(values[0], value));
     }
 
-    [RetryFact(3, 100)]
+    [Fact]
     public async Task Value_ConcurrentRefreshCallers_RunFactoryOnce()
     {
+        var clock = new ManualClock();
+        using var callersReady = new CountdownEvent(8);
+        using var startCallers = new ManualResetEventSlim();
         using var refreshStarted = new ManualResetEventSlim();
         using var continueRefresh = new ManualResetEventSlim();
         var first = new TrackedDisposable();
@@ -113,18 +118,64 @@ public class ExpiringLazyTests
             refreshStarted.Set();
             continueRefresh.Wait();
             return second;
-        }, TimeSpan.FromMilliseconds(20), value => value.Dispose());
+        }, TimeSpan.FromSeconds(1), value => value.Dispose(), clock.GetTimestamp);
         Assert.Same(first, lazy.Value);
-        Thread.Sleep(75);
+        clock.Advance(TimeSpan.FromSeconds(2));
 
-        var tasks = Enumerable.Range(0, 8).Select(_ => Task.Run(() => lazy.Value)).ToArray();
-        Assert.True(refreshStarted.Wait(TimeSpan.FromSeconds(5)));
-        continueRefresh.Set();
+        var tasks = Enumerable.Range(0, 8).Select(_ => Task.Factory.StartNew(() =>
+        {
+            callersReady.Signal();
+            startCallers.Wait();
+            return lazy.Value;
+        }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default)).ToArray();
+        try
+        {
+            Assert.True(callersReady.Wait(TimeSpan.FromSeconds(30)));
+            startCallers.Set();
+            Assert.True(refreshStarted.Wait(TimeSpan.FromSeconds(30)));
+        }
+        finally
+        {
+            startCallers.Set();
+            continueRefresh.Set();
+            await Task.WhenAll(tasks);
+        }
         var values = await Task.WhenAll(tasks);
 
         Assert.Equal(2, invocationCount);
         Assert.All(values, value => Assert.Same(second, value));
         Assert.True(first.IsDisposed);
+        Assert.Equal(1, first.DisposeCount);
+        Assert.False(second.IsDisposed);
+    }
+
+    [Fact]
+    public void Value_ExpirationStartsWhenFactoryCompletes()
+    {
+        var clock = new ManualClock();
+        var invocationCount = 0;
+        using var lazy = new ExpiringLazy<int>(() =>
+        {
+            clock.Advance(TimeSpan.FromSeconds(10));
+            return ++invocationCount;
+        }, TimeSpan.FromSeconds(1), null, clock.GetTimestamp);
+
+        Assert.Equal(1, lazy.Value);
+        Assert.Equal(1, lazy.Value);
+        clock.Advance(TimeSpan.FromSeconds(2));
+        Assert.Equal(2, lazy.Value);
+        Assert.Equal(2, lazy.Value);
+        Assert.Equal(2, invocationCount);
+    }
+
+    private sealed class ManualClock
+    {
+        private long _timestamp;
+
+        public long GetTimestamp() => Interlocked.Read(ref _timestamp);
+
+        public void Advance(TimeSpan elapsed)
+            => Interlocked.Add(ref _timestamp, checked((long)(elapsed.TotalSeconds * Stopwatch.Frequency)));
     }
 
     [RetryFact(3, 100)]

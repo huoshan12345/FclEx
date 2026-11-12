@@ -27,7 +27,7 @@ public static class LoggerSinkConfigurationExtensions
         Check.NotNull(wrapSink);
         Check.NotNull(configureWrappedSink);
         var capturing = new LoggerConfiguration();
-        var sinks = Fields.LoggerConfiguration_Sinks.GetRequiredValue<List<ILogEventSink>>(capturing);
+        var sinks = capturing.GetSinks();
         AggregateSink? aggregate = null;
         try
         {

@@ -1,1 +1,1 @@
-dotnet run -c Release
+dotnet run -c Release -f net11.0

@@ -1,5 +1,8 @@
 public static class GlobalConstants
 {
+    /// <summary>The active xUnit test's output helper, or null when no test output context is available.</summary>
+    public static ITestOutputHelper? Output => TestContext.Current.TestOutputHelper;
+
     public static class Directories
     {
         public static DirectoryInfo TestData { get; } = new(Path.Combine(AppContext.BaseDirectory, "TestData"));
