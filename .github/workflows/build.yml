@@ -142,11 +142,13 @@ jobs:
             sdk: 11.0.x
           - framework: net472
             sdk: ''
+            solution: artifacts/ci/Tests.net472.slnx
 
     needs:
       - changes
 
     env:
+      SOLUTION: ${{ matrix.solution || 'FclEx.slnx' }}
       TMP: D:\tmp
       TEMP: D:\tmp
       DOTNET_INSTALL_DIR: D:\tools\dotnet
@@ -183,6 +185,11 @@ jobs:
           dotnet-version: |
             ${{ matrix.sdk }}
             11.0.x
+
+      - name: Create net472 test solution
+        if: matrix.framework == 'net472'
+        shell: pwsh
+        run: ./build/create-ci-solution.ps1 -Framework ${{ matrix.framework }} -OutputPath ${{ env.SOLUTION }}
 
       - name: Cache NuGet packages
         uses: actions/cache@v6

@@ -4,7 +4,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <SupportOracle>false</SupportOracle>
-    <IncludeIntermediateNet>true</IncludeIntermediateNet>
     <IsGithubAction>false</IsGithubAction>
     <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
     <IsWindows>$([MSBuild]::IsOSPlatform('Windows'))</IsWindows>
@@ -16,6 +15,5 @@
   </PropertyGroup>
   <PropertyGroup>
     <IsGithubAction Condition="'$(GITHUB_ACTION)' != ''">true</IsGithubAction>
-    <IncludeIntermediateNet Condition="$(IsWindows) AND $(IsGithubAction)">false</IncludeIntermediateNet>
   </PropertyGroup>
 </Project>
