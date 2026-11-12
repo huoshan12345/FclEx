@@ -57,7 +57,9 @@ public static class DatabaseTestSettings
                         DbDriver.Sqlite,
                     ]
                     : [
+#if SUPPORT_ORACLE
                         DbDriver.Oracle,
+#endif
                         DbDriver.SqlServer,
                     ]
                 : [
