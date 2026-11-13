@@ -30,9 +30,6 @@ public class TestConsumer<T> : CommonConsumer<T>
         if (Settings is not null && Channel is not null)
         {
             await StopConsumingAsync();
-
-            await Channel.QueueDeleteAsync(Settings.RabbitMqQueue.Name, ifUnused: false, ifEmpty: false);
-            await Channel.ExchangeDeleteAsync(exchange: Settings.Exchange.Name, ifUnused: false);
         }
 
         await base.DisposeActionAsync();

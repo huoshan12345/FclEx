@@ -145,7 +145,7 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
         }
         catch (Exception ex)
         {
-            Logger.LogError($"An error occured when consuming: {ex.Message}", ex);
+            Logger.LogError(ex, "An error occured when consuming: {Error}", ex.Message);
             exception = ex;
         }
         finally
@@ -179,7 +179,7 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
         }
         catch (Exception ex)
         {
-            Logger.LogWarning($"An error occured when handle consuming error: {ex.Message}", ex);
+            Logger.LogWarning(ex, "An error occured when handle consuming error: {Error}", ex.Message);
         }
     }
 
@@ -191,7 +191,7 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
 
     protected virtual Task OnDeserializeDiscardAsync(BasicDeliverEventArgs args, Exception ex)
     {
-        Logger.LogError($"The item will be discarded due to an error occured when deserialize: {ex.Message}", ex);
+        Logger.LogError(ex, "The item will be discarded due to an error occured when deserialize: {Error}", ex.Message);
         return Task.CompletedTask;
     }
 
@@ -206,14 +206,14 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
                    ("DelaySeconds", delay)
                ))
         {
-            Logger.LogWarning(exception, $"The item will be re-queued to retry after {delay} seconds due to: {exception.Message}");
+            Logger.LogWarning(exception, "The item will be re-queued to retry after {DelaySeconds} seconds due to: {Error}", delay, exception.Message);
             await PushBackAsync(args);
         }
     }
 
     protected virtual Task OnConsumeDiscardAsync(BasicDeliverEventArgs args, T input, Exception exception)
     {
-        Logger.LogError(exception, "The item will be discarded due to: " + exception.Message);
+        Logger.LogError(exception, "The item will be discarded due to: {Error}", exception.Message);
         return Task.CompletedTask;
     }
 }

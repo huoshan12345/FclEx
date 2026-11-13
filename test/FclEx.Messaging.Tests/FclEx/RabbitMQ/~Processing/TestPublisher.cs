@@ -14,7 +14,6 @@ public class TestPublisher : MessagePublisher
             return;
 
         await using var channel = await Connection.CreateAutoCloseableChannelAsync();
-        await channel.Value.ExchangeDeleteAsync(Settings.Exchange.Name);
         await base.DisposeActionAsync();
     }
 

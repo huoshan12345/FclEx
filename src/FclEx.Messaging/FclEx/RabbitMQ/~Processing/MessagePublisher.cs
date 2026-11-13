@@ -6,7 +6,7 @@ public class MessagePublisher : MessageProcessor<RabbitMqPublisherOptions>, IMes
         : base(loggerFactory, serializer)
     {
     }
-    
+
     protected override IEnumerable<LoggerProperty> GetLogProperties()
     {
         return
@@ -43,7 +43,7 @@ public class MessagePublisher : MessageProcessor<RabbitMqPublisherOptions>, IMes
         }
         catch (Exception ex)
         {
-            Logger.LogError($"An error occured when publishing: {ex.Message}", ex);
+            Logger.LogError(ex, "An error occured when publishing: {Error}", ex.Message);
             throw;
         }
         finally

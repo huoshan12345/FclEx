@@ -24,12 +24,6 @@ public sealed class TestRouter : MessageRouter<string, string>
         if (Channel is not null && Settings is not null)
         {
             await StopConsumingAsync();
-
-            await Channel.QueueDeleteAsync(Settings.RabbitMqQueue.Name, ifUnused: false, ifEmpty: false);
-            await Channel.ExchangeDeleteAsync(Settings.Exchange.Name, ifUnused: false);
-
-            if (Settings.TargetExchange.Name != Settings.Exchange.Name)
-                await Channel.ExchangeDeleteAsync(Settings.TargetExchange.Name, ifUnused: false);
         }
 
         await base.DisposeActionAsync();
