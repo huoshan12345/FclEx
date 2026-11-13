@@ -1,6 +1,6 @@
 namespace FclEx.RabbitMQ;
 
-public class RabbitMQRouterTests
+public class RabbitMqRouterTests
 {
     [Fact]
     public async Task NullOutputOptions_AreNotReplacedBySilentDefaultRouting()
@@ -10,10 +10,10 @@ public class RabbitMQRouterTests
         var options = OptionsSnapshot.Router(new()
         {
             Input = new() { Queue = new() { Name = "input" } },
-            Target = new() { Exchange = RabbitMQExchangeOptions.Default },
+            Target = new() { Exchange = RabbitMqExchangeOptions.Default },
         });
-        var publisher = new RabbitMQPublisher<string>(input.Client, output.Object, options.Target);
-        await using var router = new RabbitMQRouter<string, string>(input.Client, input.Channel.Object, options,
+        var publisher = new RabbitMqPublisher<string>(input.Client, output.Object, options.Target);
+        await using var router = new RabbitMqRouter<string, string>(input.Client, input.Channel.Object, options,
             new MessageConverter<string, string>((message, _) => Task.FromResult(message.Body)), publisher, (_, _) => null!);
         using var stop = new CancellationTokenSource();
         var run = router.RunAsync(stop.Token);
@@ -44,10 +44,10 @@ public class RabbitMQRouterTests
         var options = OptionsSnapshot.Router(new()
         {
             Input = new() { Queue = new() { Name = "input" } },
-            Target = new() { Exchange = RabbitMQExchangeOptions.Default },
+            Target = new() { Exchange = RabbitMqExchangeOptions.Default },
         });
-        var publisher = new RabbitMQPublisher<string>(input.Client, output.Object, options.Target);
-        await using var router = new RabbitMQRouter<string, string>(input.Client, input.Channel.Object, options,
+        var publisher = new RabbitMqPublisher<string>(input.Client, output.Object, options.Target);
+        await using var router = new RabbitMqRouter<string, string>(input.Client, input.Channel.Object, options,
             new MessageConverter<string, string>((message, _) => Task.FromResult(message.Body)), publisher, null);
         using var stop = new CancellationTokenSource();
         var run = router.RunAsync(stop.Token);

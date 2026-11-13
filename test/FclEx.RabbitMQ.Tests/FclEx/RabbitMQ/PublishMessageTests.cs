@@ -52,9 +52,9 @@ public class PublishMessageTests
     public void Scheduling_RoundsUp_AndDoesNotDelayPastOrZeroTimes()
     {
         var now = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        Assert.Equal(now.ToUnixTimeMilliseconds() + 1, RabbitMQPublisher<string>.DeliveryTime(new() { Delay = TimeSpan.FromTicks(1) }, now));
-        Assert.Null(RabbitMQPublisher<string>.DeliveryTime(new() { Delay = TimeSpan.Zero }, now));
-        Assert.Null(RabbitMQPublisher<string>.DeliveryTime(new() { DeliverAt = now.AddSeconds(-1) }, now));
-        Assert.Throws<ArgumentOutOfRangeException>(() => RabbitMQPublisher<string>.DeliveryTime(new() { Delay = TimeSpan.MaxValue }, now));
+        Assert.Equal(now.ToUnixTimeMilliseconds() + 1, RabbitMqPublisher<string>.DeliveryTime(new() { Delay = TimeSpan.FromTicks(1) }, now));
+        Assert.Null(RabbitMqPublisher<string>.DeliveryTime(new() { Delay = TimeSpan.Zero }, now));
+        Assert.Null(RabbitMqPublisher<string>.DeliveryTime(new() { DeliverAt = now.AddSeconds(-1) }, now));
+        Assert.Throws<ArgumentOutOfRangeException>(() => RabbitMqPublisher<string>.DeliveryTime(new() { Delay = TimeSpan.MaxValue }, now));
     }
 }

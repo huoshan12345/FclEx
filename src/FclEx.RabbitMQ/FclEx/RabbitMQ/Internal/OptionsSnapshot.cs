@@ -40,7 +40,7 @@ internal static class OptionsSnapshot
         return TimeSpan.FromMilliseconds(Milliseconds(value));
     }
 
-    internal static RabbitMQExchangeOptions Exchange(RabbitMQExchangeOptions value)
+    internal static RabbitMqExchangeOptions Exchange(RabbitMqExchangeOptions value)
     {
         NotNull(value, nameof(value));
         ShortString(value.Name, nameof(value.Name), !value.Declare);
@@ -51,7 +51,7 @@ internal static class OptionsSnapshot
         return new() { Name = value.Name, Type = value.Type, Declare = value.Declare, Arguments = HeaderSnapshot.ReadOnly(NotNull(value.Arguments, nameof(value.Arguments))) };
     }
 
-    internal static RabbitMQBindingOptions Binding(RabbitMQBindingOptions value)
+    internal static RabbitMqBindingOptions Binding(RabbitMqBindingOptions value)
     {
         NotNull(value, nameof(value));
         var exchange = Exchange(value.Exchange);
@@ -60,7 +60,7 @@ internal static class OptionsSnapshot
         return new() { Exchange = exchange, RoutingKey = ShortString(value.RoutingKey, nameof(value.RoutingKey)), Arguments = HeaderSnapshot.ReadOnly(NotNull(value.Arguments, nameof(value.Arguments))) };
     }
 
-    internal static RabbitMQQueueOptions Queue(RabbitMQQueueOptions value)
+    internal static RabbitMqQueueOptions Queue(RabbitMqQueueOptions value)
     {
         NotNull(value, nameof(value));
         var name = QueueName(value.Name, nameof(value.Name));
@@ -90,7 +90,7 @@ internal static class OptionsSnapshot
         };
     }
 
-    internal static RabbitMQConsumerOptions Consumer(RabbitMQConsumerOptions value)
+    internal static RabbitMqConsumerOptions Consumer(RabbitMqConsumerOptions value)
     {
         NotNull(value, nameof(value));
         if (value.MaxConcurrency == 0 || value.PrefetchCount < value.MaxConcurrency)
@@ -105,13 +105,13 @@ internal static class OptionsSnapshot
         };
     }
 
-    internal static RabbitMQPublisherOptions Publisher(RabbitMQPublisherOptions value)
+    internal static RabbitMqPublisherOptions Publisher(RabbitMqPublisherOptions value)
     {
         NotNull(value, nameof(value));
         return new() { Exchange = Exchange(value.Exchange), ConfirmationTimeout = Timeout(value.ConfirmationTimeout, nameof(value.ConfirmationTimeout)) };
     }
 
-    internal static RabbitMQPublishOptions Publish(RabbitMQPublishOptions value)
+    internal static RabbitMqPublishOptions Publish(RabbitMqPublishOptions value)
     {
         NotNull(value, nameof(value));
         if (value.Delay < TimeSpan.Zero || value.Delay.HasValue && value.DeliverAt.HasValue)
@@ -119,7 +119,7 @@ internal static class OptionsSnapshot
         return new() { RoutingKey = ShortString(value.RoutingKey, nameof(value.RoutingKey)), Delay = value.Delay, DeliverAt = value.DeliverAt };
     }
 
-    internal static RabbitMQRouterOptions Router(RabbitMQRouterOptions value)
+    internal static RabbitMqRouterOptions Router(RabbitMqRouterOptions value)
     {
         NotNull(value, nameof(value));
         var headers = NotNull(value.ForwardedHeaderNames, nameof(value.ForwardedHeaderNames)).ToArray();

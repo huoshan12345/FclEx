@@ -1,10 +1,10 @@
 namespace FclEx.RabbitMQ;
 
 /// <summary>Describes an exchange to declare or an existing exchange to reference.</summary>
-public sealed class RabbitMQExchangeOptions
+public sealed class RabbitMqExchangeOptions
 {
     /// <summary>References the built-in default exchange without declaring it.</summary>
-    public static RabbitMQExchangeOptions Default => new() { Declare = false, Type = ExchangeType.Direct };
+    public static RabbitMqExchangeOptions Default => new() { Declare = false, Type = ExchangeType.Direct };
 
     /// <summary>Gets the exchange name. Empty is allowed only when referencing the default exchange.</summary>
     public string Name { get; init; } = "";

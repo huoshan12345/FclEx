@@ -5,7 +5,7 @@ namespace FclEx.RabbitMQ;
 /// <summary>Owns one RabbitMQ connection and creates independently disposable publishers, consumers, and routers.</summary>
 /// <remarks>Requires RabbitMQ 4.3+. Initial delivery scheduling requires 4.4+ on every relevant cluster node.
 /// Disposing this client stops its roles before disposing the connection; broker topology is retained.</remarks>
-public sealed class RabbitMQClient : IAsyncDisposable
+public sealed class RabbitMqClient : IAsyncDisposable
 {
     private readonly SemaphoreSlim _lifecycle = new(1, 1);
     private readonly List<IAsyncDisposable> _roles = [];
@@ -20,7 +20,7 @@ public sealed class RabbitMQClient : IAsyncDisposable
     internal bool AutomaticRecoveryEnabled { get; }
     internal Func<DateTimeOffset> UtcNow { get; }
 
-    internal RabbitMQClient(IConnection connection, IMemoryBytesSerializer serializer, ILoggerFactory loggerFactory,
+    internal RabbitMqClient(IConnection connection, IMemoryBytesSerializer serializer, ILoggerFactory loggerFactory,
         bool automaticRecoveryEnabled, Func<DateTimeOffset>? utcNow = null)
     {
         Connection = connection;
@@ -36,14 +36,14 @@ public sealed class RabbitMQClient : IAsyncDisposable
     /// <param name="serializer">Optional serializer; defaults to verbatim UTF-8 strings and JSON for other values.</param>
     /// <param name="cancellationToken">Cancels initial connection establishment.</param>
     /// <returns>The connected owner. Initial connection and unsupported-version failures propagate.</returns>
-    public static async Task<RabbitMQClient> ConnectAsync(ConnectionFactory factory, ILoggerFactory? loggerFactory = null,
+    public static async Task<RabbitMqClient> ConnectAsync(ConnectionFactory factory, ILoggerFactory? loggerFactory = null,
         IMemoryBytesSerializer? serializer = null, CancellationToken cancellationToken = default)
     {
         OptionsSnapshot.NotNull(factory, nameof(factory));
         if (factory.AutomaticRecoveryEnabled && !factory.TopologyRecoveryEnabled)
             throw new ArgumentException("Automatic recovery requires topology recovery to restore subscriptions.", nameof(factory));
         var connection = await factory.CreateConnectionAsync(cancellationToken).ConfigureAwait(false);
-        var client = new RabbitMQClient(connection, serializer ?? SerializerPresets.Utf8StringOrJson,
+        var client = new RabbitMqClient(connection, serializer ?? SerializerPresets.Utf8StringOrJson,
             loggerFactory ?? NullLoggerFactory.Instance, factory.AutomaticRecoveryEnabled);
         try
         {
@@ -62,7 +62,7 @@ public sealed class RabbitMQClient : IAsyncDisposable
     /// <param name="options">Copied destination and confirmation timeout settings. An exchange declaration never creates unknown subscriber queues.</param>
     /// <param name="cancellationToken">Cancels channel creation and topology declaration.</param>
     /// <returns>A ready publisher, owned by this client and independently disposable.</returns>
-    public async Task<RabbitMQPublisher<T>> CreatePublisherAsync<T>(RabbitMQPublisherOptions options, CancellationToken cancellationToken = default)
+    public async Task<RabbitMqPublisher<T>> CreatePublisherAsync<T>(RabbitMqPublisherOptions options, CancellationToken cancellationToken = default)
     {
         var snapshot = OptionsSnapshot.Publisher(options);
         await _lifecycle.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -79,7 +79,7 @@ public sealed class RabbitMQClient : IAsyncDisposable
     /// <param name="options">Copied subscription configuration. Declaration conflicts fail without deleting existing resources.</param>
     /// <param name="handler">Returns a disposition after completing its work; exceptions retry unless retry is disabled.</param>
     /// <param name="cancellationToken">Cancels resource creation, not the eventual RunAsync lifetime.</param>
-    public async Task<RabbitMQConsumer<T>> CreateConsumerAsync<T>(RabbitMQConsumerOptions options,
+    public async Task<RabbitMqConsumer<T>> CreateConsumerAsync<T>(RabbitMqConsumerOptions options,
         Func<ReceivedMessage<T>, CancellationToken, Task<MessageHandlingResult>> handler, CancellationToken cancellationToken = default)
     {
         var snapshot = OptionsSnapshot.Consumer(options);
@@ -92,7 +92,7 @@ public sealed class RabbitMQClient : IAsyncDisposable
             ConsumerRunner<T> runner;
             try { runner = new ConsumerRunner<T>(this, channel, snapshot, handler); }
             catch { await AsyncTools.CloseChannelAsync(channel).ConfigureAwait(false); throw; }
-            return await RegisterAsync(new RabbitMQConsumer<T>(this, runner)).ConfigureAwait(false);
+            return await RegisterAsync(new RabbitMqConsumer<T>(this, runner)).ConfigureAwait(false);
         }
         finally { _lifecycle.Release(); }
     }
@@ -102,9 +102,9 @@ public sealed class RabbitMQClient : IAsyncDisposable
     /// <param name="converter">Converts input without publishing or manually acknowledging it.</param>
     /// <param name="outputOptionsSelector">Optional synchronous per-output routing/scheduling selector; null uses options.Output.</param>
     /// <param name="cancellationToken">Cancels creation. Call RunAsync separately to start consuming.</param>
-    public async Task<RabbitMQRouter<TInput, TOutput>> CreateRouterAsync<TInput, TOutput>(RabbitMQRouterOptions options,
+    public async Task<RabbitMqRouter<TInput, TOutput>> CreateRouterAsync<TInput, TOutput>(RabbitMqRouterOptions options,
         IMessageConverter<TInput, TOutput> converter,
-        Func<ReceivedMessage<TInput>, TOutput, RabbitMQPublishOptions>? outputOptionsSelector = null,
+        Func<ReceivedMessage<TInput>, TOutput, RabbitMqPublishOptions>? outputOptionsSelector = null,
         CancellationToken cancellationToken = default)
     {
         var snapshot = OptionsSnapshot.Router(options);
@@ -117,7 +117,7 @@ public sealed class RabbitMQClient : IAsyncDisposable
             try
             {
                 var channel = await CreateConsumerChannelAsync(snapshot.Input, cancellationToken).ConfigureAwait(false);
-                RabbitMQRouter<TInput, TOutput> router;
+                RabbitMqRouter<TInput, TOutput> router;
                 try { router = new(this, channel, snapshot, converter, publisher, outputOptionsSelector); }
                 catch { await AsyncTools.CloseChannelAsync(channel).ConfigureAwait(false); throw; }
                 return await RegisterAsync(router).ConfigureAwait(false);
@@ -131,7 +131,7 @@ public sealed class RabbitMQClient : IAsyncDisposable
         finally { _lifecycle.Release(); }
     }
 
-    private async Task<RabbitMQPublisher<T>> CreatePublisherCoreAsync<T>(RabbitMQPublisherOptions options, CancellationToken token)
+    private async Task<RabbitMqPublisher<T>> CreatePublisherCoreAsync<T>(RabbitMqPublisherOptions options, CancellationToken token)
     {
         RequireVersion(4, 3);
         var channel = await Connection.CreateChannelAsync(new CreateChannelOptions(true, true), token).ConfigureAwait(false);
@@ -143,7 +143,7 @@ public sealed class RabbitMQClient : IAsyncDisposable
         catch { await AsyncTools.CloseChannelAsync(channel).ConfigureAwait(false); throw; }
     }
 
-    private async Task<IChannel> CreateConsumerChannelAsync(RabbitMQConsumerOptions options, CancellationToken token)
+    private async Task<IChannel> CreateConsumerChannelAsync(RabbitMqConsumerOptions options, CancellationToken token)
     {
         RequireVersion(4, 3);
         var channel = await Connection.CreateChannelAsync(new CreateChannelOptions(false, false,
@@ -166,7 +166,7 @@ public sealed class RabbitMQClient : IAsyncDisposable
         if (Volatile.Read(ref _disposing) != 0)
         {
             await role.DisposeAsync().ConfigureAwait(false);
-            throw new ObjectDisposedException(nameof(RabbitMQClient));
+            throw new ObjectDisposedException(nameof(RabbitMqClient));
         }
         lock (_rolesLock) _roles.Add(role);
         return role;
@@ -190,7 +190,7 @@ public sealed class RabbitMQClient : IAsyncDisposable
     internal void ThrowIfDisposed()
     {
         if (Volatile.Read(ref _disposing) != 0)
-            throw new ObjectDisposedException(nameof(RabbitMQClient));
+            throw new ObjectDisposedException(nameof(RabbitMqClient));
     }
 
     /// <summary>Stops every owned role and disposes the connection, attempting all cleanup even if one role fails.</summary>

@@ -2,7 +2,7 @@ using System.IO;
 
 namespace FclEx.RabbitMQ;
 
-public class RabbitMQConsumerTests
+public class RabbitMqConsumerTests
 {
     [Fact]
     public async Task NoncooperativeCallback_DoesNotHoldRunShutdownIndefinitely_OrAcknowledgeAfterClosure()

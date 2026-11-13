@@ -1,6 +1,6 @@
 namespace FclEx.RabbitMQ;
 
-public class RabbitMQPublisherTests
+public class RabbitMqPublisherTests
 {
     public static TheoryData<object?, string, string> DefaultFormats => new()
     {
@@ -23,7 +23,7 @@ public class RabbitMQPublisherTests
                 captured = properties;
                 capturedBody = bytes.ToArray();
             });
-        await using var publisher = new RabbitMQPublisher<object?>(doubles.Client, doubles.Channel.Object, new() { Exchange = RabbitMQExchangeOptions.Default });
+        await using var publisher = new RabbitMqPublisher<object?>(doubles.Client, doubles.Channel.Object, new() { Exchange = RabbitMqExchangeOptions.Default });
         await publisher.PublishAsync(new(value));
         Assert.Equal(contentType, captured!.ContentType);
         Assert.Equal(body, System.Text.Encoding.UTF8.GetString(capturedBody.ToArray()));
@@ -46,8 +46,8 @@ public class RabbitMQPublisherTests
                 entered.TrySetResult(true);
                 return new ValueTask(confirm.Task);
             });
-        await using var publisher = new RabbitMQPublisher<string>(doubles.Client, doubles.Channel.Object,
-            new() { Exchange = RabbitMQExchangeOptions.Default });
+        await using var publisher = new RabbitMqPublisher<string>(doubles.Client, doubles.Channel.Object,
+            new() { Exchange = RabbitMqExchangeOptions.Default });
         var first = publisher.PublishAsync(new("first", new() { RoutingKey = "queue" }, messageId: "stable-id"));
         await entered.Task;
         var second = publisher.PublishAsync(new("second"));
@@ -68,8 +68,8 @@ public class RabbitMQPublisherTests
                 It.IsAny<BasicProperties>(), It.IsAny<ReadOnlyMemory<byte>>(), It.IsAny<CancellationToken>()))
             .Returns((string _, string _, bool _, BasicProperties _, ReadOnlyMemory<byte> _, CancellationToken token)
                 => new ValueTask(Task.Delay(Timeout.Infinite, token)));
-        await using var publisher = new RabbitMQPublisher<string>(doubles.Client, doubles.Channel.Object,
-            new() { Exchange = RabbitMQExchangeOptions.Default, ConfirmationTimeout = TimeSpan.FromMilliseconds(50) });
+        await using var publisher = new RabbitMqPublisher<string>(doubles.Client, doubles.Channel.Object,
+            new() { Exchange = RabbitMqExchangeOptions.Default, ConfirmationTimeout = TimeSpan.FromMilliseconds(50) });
         await Assert.ThrowsAsync<TimeoutException>(() => publisher.PublishAsync(new("body")));
         using var cancel = new CancellationTokenSource();
         cancel.Cancel();
@@ -80,7 +80,7 @@ public class RabbitMQPublisherTests
     public async Task Delay_Requires44_AndUsesInt64AbsoluteTimestamp()
     {
         var old = new TestDoubles("4.3.6");
-        await using var oldPublisher = new RabbitMQPublisher<string>(old.Client, old.Channel.Object, new() { Exchange = RabbitMQExchangeOptions.Default });
+        await using var oldPublisher = new RabbitMqPublisher<string>(old.Client, old.Channel.Object, new() { Exchange = RabbitMqExchangeOptions.Default });
         await Assert.ThrowsAsync<NotSupportedException>(() => oldPublisher.PublishAsync(new("delayed", new() { Delay = TimeSpan.FromSeconds(1) })));
         await oldPublisher.PublishAsync(new("immediate"));
         var current = new TestDoubles();
@@ -89,7 +89,7 @@ public class RabbitMQPublisherTests
         current.Channel.Setup(c => c.BasicPublishAsync(It.IsAny<string>(), It.IsAny<string>(), true,
                 It.IsAny<BasicProperties>(), It.IsAny<ReadOnlyMemory<byte>>(), It.IsAny<CancellationToken>()))
             .Callback((string _, string _, bool _, BasicProperties p, ReadOnlyMemory<byte> _, CancellationToken _) => properties = p);
-        await using var publisher = new RabbitMQPublisher<string>(current.Client, current.Channel.Object, new() { Exchange = RabbitMQExchangeOptions.Default });
+        await using var publisher = new RabbitMqPublisher<string>(current.Client, current.Channel.Object, new() { Exchange = RabbitMqExchangeOptions.Default });
         await publisher.PublishAsync(new("scheduled", new() { DeliverAt = at }));
         Assert.Equal(at.ToUnixTimeMilliseconds() + (at.Ticks % TimeSpan.TicksPerMillisecond == 0 ? 0 : 1), Assert.IsType<long>(properties!.Headers!["x-opt-delivery-time"]));
     }
@@ -98,7 +98,7 @@ public class RabbitMQPublisherTests
     public async Task DisposedPublisher_RejectsNewPublications()
     {
         var doubles = new TestDoubles();
-        var publisher = new RabbitMQPublisher<string>(doubles.Client, doubles.Channel.Object, new() { Exchange = RabbitMQExchangeOptions.Default });
+        var publisher = new RabbitMqPublisher<string>(doubles.Client, doubles.Channel.Object, new() { Exchange = RabbitMqExchangeOptions.Default });
         await publisher.DisposeAsync();
         await publisher.DisposeAsync();
         await Assert.ThrowsAsync<ObjectDisposedException>(() => publisher.PublishAsync(new("body")));

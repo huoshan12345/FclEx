@@ -2,14 +2,14 @@ using System.Diagnostics;
 
 namespace FclEx.RabbitMQ;
 
-public class RabbitMQConsumerIntegrationTests
+public class RabbitMqConsumerIntegrationTests
 {
-    [Fact(Skip = RabbitMQIntegrationFixture.SkipReason, SkipUnless = nameof(RabbitMQIntegrationFixture.IsConfigured), SkipType = typeof(RabbitMQIntegrationFixture))]
+    [Fact(Skip = RabbitMqIntegrationFixture.SkipReason, SkipUnless = nameof(RabbitMqIntegrationFixture.IsConfigured), SkipType = typeof(RabbitMqIntegrationFixture))]
     public async Task ParallelHandlers_RespectConfiguredConcurrencyAndPrefetch()
     {
         await using var scope = await BrokerScope.CreateAsync();
         var prepared = scope.Input("parallel");
-        var input = new RabbitMQConsumerOptions { Queue = prepared.Queue, MaxConcurrency = 2, PrefetchCount = 2 };
+        var input = new RabbitMqConsumerOptions { Queue = prepared.Queue, MaxConcurrency = 2, PrefetchCount = 2 };
         var active = 0;
         var completed = 0;
         var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -27,7 +27,7 @@ public class RabbitMQConsumerIntegrationTests
         });
         using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         var run = consumer.RunAsync(stop.Token);
-        await using var publisher = await scope.Client.CreatePublisherAsync<string>(new() { Exchange = RabbitMQExchangeOptions.Default });
+        await using var publisher = await scope.Client.CreatePublisherAsync<string>(new() { Exchange = RabbitMqExchangeOptions.Default });
         try
         {
             for (var i = 0; i < 4; i++) await publisher.PublishAsync(new(i.ToString(), new() { RoutingKey = input.Queue.Name }));
@@ -40,7 +40,7 @@ public class RabbitMQConsumerIntegrationTests
         Assert.Equal(4, completed);
     }
 
-    [Fact(Skip = RabbitMQIntegrationFixture.SkipReason, SkipUnless = nameof(RabbitMQIntegrationFixture.IsConfigured), SkipType = typeof(RabbitMQIntegrationFixture))]
+    [Fact(Skip = RabbitMqIntegrationFixture.SkipReason, SkipUnless = nameof(RabbitMqIntegrationFixture.IsConfigured), SkipType = typeof(RabbitMqIntegrationFixture))]
     public async Task NativeRetry_StaysInOriginalQueue_AndBacksOff()
     {
         await using var scope = await BrokerScope.CreateAsync();
@@ -79,7 +79,7 @@ public class RabbitMQConsumerIntegrationTests
         await scope.AssertEmptyForAsync(observer.Queue.Name, TimeSpan.FromMilliseconds(250));
     }
 
-    [Fact(Skip = RabbitMQIntegrationFixture.SkipReason, SkipUnless = nameof(RabbitMQIntegrationFixture.IsConfigured), SkipType = typeof(RabbitMQIntegrationFixture))]
+    [Fact(Skip = RabbitMqIntegrationFixture.SkipReason, SkipUnless = nameof(RabbitMqIntegrationFixture.IsConfigured), SkipType = typeof(RabbitMqIntegrationFixture))]
     public async Task DeliveryLimit_RetainsPoisonMessageInDeadLetterQueue()
     {
         await using var scope = await BrokerScope.CreateAsync();
@@ -87,7 +87,7 @@ public class RabbitMQConsumerIntegrationTests
         await using var consumer = await scope.Client.CreateConsumerAsync<string>(input, (_, _) => throw new InvalidOperationException("poison"));
         using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         var run = consumer.RunAsync(stop.Token);
-        await using var publisher = await scope.Client.CreatePublisherAsync<string>(new() { Exchange = RabbitMQExchangeOptions.Default });
+        await using var publisher = await scope.Client.CreatePublisherAsync<string>(new() { Exchange = RabbitMqExchangeOptions.Default });
         await publisher.PublishAsync(new("poison-body", new() { RoutingKey = input.Queue.Name }));
         try
         {
@@ -99,7 +99,7 @@ public class RabbitMQConsumerIntegrationTests
         await scope.AssertEmptyForAsync(input.Queue.Name, TimeSpan.FromMilliseconds(100));
     }
 
-    [Fact(Skip = RabbitMQIntegrationFixture.SkipReason, SkipUnless = nameof(RabbitMQIntegrationFixture.IsConfigured), SkipType = typeof(RabbitMQIntegrationFixture))]
+    [Fact(Skip = RabbitMqIntegrationFixture.SkipReason, SkipUnless = nameof(RabbitMqIntegrationFixture.IsConfigured), SkipType = typeof(RabbitMqIntegrationFixture))]
     public async Task CanceledWork_IsRequeuedWithoutDeletingTopology()
     {
         await using var scope = await BrokerScope.CreateAsync();
@@ -113,7 +113,7 @@ public class RabbitMQConsumerIntegrationTests
             return MessageHandlingResult.Completed;
         });
         var run = consumer.RunAsync(stop.Token);
-        await using var publisher = await scope.Client.CreatePublisherAsync<string>(new() { Exchange = RabbitMQExchangeOptions.Default });
+        await using var publisher = await scope.Client.CreatePublisherAsync<string>(new() { Exchange = RabbitMqExchangeOptions.Default });
         await publisher.PublishAsync(new("unfinished", new() { RoutingKey = input.Queue.Name }));
         await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
         stop.Cancel();

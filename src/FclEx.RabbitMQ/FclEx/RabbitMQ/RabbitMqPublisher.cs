@@ -4,11 +4,11 @@ namespace FclEx.RabbitMQ;
 /// <typeparam name="T">The serialized body type.</typeparam>
 /// <remarks>Calls on the channel are serialized. Publication failures or cancellation after sending can have an unknown outcome;
 /// reuse a stable ID and idempotent consumers when retrying. No automatic republication is performed.</remarks>
-public sealed class RabbitMQPublisher<T> : IAsyncDisposable
+public sealed class RabbitMqPublisher<T> : IAsyncDisposable
 {
-    private readonly RabbitMQClient _client;
+    private readonly RabbitMqClient _client;
     private readonly IChannel _channel;
-    private readonly RabbitMQPublisherOptions _options;
+    private readonly RabbitMqPublisherOptions _options;
     private readonly ILogger _logger;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly CancellationTokenSource _shutdown = new();
@@ -16,12 +16,12 @@ public sealed class RabbitMQPublisher<T> : IAsyncDisposable
     private Task? _disposeTask;
     private int _disposing;
 
-    internal RabbitMQPublisher(RabbitMQClient client, IChannel channel, RabbitMQPublisherOptions options)
+    internal RabbitMqPublisher(RabbitMqClient client, IChannel channel, RabbitMqPublisherOptions options)
     {
         _client = client;
         _channel = channel;
         _options = options;
-        _logger = client.LoggerFactory.CreateLogger<RabbitMQPublisher<T>>();
+        _logger = client.LoggerFactory.CreateLogger<RabbitMqPublisher<T>>();
     }
 
     /// <summary>Gets the fixed exchange name; empty denotes the built-in default exchange.</summary>
@@ -74,7 +74,7 @@ public sealed class RabbitMQPublisher<T> : IAsyncDisposable
         finally { if (entered) _gate.Release(); }
     }
 
-    internal static long? DeliveryTime(RabbitMQPublishOptions options, DateTimeOffset now)
+    internal static long? DeliveryTime(RabbitMqPublishOptions options, DateTimeOffset now)
     {
         var at = options.DeliverAt ?? (options.Delay.HasValue ? now.Add(options.Delay.Value) : now);
         if (at <= now) return null;
@@ -84,7 +84,7 @@ public sealed class RabbitMQPublisher<T> : IAsyncDisposable
 
     private void ThrowIfDisposed()
     {
-        if (Volatile.Read(ref _disposing) != 0) throw new ObjectDisposedException(nameof(RabbitMQPublisher<T>));
+        if (Volatile.Read(ref _disposing) != 0) throw new ObjectDisposedException(nameof(RabbitMqPublisher<T>));
         _client.ThrowIfDisposed();
     }
 

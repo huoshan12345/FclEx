@@ -3,17 +3,17 @@ namespace FclEx.RabbitMQ;
 /// <summary>Converts one input into one output and acknowledges the input only after confirmed output publication.</summary>
 /// <remarks>Output confirmation and input acknowledgement are not atomic. A crash between them can duplicate output.
 /// Output inherits the input ID when present, its correlation ID, and only explicitly allowlisted business headers.</remarks>
-public sealed class RabbitMQRouter<TInput, TOutput> : IAsyncDisposable
+public sealed class RabbitMqRouter<TInput, TOutput> : IAsyncDisposable
 {
     private readonly ConsumerRunner<TInput> _runner;
-    private readonly RabbitMQPublisher<TOutput> _publisher;
-    private readonly RabbitMQClient _client;
+    private readonly RabbitMqPublisher<TOutput> _publisher;
+    private readonly RabbitMqClient _client;
     private readonly object _disposeLock = new();
     private Task? _disposeTask;
 
-    internal RabbitMQRouter(RabbitMQClient client, IChannel channel, RabbitMQRouterOptions options,
-        IMessageConverter<TInput, TOutput> converter, RabbitMQPublisher<TOutput> publisher,
-        Func<ReceivedMessage<TInput>, TOutput, RabbitMQPublishOptions>? selector)
+    internal RabbitMqRouter(RabbitMqClient client, IChannel channel, RabbitMqRouterOptions options,
+        IMessageConverter<TInput, TOutput> converter, RabbitMqPublisher<TOutput> publisher,
+        Func<ReceivedMessage<TInput>, TOutput, RabbitMqPublishOptions>? selector)
     {
         _client = client;
         _publisher = publisher;

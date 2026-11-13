@@ -23,20 +23,20 @@ topology; `RunAsync` separately starts consumption. `stoppingToken` below repres
 using FclEx.RabbitMQ;
 using RabbitMQ.Client;
 
-await using var client = await RabbitMQClient.ConnectAsync(new ConnectionFactory
+await using var client = await RabbitMqClient.ConnectAsync(new ConnectionFactory
 {
     HostName = "localhost",
     UserName = "app",
     Password = "<password>",
 });
 
-var exchange = new RabbitMQExchangeOptions { Name = "orders", Type = ExchangeType.Topic };
+var exchange = new RabbitMqExchangeOptions { Name = "orders", Type = ExchangeType.Topic };
 
 await using var consumer = await client.CreateConsumerAsync<string>(
-    new RabbitMQConsumerOptions
+    new RabbitMqConsumerOptions
     {
-        Queue = new RabbitMQQueueOptions { Name = "orders.worker" },
-        Bindings = [new RabbitMQBindingOptions { Exchange = exchange, RoutingKey = "created" }],
+        Queue = new RabbitMqQueueOptions { Name = "orders.worker" },
+        Bindings = [new RabbitMqBindingOptions { Exchange = exchange, RoutingKey = "created" }],
     },
     async (message, token) =>
     {
@@ -47,10 +47,10 @@ await using var consumer = await client.CreateConsumerAsync<string>(
 var consuming = consumer.RunAsync(stoppingToken);
 
 await using var publisher = await client.CreatePublisherAsync<string>(
-    new RabbitMQPublisherOptions { Exchange = exchange });
+    new RabbitMqPublisherOptions { Exchange = exchange });
 
 await publisher.PublishAsync(new PublishMessage<string>(
-    "order-123", new RabbitMQPublishOptions { RoutingKey = "created" }, messageId: "order-123-created"));
+    "order-123", new RabbitMqPublishOptions { RoutingKey = "created" }, messageId: "order-123-created"));
 
 await consuming;
 ```
@@ -60,7 +60,7 @@ Publisher confirms and mandatory return tracking are always enabled. An unroutab
 being logged as success. Confirmation means broker acceptance, not that a handler has executed.
 Timeouts or cancellation after sending can leave acceptance unknown; retries need stable message IDs and idempotent consumers.
 
-Use `RabbitMQExchangeOptions.Default` to publish through the built-in default exchange and set the routing key to the queue name.
+Use `RabbitMqExchangeOptions.Default` to publish through the built-in default exchange and set the routing key to the queue name.
 Its queue can be prepared using a Consumer with no bindings. For independent topology provisioning, the
 `RabbitMQ.Client` namespace exposes `EnsureExchangeAsync`, `EnsureQueueAsync`, and `EnsureBindingAsync` extensions.
 
@@ -71,18 +71,18 @@ Its target subscribers must also be prepared before forwarding can succeed.
 
 ```csharp
 await using var router = await client.CreateRouterAsync(
-    new RabbitMQRouterOptions
+    new RabbitMqRouterOptions
     {
-        Input = new RabbitMQConsumerOptions
+        Input = new RabbitMqConsumerOptions
         {
-            Queue = new RabbitMQQueueOptions { Name = "orders.transform" },
-            Bindings = [new RabbitMQBindingOptions { Exchange = exchange, RoutingKey = "created" }],
+            Queue = new RabbitMqQueueOptions { Name = "orders.transform" },
+            Bindings = [new RabbitMqBindingOptions { Exchange = exchange, RoutingKey = "created" }],
         },
-        Target = new RabbitMQPublisherOptions
+        Target = new RabbitMqPublisherOptions
         {
-            Exchange = new RabbitMQExchangeOptions { Name = "processed-orders" },
+            Exchange = new RabbitMqExchangeOptions { Name = "processed-orders" },
         },
-        Output = new RabbitMQPublishOptions { RoutingKey = "processed" },
+        Output = new RabbitMqPublishOptions { RoutingKey = "processed" },
         ForwardedHeaderNames = ["tenant"],
     },
     new MessageConverter<string, string>((input, token) => ConvertOrderAsync(input.Body, token)));
@@ -127,7 +127,7 @@ On RabbitMQ 4.4+, schedule a message using either a relative `Delay` or an absol
 
 ```csharp
 await publisher.PublishAsync(new PublishMessage<string>("reminder",
-    new RabbitMQPublishOptions { RoutingKey = "created", Delay = TimeSpan.FromMinutes(5) }));
+    new RabbitMqPublishOptions { RoutingKey = "created", Delay = TimeSpan.FromMinutes(5) }));
 ```
 
 These settings are mutually exclusive. Negative delays are invalid; zero or past times publish immediately.

@@ -1,7 +1,7 @@
 namespace FclEx.RabbitMQ;
 
 /// <summary>Configures routing and optional initial delivery scheduling for an individual message.</summary>
-public sealed class RabbitMQPublishOptions
+public sealed class RabbitMqPublishOptions
 {
     /// <summary>Gets the routing key. Empty is valid; the UTF-8 representation must fit an AMQP short string.</summary>
     public string RoutingKey { get; init; } = "";

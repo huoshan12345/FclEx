@@ -1,6 +1,6 @@
 namespace RabbitMQ.Client;
 
-public class RabbitMQChannelExtensionsTests
+public class RabbitMqChannelExtensionsTests
 {
     [Fact]
     public async Task QuorumTopology_UsesReliableDeadLettering_AndDeclaresTargetsFirst()
@@ -18,7 +18,7 @@ public class RabbitMQChannelExtensionsTests
                 events.Add(name);
                 if (name == "input") sourceArguments = new(arguments);
             });
-        await channel.Object.EnsureQueueAsync(new FclEx.RabbitMQ.RabbitMQQueueOptions { Name = "input" });
+        await channel.Object.EnsureQueueAsync(new FclEx.RabbitMQ.RabbitMqQueueOptions { Name = "input" });
         Assert.Equal(new[] { "input.dlx", "input.dead", "input" }, events);
         Assert.Equal("quorum", sourceArguments!["x-queue-type"]);
         Assert.Equal("at-least-once", sourceArguments["x-dead-letter-strategy"]);

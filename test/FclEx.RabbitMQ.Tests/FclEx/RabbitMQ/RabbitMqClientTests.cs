@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 
 namespace FclEx.RabbitMQ;
 
-public class RabbitMQClientTests
+public class RabbitMqClientTests
 {
     [Fact]
     public async Task RouterConstructionFailure_ReleasesBothPreparedChannels()
@@ -14,11 +14,11 @@ public class RabbitMQClientTests
         var logging = new Mock<ILoggerFactory>();
         logging.SetupSequence(f => f.CreateLogger(It.IsAny<string>()))
             .Returns(NullLogger.Instance).Throws(new InvalidOperationException("consumer logger initialization failed"));
-        await using var client = new RabbitMQClient(doubles.Connection.Object, SerializerPresets.Utf8StringOrJson, logging.Object, false);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => client.CreateRouterAsync(new RabbitMQRouterOptions
+        await using var client = new RabbitMqClient(doubles.Connection.Object, SerializerPresets.Utf8StringOrJson, logging.Object, false);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => client.CreateRouterAsync(new RabbitMqRouterOptions
         {
             Input = new() { Queue = new() { Name = "input" } },
-            Target = new() { Exchange = RabbitMQExchangeOptions.Default },
+            Target = new() { Exchange = RabbitMqExchangeOptions.Default },
         }, new MessageConverter<string, string>((message, _) => Task.FromResult(message.Body))));
         doubles.Channel.Verify(c => c.DisposeAsync(), Times.Once);
         output.Verify(c => c.DisposeAsync(), Times.Once);
@@ -31,7 +31,7 @@ public class RabbitMQClientTests
         doubles.Connection.Setup(c => c.CreateChannelAsync(It.IsAny<CreateChannelOptions>(), It.IsAny<CancellationToken>())).ReturnsAsync(doubles.Channel.Object);
         var logging = new Mock<ILoggerFactory>();
         logging.Setup(f => f.CreateLogger(It.IsAny<string>())).Throws(new InvalidOperationException("logger initialization failed"));
-        await using var client = new RabbitMQClient(doubles.Connection.Object, SerializerPresets.Utf8StringOrJson, logging.Object, false);
+        await using var client = new RabbitMqClient(doubles.Connection.Object, SerializerPresets.Utf8StringOrJson, logging.Object, false);
         await Assert.ThrowsAsync<InvalidOperationException>(() => client.CreateConsumerAsync<string>(new() { Queue = new() { Name = "input" } },
             (_, _) => Task.FromResult(MessageHandlingResult.Completed)));
         doubles.Channel.Verify(c => c.DisposeAsync(), Times.Once);
@@ -46,7 +46,7 @@ public class RabbitMQClientTests
             .Callback((CreateChannelOptions options, CancellationToken _) => created = options)
             .ReturnsAsync(doubles.Channel.Object);
         using var logging = LoggerFactory.Create(_ => { });
-        await using var client = new RabbitMQClient(doubles.Connection.Object, SerializerPresets.Utf8StringOrJson, logging, false);
+        await using var client = new RabbitMqClient(doubles.Connection.Object, SerializerPresets.Utf8StringOrJson, logging, false);
         await using var publisher = await client.CreatePublisherAsync<string>(new() { Exchange = new() { Name = "events" } });
         await publisher.PublishAsync(new("message"));
         Assert.True(created!.PublisherConfirmationsEnabled);
@@ -62,13 +62,13 @@ public class RabbitMQClientTests
         doubles.Connection.Setup(c => c.CreateChannelAsync(It.IsAny<CreateChannelOptions>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(() => channels.Dequeue());
         other.Setup(c => c.DisposeAsync()).Throws(new InvalidOperationException("cleanup failed"));
-        var first = await doubles.Client.CreatePublisherAsync<string>(new() { Exchange = RabbitMQExchangeOptions.Default });
-        await doubles.Client.CreatePublisherAsync<string>(new() { Exchange = RabbitMQExchangeOptions.Default });
+        var first = await doubles.Client.CreatePublisherAsync<string>(new() { Exchange = RabbitMqExchangeOptions.Default });
+        await doubles.Client.CreatePublisherAsync<string>(new() { Exchange = RabbitMqExchangeOptions.Default });
         await Assert.ThrowsAsync<AggregateException>(() => doubles.Client.DisposeAsync().AsTask());
         doubles.Channel.Verify(c => c.DisposeAsync(), Times.Once);
         doubles.Connection.Verify(c => c.DisposeAsync(), Times.Once);
         await Assert.ThrowsAsync<ObjectDisposedException>(() => first.PublishAsync(new("body")));
-        await Assert.ThrowsAsync<ObjectDisposedException>(() => doubles.Client.CreatePublisherAsync<string>(new() { Exchange = RabbitMQExchangeOptions.Default }));
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => doubles.Client.CreatePublisherAsync<string>(new() { Exchange = RabbitMqExchangeOptions.Default }));
     }
 
     [Fact]

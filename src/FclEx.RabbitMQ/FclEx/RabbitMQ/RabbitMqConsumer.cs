@@ -1,11 +1,11 @@
 namespace FclEx.RabbitMQ;
 
 /// <summary>A prepared queue subscription whose handler determines the settlement of each delivery.</summary>
-public sealed class RabbitMQConsumer<T> : IAsyncDisposable
+public sealed class RabbitMqConsumer<T> : IAsyncDisposable
 {
     private readonly ConsumerRunner<T> _runner;
-    private readonly RabbitMQClient _client;
-    internal RabbitMQConsumer(RabbitMQClient client, ConsumerRunner<T> runner) { _client = client; _runner = runner; }
+    private readonly RabbitMqClient _client;
+    internal RabbitMqConsumer(RabbitMqClient client, ConsumerRunner<T> runner) { _client = client; _runner = runner; }
 
     /// <summary>Gets the declared input queue name.</summary>
     public string QueueName => _runner.QueueName;

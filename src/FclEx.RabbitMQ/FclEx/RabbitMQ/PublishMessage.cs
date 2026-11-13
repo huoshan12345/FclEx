@@ -13,7 +13,7 @@ public sealed class PublishMessage<T>
     /// <param name="messageId">A stable nonempty identity, or null to generate one.</param>
     /// <param name="correlationId">An optional nonempty correlation identity.</param>
     /// <param name="headers">Supported AMQP field values; scheduling, retry and broker-owned keys are forbidden.</param>
-    public PublishMessage(T body, RabbitMQPublishOptions? options = null, string? messageId = null,
+    public PublishMessage(T body, RabbitMqPublishOptions? options = null, string? messageId = null,
         string? correlationId = null, IReadOnlyDictionary<string, object?>? headers = null)
     {
         Body = body;
@@ -26,7 +26,7 @@ public sealed class PublishMessage<T>
     /// <summary>Gets the body retained by reference.</summary>
     public T Body { get; }
     /// <summary>Gets the validated routing and scheduling settings.</summary>
-    public RabbitMQPublishOptions Options { get; }
+    public RabbitMqPublishOptions Options { get; }
     /// <summary>Gets the identity reused when this envelope is published again.</summary>
     public string MessageId { get; }
     /// <summary>Gets the optional correlation identity.</summary>

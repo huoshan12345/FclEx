@@ -3,11 +3,11 @@ using FclEx.RabbitMQ;
 namespace RabbitMQ.Client;
 
 /// <summary>Ensures durable RabbitMQ topology without deleting or purging existing resources.</summary>
-public static class RabbitMQChannelExtensions
+public static class RabbitMqChannelExtensions
 {
     /// <summary>Declares a durable standard exchange, or does nothing for an explicit predeclared reference.</summary>
     /// <remarks>Incompatible existing declarations fail with the broker's channel error. The default exchange is referenced, never declared.</remarks>
-    public static Task EnsureExchangeAsync(this IChannel channel, RabbitMQExchangeOptions options, CancellationToken cancellationToken = default)
+    public static Task EnsureExchangeAsync(this IChannel channel, RabbitMqExchangeOptions options, CancellationToken cancellationToken = default)
     {
         OptionsSnapshot.NotNull(channel, nameof(channel));
         var snapshot = OptionsSnapshot.Exchange(options);
@@ -20,7 +20,7 @@ public static class RabbitMQChannelExtensions
     /// <summary>Declares the source quorum queue and its independent direct DLX and quorum dead-letter queue.</summary>
     /// <remarks>Sets at-least-once dead lettering and reject-publish overflow. Retry settings require RabbitMQ 4.3+.
     /// Existing conflicting definitions fail; this operation never recreates queues or removes messages.</remarks>
-    public static async Task EnsureQueueAsync(this IChannel channel, RabbitMQQueueOptions options, CancellationToken cancellationToken = default)
+    public static async Task EnsureQueueAsync(this IChannel channel, RabbitMqQueueOptions options, CancellationToken cancellationToken = default)
     {
         OptionsSnapshot.NotNull(channel, nameof(channel));
         var snapshot = OptionsSnapshot.Queue(options);
@@ -52,7 +52,7 @@ public static class RabbitMQChannelExtensions
 
     /// <summary>Ensures the source exchange and binds an already declared queue to it.</summary>
     /// <remarks>Does not declare the queue; call EnsureQueueAsync first. Explicit bindings to the default exchange are rejected.</remarks>
-    public static async Task EnsureBindingAsync(this IChannel channel, string queueName, RabbitMQBindingOptions options, CancellationToken cancellationToken = default)
+    public static async Task EnsureBindingAsync(this IChannel channel, string queueName, RabbitMqBindingOptions options, CancellationToken cancellationToken = default)
     {
         OptionsSnapshot.NotNull(channel, nameof(channel));
         OptionsSnapshot.QueueName(queueName, nameof(queueName));

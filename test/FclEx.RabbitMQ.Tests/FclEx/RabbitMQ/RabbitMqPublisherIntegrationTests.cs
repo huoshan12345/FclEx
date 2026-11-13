@@ -3,9 +3,9 @@ using RabbitMQ.Client.Exceptions;
 
 namespace FclEx.RabbitMQ;
 
-public class RabbitMQPublisherIntegrationTests
+public class RabbitMqPublisherIntegrationTests
 {
-    [Fact(Skip = RabbitMQIntegrationFixture.SkipReason, SkipUnless = nameof(RabbitMQIntegrationFixture.IsConfigured), SkipType = typeof(RabbitMQIntegrationFixture))]
+    [Fact(Skip = RabbitMqIntegrationFixture.SkipReason, SkipUnless = nameof(RabbitMqIntegrationFixture.IsConfigured), SkipType = typeof(RabbitMqIntegrationFixture))]
     public async Task NoQueue_ReturnsFailure_AndQueueCanBePreparedBeforeRun()
     {
         await using var scope = await BrokerScope.CreateAsync();
@@ -18,7 +18,7 @@ public class RabbitMQPublisherIntegrationTests
         Assert.Equal("retained-before-consumption", BrokerScope.Text(await scope.GetAsync(input.Queue.Name)));
     }
 
-    [Fact(Skip = RabbitMQIntegrationFixture.SkipReason, SkipUnless = nameof(RabbitMQIntegrationFixture.IsConfigured), SkipType = typeof(RabbitMQIntegrationFixture))]
+    [Fact(Skip = RabbitMqIntegrationFixture.SkipReason, SkipUnless = nameof(RabbitMqIntegrationFixture.IsConfigured), SkipType = typeof(RabbitMqIntegrationFixture))]
     public async Task NativeDelay_ConfirmsBeforeDue_AndDoesNotBlockImmediateMessages()
     {
         await using var scope = await BrokerScope.CreateAsync();
@@ -37,7 +37,7 @@ public class RabbitMQPublisherIntegrationTests
         Assert.True(watch.Elapsed >= TimeSpan.FromSeconds(3), "The scheduled message arrived before its delay elapsed.");
     }
 
-    [Fact(Skip = RabbitMQIntegrationFixture.SkipReason, SkipUnless = nameof(RabbitMQIntegrationFixture.IsConfigured), SkipType = typeof(RabbitMQIntegrationFixture))]
+    [Fact(Skip = RabbitMqIntegrationFixture.SkipReason, SkipUnless = nameof(RabbitMqIntegrationFixture.IsConfigured), SkipType = typeof(RabbitMqIntegrationFixture))]
     public async Task NativeDelay_RoutesAtPublication_NotWhenDue()
     {
         await using var scope = await BrokerScope.CreateAsync();
@@ -52,13 +52,13 @@ public class RabbitMQPublisherIntegrationTests
         await scope.AssertEmptyForAsync(late.Queue.Name, TimeSpan.FromMilliseconds(250));
     }
 
-    [Fact(Skip = RabbitMQIntegrationFixture.SkipReason, SkipUnless = nameof(RabbitMQIntegrationFixture.IsConfigured), SkipType = typeof(RabbitMQIntegrationFixture))]
+    [Fact(Skip = RabbitMqIntegrationFixture.SkipReason, SkipUnless = nameof(RabbitMqIntegrationFixture.IsConfigured), SkipType = typeof(RabbitMqIntegrationFixture))]
     public async Task DefaultExchange_AddressesQueueByName()
     {
         await using var scope = await BrokerScope.CreateAsync();
         var input = scope.Input("direct");
         await using var consumer = await scope.Client.CreateConsumerAsync<int>(input, (_, _) => Task.FromResult(MessageHandlingResult.Completed));
-        await using var publisher = await scope.Client.CreatePublisherAsync<int>(new() { Exchange = RabbitMQExchangeOptions.Default });
+        await using var publisher = await scope.Client.CreatePublisherAsync<int>(new() { Exchange = RabbitMqExchangeOptions.Default });
         await publisher.PublishAsync(new(42, new() { RoutingKey = input.Queue.Name }));
         Assert.Equal("42", BrokerScope.Text(await scope.GetAsync(input.Queue.Name)));
     }

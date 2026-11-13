@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace FclEx.RabbitMQ;
 
-public static class RabbitMQIntegrationFixture
+public static class RabbitMqIntegrationFixture
 {
     public const string SkipReason = "Configure RabbitMQ test connection settings before running broker integration tests.";
     private static IConfigurationRoot Configuration { get; } = new ConfigurationBuilder()
@@ -32,10 +32,10 @@ internal sealed class BrokerScope : IAsyncDisposable
     private readonly List<string> _exchanges = [];
     private readonly string _prefix = "fclex-" + Guid.NewGuid().ToString("N");
     private readonly IConnection _adminConnection;
-    internal RabbitMQClient Client { get; }
+    internal RabbitMqClient Client { get; }
     internal IChannel Raw { get; }
 
-    private BrokerScope(RabbitMQClient client, IConnection connection, IChannel channel)
+    private BrokerScope(RabbitMqClient client, IConnection connection, IChannel channel)
     {
         Client = client;
         _adminConnection = connection;
@@ -44,20 +44,20 @@ internal sealed class BrokerScope : IAsyncDisposable
 
     internal static async Task<BrokerScope> CreateAsync()
     {
-        var factory = RabbitMQIntegrationFixture.Factory();
-        var client = await RabbitMQClient.ConnectAsync(factory);
+        var factory = RabbitMqIntegrationFixture.Factory();
+        var client = await RabbitMqClient.ConnectAsync(factory);
         var admin = await factory.CreateConnectionAsync();
         return new(client, admin, await admin.CreateChannelAsync());
     }
 
-    internal RabbitMQExchangeOptions Exchange(string suffix)
+    internal RabbitMqExchangeOptions Exchange(string suffix)
     {
         var name = _prefix + "." + suffix;
         _exchanges.Add(name);
         return new() { Name = name };
     }
 
-    internal RabbitMQConsumerOptions Input(string suffix, RabbitMQExchangeOptions? exchange = null, RabbitMQRetryOptions? retry = null)
+    internal RabbitMqConsumerOptions Input(string suffix, RabbitMqExchangeOptions? exchange = null, RabbitMqRetryOptions? retry = null)
     {
         var name = _prefix + "." + suffix;
         _queues.AddRange([name, name + ".dead"]);

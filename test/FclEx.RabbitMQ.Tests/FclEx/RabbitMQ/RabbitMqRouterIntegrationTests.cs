@@ -2,15 +2,15 @@ using System.Text;
 
 namespace FclEx.RabbitMQ;
 
-public class RabbitMQRouterIntegrationTests
+public class RabbitMqRouterIntegrationTests
 {
-    [Fact(Skip = RabbitMQIntegrationFixture.SkipReason, SkipUnless = nameof(RabbitMQIntegrationFixture.IsConfigured), SkipType = typeof(RabbitMQIntegrationFixture))]
+    [Fact(Skip = RabbitMqIntegrationFixture.SkipReason, SkipUnless = nameof(RabbitMqIntegrationFixture.IsConfigured), SkipType = typeof(RabbitMqIntegrationFixture))]
     public async Task Router_DeclaresTarget_ConvertsAndForwardsOnlyBusinessHeaders()
     {
         await using var scope = await BrokerScope.CreateAsync();
         var source = scope.Input("source");
         var target = scope.Exchange("target");
-        await using var router = await scope.Client.CreateRouterAsync(new RabbitMQRouterOptions
+        await using var router = await scope.Client.CreateRouterAsync(new RabbitMqRouterOptions
         {
             Input = source,
             Target = new() { Exchange = target },
@@ -48,19 +48,19 @@ public class RabbitMQRouterIntegrationTests
         await scope.AssertEmptyForAsync(source.Queue.Name, TimeSpan.FromMilliseconds(100));
     }
 
-    [Fact(Skip = RabbitMQIntegrationFixture.SkipReason, SkipUnless = nameof(RabbitMQIntegrationFixture.IsConfigured), SkipType = typeof(RabbitMQIntegrationFixture))]
+    [Fact(Skip = RabbitMqIntegrationFixture.SkipReason, SkipUnless = nameof(RabbitMqIntegrationFixture.IsConfigured), SkipType = typeof(RabbitMqIntegrationFixture))]
     public async Task UnroutableOutput_DoesNotAcknowledgeInput_AndEventuallyDeadLetters()
     {
         await using var scope = await BrokerScope.CreateAsync();
         var input = scope.Input("source", retry: new() { MinDelay = TimeSpan.FromMilliseconds(50), MaxDelay = TimeSpan.FromMilliseconds(50), DeliveryLimit = 1 });
-        await using var router = await scope.Client.CreateRouterAsync(new RabbitMQRouterOptions
+        await using var router = await scope.Client.CreateRouterAsync(new RabbitMqRouterOptions
         {
             Input = input,
             Target = new() { Exchange = scope.Exchange("empty-target") },
         }, new MessageConverter<string, string>((message, _) => Task.FromResult(message.Body)));
         using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         var run = router.RunAsync(stop.Token);
-        await using var publisher = await scope.Client.CreatePublisherAsync<string>(new() { Exchange = RabbitMQExchangeOptions.Default });
+        await using var publisher = await scope.Client.CreatePublisherAsync<string>(new() { Exchange = RabbitMqExchangeOptions.Default });
         await publisher.PublishAsync(new("retained", new() { RoutingKey = input.Queue.Name }));
         try { Assert.Equal("retained", BrokerScope.Text(await scope.GetAsync(input.Queue.Name + ".dead"))); }
         finally { stop.Cancel(); await run; }

@@ -5,9 +5,9 @@ namespace FclEx.RabbitMQ.Internal;
 
 internal sealed class ConsumerRunner<T> : IAsyncDisposable
 {
-    private readonly RabbitMQClient _client;
+    private readonly RabbitMqClient _client;
     private readonly IChannel _channel;
-    private readonly RabbitMQConsumerOptions _options;
+    private readonly RabbitMqConsumerOptions _options;
     private readonly Func<ReceivedMessage<T>, CancellationToken, Task<MessageHandlingResult>> _handler;
     private readonly ILogger _logger;
     private readonly AsyncEventingBasicConsumer _consumer;
@@ -28,7 +28,7 @@ internal sealed class ConsumerRunner<T> : IAsyncDisposable
 
     internal string QueueName => _options.Queue.Name;
 
-    internal ConsumerRunner(RabbitMQClient client, IChannel channel, RabbitMQConsumerOptions options,
+    internal ConsumerRunner(RabbitMqClient client, IChannel channel, RabbitMqConsumerOptions options,
         Func<ReceivedMessage<T>, CancellationToken, Task<MessageHandlingResult>> handler)
     {
         _client = client;
@@ -47,7 +47,7 @@ internal sealed class ConsumerRunner<T> : IAsyncDisposable
     {
         lock (_state)
         {
-            if (_disposing) throw new ObjectDisposedException(nameof(RabbitMQConsumer<T>));
+            if (_disposing) throw new ObjectDisposedException(nameof(RabbitMqConsumer<T>));
             _client.ThrowIfDisposed();
             if (_started) throw new InvalidOperationException("A subscription can only run once.");
             _started = true;

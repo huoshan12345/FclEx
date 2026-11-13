@@ -6,7 +6,7 @@ internal sealed class TestDoubles
 {
     internal Mock<IConnection> Connection { get; } = new();
     internal Mock<IChannel> Channel { get; } = new();
-    internal RabbitMQClient Client { get; }
+    internal RabbitMqClient Client { get; }
     internal IAsyncBasicConsumer? Consumer { get; private set; }
     internal TaskCompletionSource<bool> Subscribed { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 

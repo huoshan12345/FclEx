@@ -1,7 +1,7 @@
 namespace FclEx.RabbitMQ;
 
 /// <summary>Configures broker-native quorum queue retries; this is not an application retry loop.</summary>
-public sealed class RabbitMQRetryOptions
+public sealed class RabbitMqRetryOptions
 {
     /// <summary>Gets whether handler failures are returned to the queue. If false, they are dead-lettered.</summary>
     public bool Enabled { get; init; } = true;

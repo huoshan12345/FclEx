@@ -7,7 +7,7 @@
 1. 重构实现在独立项目/包 `FclEx.RabbitMQ` 中，目标路径为 `src/FclEx.RabbitMQ/FclEx.RabbitMQ.csproj`，命名空间使用 `FclEx.RabbitMQ`。
 2. 配套测试独立放在 `test/FclEx.RabbitMQ.Tests/`，不继续放进 `FclEx.Messaging.Tests`。
 3. 新项目直接依赖 `RabbitMQ.Client`，按需复用 `FclEx.Logging` 和 Core 的序列化等基础能力；不依赖 `FclEx.Messaging` 或 Kafka，不照搬旧 Processor 继承框架。
-4. broker 专用类型统一使用 `RabbitMQ` 前缀，例如 `RabbitMQPublisher<T>`、`RabbitMQConsumer<T>`、`RabbitMQRouter<TInput, TOutput>`、`RabbitMQQueueOptions`。保留 RabbitMQ 产品名称的正式大小写，与 `RabbitMQ.Client` 一致；不再混用 `RabbitMq`。
+4. broker 专用类型统一使用 `RabbitMq` 前缀，例如 `RabbitMqPublisher<T>`、`RabbitMqConsumer<T>`、`RabbitMqRouter<TInput, TOutput>`、`RabbitMqQueueOptions`。类型名前缀使用 PascalCase，避免连续大写字母；项目、包、目录和命名空间仍保留 `RabbitMQ`。
 5. `ReceivedMessage<T>`、`PublishMessage<T>`、`IMessageConverter<TInput, TOutput>` 等上下文已经明确的类型不机械叠加前缀；其命名空间仍是 `FclEx.RabbitMQ`。
 6. 新项目与测试项目已加入 solution。RootNamespace 通过现有 Directory.Build.targets 保持为空；主要代码位于 `FclEx/RabbitMQ/`，原生客户端扩展位于 `RabbitMQ/Client/`。旧 `FclEx.Messaging` 的运行代码及其 RabbitMq 命名保持不变，后续单独移除。
 
@@ -27,7 +27,7 @@ Publisher 不知道订阅者有哪些，因此不猜测或创建下游业务 que
 
 ## 2. 总体结构：组合三个角色
 
-对外提供 `RabbitMQPublisher<T>`、`RabbitMQConsumer<T>`、`RabbitMQRouter<TInput, TOutput>` 三个具体类型。类型参数分别绑定发布消息、handler 输入和 Converter 输入/输出，不再保留只有生命周期成员的泛型标记接口。
+对外提供 `RabbitMqPublisher<T>`、`RabbitMqConsumer<T>`、`RabbitMqRouter<TInput, TOutput>` 三个具体类型。类型参数分别绑定发布消息、handler 输入和 Converter 输入/输出，不再保留只有生命周期成员的泛型标记接口。
 
 内部复用拓扑声明、确认发布和消费执行逻辑；Router 组合消费执行器与 Publisher，不继承公开 Consumer 类。删除承担全部职责的 `MessageProcessor<TSettings>` 继承树，不要求用户为了传入 handler 或 Converter 而创建子类。
 
@@ -44,7 +44,7 @@ flowchart LR
     Q -. 永久失败或超过 delivery limit .-> D[DLX → dead-letter queue]
 ```
 
-`RabbitMQClient` 负责创建连接和三个角色，拥有其连接；各角色拥有自己的 channel。连接配置直接复用 `RabbitMQ.Client.ConnectionFactory`，支持已有的 virtual host、TLS、凭据和连接恢复选项，不再通过自定义 `ToString()` 拼接含密码的 URI。
+`RabbitMqClient` 负责创建连接和三个角色，拥有其连接；各角色拥有自己的 channel。连接配置直接复用 `RabbitMQ.Client.ConnectionFactory`，支持已有的 virtual host、TLS、凭据和连接恢复选项，不再通过自定义 `ToString()` 拼接含密码的 URI。
 
 角色配置在创建时校验并复制；调用者后续修改配置对象或 headers，不改变已经创建的实例。DI 是可选的装配方式，不通过 `IServiceProvider.GetRequiredService()` 隐式决定新对象及连接的所有权。
 
@@ -54,24 +54,24 @@ flowchart LR
 
 ```csharp
 // 连接由 client 拥有；loggerFactory、serializer 可作为可选依赖传入。
-Task<RabbitMQClient> ConnectAsync(
+Task<RabbitMqClient> ConnectAsync(
     ConnectionFactory factory,
     CancellationToken cancellationToken = default);
 
 // client 上的工厂方法完成拓扑声明，返回可用的角色对象。
-Task<RabbitMQPublisher<T>> CreatePublisherAsync<T>(
-    RabbitMQPublisherOptions options,
+Task<RabbitMqPublisher<T>> CreatePublisherAsync<T>(
+    RabbitMqPublisherOptions options,
     CancellationToken cancellationToken = default);
 
-Task<RabbitMQConsumer<T>> CreateConsumerAsync<T>(
-    RabbitMQConsumerOptions options,
+Task<RabbitMqConsumer<T>> CreateConsumerAsync<T>(
+    RabbitMqConsumerOptions options,
     Func<ReceivedMessage<T>, CancellationToken, Task<MessageHandlingResult>> handler,
     CancellationToken cancellationToken = default);
 
-Task<RabbitMQRouter<TInput, TOutput>> CreateRouterAsync<TInput, TOutput>(
-    RabbitMQRouterOptions options,
+Task<RabbitMqRouter<TInput, TOutput>> CreateRouterAsync<TInput, TOutput>(
+    RabbitMqRouterOptions options,
     IMessageConverter<TInput, TOutput> converter,
-    Func<ReceivedMessage<TInput>, TOutput, RabbitMQPublishOptions>?
+    Func<ReceivedMessage<TInput>, TOutput, RabbitMqPublishOptions>?
         outputOptionsSelector = null,
     CancellationToken cancellationToken = default);
 
@@ -101,7 +101,7 @@ public enum MessageHandlingResult
 2. `CreateConsumerAsync`/`CreateRouterAsync` 声明资源，但不自动开始消费；调用 `RunAsync` 才订阅。这样可以先准备下游，再启动上游。
 3. 同一对象只允许启动一次 `RunAsync`。需要重启已停止或已失败的角色时重新创建；网络暂时中断由客户端自动恢复处理。
 4. Converter 只负责类型转换，不负责序列化、发布和 Ack。它能读取输入元数据，但拿不到 channel 或手动 Ack 接口。
-5. Router 的静态 routing key 配在 `RabbitMQRouterOptions.Output`；需要动态 key 或每条输出的延迟时，工厂可额外接受返回 `RabbitMQPublishOptions` 的同步 selector。selector 和 Converter 的失败进入同一错误处理流程。
+5. Router 的静态 routing key 配在 `RabbitMqRouterOptions.Output`；需要动态 key 或每条输出的延迟时，工厂可额外接受返回 `RabbitMqPublishOptions` 的同步 selector。selector 和 Converter 的失败进入同一错误处理流程。
 6. 首版不把 `null` 输出解释为过滤。若序列化器允许，`null` 就是一个消息值；丢弃、过滤或一对多转换应以后用明确的返回类型表达。
 7. 默认值 `0` 和未定义的处理结果不能解释为成功；按 handler 契约错误记录并走失败流程，避免遗漏返回值导致误 Ack。
 
@@ -111,14 +111,14 @@ public enum MessageHandlingResult
 
 | 配置 | 主要内容 | 建议默认值 |
 | --- | --- | --- |
-| `RabbitMQExchangeOptions` | `Name`、`Type`、声明 arguments | topic、durable、非 auto-delete |
-| `RabbitMQQueueOptions` | `Name`、`Retry`、`DeadLetter`、可选容量限制 | 明确名称、Quorum、durable、非 exclusive、非 auto-delete |
-| `RabbitMQBindingOptions` | 来源 `Exchange`、`RoutingKey`、binding arguments | 空 routing key 合法，空 binding 集合合法 |
-| `RabbitMQPublisherOptions` | `Exchange`、发布确认超时 | 30 秒；confirms 与 mandatory 开启 |
-| `RabbitMQConsumerOptions` | `Queue`、`Bindings`、`PrefetchCount`、`MaxConcurrency`、停止超时 | prefetch=1、并发=1、停止超时=30 秒 |
-| `RabbitMQRouterOptions` | `Input` 消费配置、`Target`、`Output` 发布配置 | 使用相同消费与确认发布规则 |
-| `RabbitMQRetryOptions` | `Enabled`、`MinDelay`、`MaxDelay`、`DeliveryLimit` | 开启、1 秒、30 秒、20 |
-| `RabbitMQDeadLetterOptions` | 死信 exchange、queue 名称与 binding key | 自动生成 `<queue>.dlx`、`<queue>.dead`，key 为源 queue 名 |
+| `RabbitMqExchangeOptions` | `Name`、`Type`、声明 arguments | topic、durable、非 auto-delete |
+| `RabbitMqQueueOptions` | `Name`、`Retry`、`DeadLetter`、可选容量限制 | 明确名称、Quorum、durable、非 exclusive、非 auto-delete |
+| `RabbitMqBindingOptions` | 来源 `Exchange`、`RoutingKey`、binding arguments | 空 routing key 合法，空 binding 集合合法 |
+| `RabbitMqPublisherOptions` | `Exchange`、发布确认超时 | 30 秒；confirms 与 mandatory 开启 |
+| `RabbitMqConsumerOptions` | `Queue`、`Bindings`、`PrefetchCount`、`MaxConcurrency`、停止超时 | prefetch=1、并发=1、停止超时=30 秒 |
+| `RabbitMqRouterOptions` | `Input` 消费配置、`Target`、`Output` 发布配置 | 使用相同消费与确认发布规则 |
+| `RabbitMqRetryOptions` | `Enabled`、`MinDelay`、`MaxDelay`、`DeliveryLimit` | 开启、1 秒、30 秒、20 |
+| `RabbitMqDeadLetterOptions` | 死信 exchange、queue 名称与 binding key | 自动生成 `<queue>.dlx`、`<queue>.dead`，key 为源 queue 名 |
 
 `PublishMessage<T>` 是不可变消息 envelope，包含 Body、routing key、消息 ID、关联 ID、业务 headers 和本次发布选项。未指定消息 ID 时在 envelope 创建时生成一次，重复提交同一 envelope 不更换 ID。序列化默认复用现有 `IMemoryBytesSerializer` 与 `SerializerPresets.Utf8StringOrJson`，允许注入替代实现，不另建序列化框架。
 
@@ -188,7 +188,7 @@ Router 不提供跨“消费输入 + 发布输出”的原子事务。目标发�
 
 ### 8.2 Publisher/Router 的首次投递延迟
 
-`PublishMessage<T>`/`RabbitMQPublishOptions` 提供互斥的 `TimeSpan? Delay` 与 `DateTimeOffset? DeliverAt`：前者是相对时间，后者是绝对时间。未设置或零延迟表示立即可投递；负延迟和两者同时设置属于参数错误；已经到期的绝对时间按立即投递处理。
+`PublishMessage<T>`/`RabbitMqPublishOptions` 提供互斥的 `TimeSpan? Delay` 与 `DateTimeOffset? DeliverAt`：前者是相对时间，后者是绝对时间。未设置或零延迟表示立即可投递；负延迟和两者同时设置属于参数错误；已经到期的绝对时间按立即投递处理。
 
 每次 `PublishAsync` 开始时将目标时间一次性换算为 UTC Unix 毫秒，写入 `long` 类型的 `x-opt-delivery-time`。时间计算应检查溢出并向上取整到毫秒，避免正延迟被截断为更早的时刻。同一次调用中的发送尝试不重新计算目标时刻；调用者跨调用重试相对 `Delay` 时会重新计时，需要保持原计划时应保存并复用绝对 `DeliverAt`。
 
