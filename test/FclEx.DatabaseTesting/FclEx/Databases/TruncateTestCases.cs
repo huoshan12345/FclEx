@@ -1,5 +1,3 @@
-using FclEx.Xunit;
-
 namespace FclEx.Databases;
 
 /// <summary>Shares truncate capability expectations and selected-driver cases between Dapper and EF tests.</summary>

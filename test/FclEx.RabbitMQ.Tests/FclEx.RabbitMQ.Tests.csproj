@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\FclEx.RabbitMQ\FclEx.RabbitMQ.csproj" />
+    <ProjectReference Include="..\FclEx.Core.Tests\FclEx.Core.Tests.csproj" />
+  </ItemGroup>
+</Project>

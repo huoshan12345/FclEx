@@ -21,15 +21,7 @@ public class DapperTestsFixture : CoreTestsFixture
 
     public override async ValueTask InitializeAsync()
     {
-        if (SelectedDrivers.Contains(DbDriver.Sqlite))
-            await DatabaseEnvironment.InitializeSqliteAsync();
-
-        foreach (var (driver, schema) in GetDriverSchemaCases(Schemas))
-        {
-            // ReSharper disable once UseAwaitUsing
-            using var connection = CreateDbConnection(driver, schema);
-            await connection.ReseedIdentityAsync<EntityWithAutoKey>(schema);
-        }
+        await DatabaseTestSettings.InitializeAsync(DatabaseEnvironment, Schemas);
     }
 
     public override ValueTask DisposeAsync()

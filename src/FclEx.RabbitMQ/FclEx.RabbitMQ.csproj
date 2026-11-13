@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>RabbitMQ publishers, consumers, and conversion routers with automatic quorum topology, confirmed publishing, native delayed delivery, retries, and dead lettering.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="RabbitMQ.Client" />
+    <ProjectReference Include="..\FclEx.Logging\FclEx.Logging.csproj" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\FclEx.Core\FclExUsings.cs" />
+  </ItemGroup>
+</Project>

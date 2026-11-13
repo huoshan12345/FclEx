@@ -1,0 +1,11 @@
+global using System;
+global using System.Collections.Generic;
+global using System.Linq;
+global using System.Threading;
+global using System.Threading.Tasks;
+global using FclEx.RabbitMQ.Internal;
+global using FclEx.Utils;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Logging.Abstractions;
+global using RabbitMQ.Client;
+global using RabbitMQ.Client.Events;
