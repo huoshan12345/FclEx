@@ -42,8 +42,8 @@
     <Project Path="src/FclEx.DependencyInjection/FclEx.DependencyInjection.csproj" />
     <Project Path="src/FclEx.EfCore/FclEx.EfCore.csproj" />
     <Project Path="src/FclEx.Http/FclEx.Http.csproj" />
+    <Project Path="src/FclEx.Kafka/FclEx.Kafka.csproj" />
     <Project Path="src/FclEx.Logging/FclEx.Logging.csproj" />
-    <Project Path="src/FclEx.Messaging/FclEx.Messaging.csproj" />
     <Project Path="src/FclEx.NewRelic/FclEx.NewRelic.csproj" />
     <Project Path="src/FclEx.NewtonsoftJson/FclEx.NewtonsoftJson.csproj" />
     <Project Path="src/FclEx.Options/FclEx.Options.csproj" />
@@ -70,8 +70,8 @@
     <Project Path="test/FclEx.Dapper.Tests/FclEx.Dapper.Tests.csproj" />
     <Project Path="test/FclEx.EfCore.Tests/FclEx.EfCore.Tests.csproj" />
     <Project Path="test/FclEx.Http.Tests/FclEx.Http.Tests.csproj" />
+    <Project Path="test/FclEx.Kafka.Tests/FclEx.Kafka.Tests.csproj" />
     <Project Path="test/FclEx.Logging.Tests/FclEx.Logging.Tests.csproj" />
-    <Project Path="test/FclEx.Messaging.Tests/FclEx.Messaging.Tests.csproj" />
     <Project Path="test/FclEx.NewRelic.Tests/FclEx.NewRelic.Tests.csproj" />
     <Project Path="test/FclEx.NewtonsoftJson.Tests/FclEx.NewtonsoftJson.Tests.csproj" />
     <Project Path="test/FclEx.RabbitMQ.Tests/FclEx.RabbitMQ.Tests.csproj" />

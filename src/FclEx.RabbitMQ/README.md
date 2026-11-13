@@ -2,7 +2,7 @@
 
 RabbitMQ publishers, consumers, and one-input/one-output conversion routers with automatic durable topology,
 tracked publisher confirmations, quorum queue retries, dead lettering, and native delayed delivery.
-This package uses RabbitMQ.Client directly and has no dependency on FclEx.Messaging or Kafka.
+This package uses RabbitMQ.Client directly and has no dependency on FclEx.Kafka.
 
 ## Requirements
 

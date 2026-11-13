@@ -1,4 +1,4 @@
-namespace FclEx.Messaging;
+namespace FclEx.Kafka;
 
 public static class LogPropertyNames
 {

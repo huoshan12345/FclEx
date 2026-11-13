@@ -5,11 +5,11 @@
 ## 项目归属与命名
 
 1. 重构实现在独立项目/包 `FclEx.RabbitMQ` 中，目标路径为 `src/FclEx.RabbitMQ/FclEx.RabbitMQ.csproj`，命名空间使用 `FclEx.RabbitMQ`。
-2. 配套测试独立放在 `test/FclEx.RabbitMQ.Tests/`，不继续放进 `FclEx.Messaging.Tests`。
-3. 新项目直接依赖 `RabbitMQ.Client`，按需复用 `FclEx.Logging` 和 Core 的序列化等基础能力；不依赖 `FclEx.Messaging` 或 Kafka，不照搬旧 Processor 继承框架。
+2. 配套测试独立放在 `test/FclEx.RabbitMQ.Tests/`，与 `FclEx.Kafka.Tests` 分开。
+3. 新项目直接依赖 `RabbitMQ.Client`，按需复用 `FclEx.Logging` 和 Core 的序列化等基础能力；不依赖 `FclEx.Kafka`，不照搬旧 Processor 继承框架。
 4. broker 专用类型统一使用 `RabbitMq` 前缀，例如 `RabbitMqPublisher<T>`、`RabbitMqConsumer<T>`、`RabbitMqRouter<TInput, TOutput>`、`RabbitMqQueueOptions`。类型名前缀使用 PascalCase，避免连续大写字母；项目、包、目录和命名空间仍保留 `RabbitMQ`。
 5. `ReceivedMessage<T>`、`PublishMessage<T>`、`IMessageConverter<TInput, TOutput>` 等上下文已经明确的类型不机械叠加前缀；其命名空间仍是 `FclEx.RabbitMQ`。
-6. 新项目与测试项目已加入 solution。RootNamespace 通过现有 Directory.Build.targets 保持为空；主要代码位于 `FclEx/RabbitMQ/`，原生客户端扩展位于 `RabbitMQ/Client/`。旧 `FclEx.Messaging` 的运行代码及其 RabbitMq 命名保持不变，后续单独移除。
+6. 新项目与测试项目已加入 solution。RootNamespace 通过现有 Directory.Build.targets 保持为空；主要代码位于 `FclEx/RabbitMQ/`，原生客户端扩展位于 `RabbitMQ/Client/`。原混合消息包中的旧 RabbitMQ 实现及测试已移除，剩余 Kafka 功能独立为 `FclEx.Kafka`。
 
 ## 1. 目标与范围
 

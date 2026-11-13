@@ -7,7 +7,7 @@ public sealed class KafkaTestsFixture
     public static ClientConfig CreateClientConfig()
     {
         return CoreTestsFixture.Config.GetSection("Kafka").Get<ClientConfig>()
-            ?? throw new InvalidOperationException("Configure Kafka in appsettings.local.json or FCLEX_TEST_Kafka__ environment variables.");
+            ?? throw new InvalidOperationException("Configure the Kafka section in the shared CoreTestsFixture appsettings files.");
     }
 
     public static async Task<KafkaTestTopic> CreateTopicAsync()

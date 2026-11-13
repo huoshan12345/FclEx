@@ -1,10 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Description>Kafka and RabbitMQ helpers for consumers, publishers, routers, message conversion, retry metadata, and messaging logs.</Description>
+    <Description>Kafka consumer helpers with explicit offset commits, JSON deserializers, headers, and structured logging.</Description>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Confluent.Kafka" />
-    <PackageReference Include="RabbitMQ.Client" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FclEx.Logging\FclEx.Logging.csproj" />
