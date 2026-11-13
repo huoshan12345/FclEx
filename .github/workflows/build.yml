@@ -196,15 +196,16 @@ jobs:
         shell: pwsh
         run: ./build/create-ci-solution.ps1 -Framework ${{ matrix.framework }} -OutputPath ${{ env.SOLUTION }}
 
-      - name: Cache NuGet packages
-        uses: actions/cache@v6
+      - name: Restore NuGet packages
+        id: nuget-cache
+        uses: actions/cache/restore@v6
         with:
           path: ${{ env.NUGET_PACKAGES }}
-          key: nuget-${{ runner.os }}-${{ matrix.framework }}-v1-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'NuGet.Config', 'global.json') }}
+          key: nuget-${{ runner.os }}-shared-v1-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'NuGet.Config', 'global.json') }}
           restore-keys: |
-            nuget-${{ runner.os }}-${{ matrix.framework }}-v1-
+            nuget-${{ runner.os }}-shared-v1-
+            nuget-${{ runner.os }}-net11.0-v1-
             nuget-${{ runner.os }}-pack-v1-
-            nuget-${{ runner.os }}-v1-
 
       - name: Test Release
         timeout-minutes: 5
@@ -222,6 +223,14 @@ jobs:
           reporter: dotnet-trx
           list-suites: failed
           list-tests: failed
+
+      # The full solution restores all target frameworks; only one matrix job saves it.
+      - name: Save NuGet packages
+        if: success() && matrix.framework == 'net11.0' && steps.nuget-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: ${{ steps.nuget-cache.outputs.cache-primary-key }}
 
   pack:
     runs-on: ubuntu-latest
