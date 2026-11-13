@@ -1,5 +1,3 @@
-using FclEx.Xunit;
-
 namespace FclEx.Databases;
 
 /// <summary>Defines run selection separately from the remote provisioning matrix.</summary>
@@ -120,4 +118,24 @@ public static class DatabaseTestSettings
 #endif
         _ => throw new ArgumentOutOfRangeException(nameof(driver), driver, null),
     };
+
+    public static async ValueTask InitializeAsync(TestDatabaseEnvironment environment, string?[] schemas)
+    {
+        if (SelectedDrivers.Contains(DbDriver.Sqlite))
+            await environment.InitializeSqliteAsync();
+
+        foreach (var (driver, schema) in GetDriverSchemaCases(schemas))
+        {
+            // Only reseed identity for PostgreSQL and Oracle,
+            // as they won't automatically reset the identity value after inserting rows with explicit identity values. 
+            if (driver is not DbDriver.Npgsql and not DbDriver.Oracle)
+                continue;
+
+#if NET5_0_OR_GREATER
+            await
+#endif
+            using var connection = environment.Resolve(driver, schema: schema).CreateConnection();
+            await connection.ReseedIdentityAsync<EntityWithAutoKey>(schema);
+        }
+    }
 }
