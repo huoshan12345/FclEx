@@ -47,6 +47,7 @@
     <Project Path="src/FclEx.NewRelic/FclEx.NewRelic.csproj" />
     <Project Path="src/FclEx.NewtonsoftJson/FclEx.NewtonsoftJson.csproj" />
     <Project Path="src/FclEx.Options/FclEx.Options.csproj" />
+    <Project Path="src/FclEx.RabbitMQ/FclEx.RabbitMQ.csproj" />
     <Project Path="src/FclEx.Serilog.Slack/FclEx.Serilog.Slack.csproj" />
     <Project Path="src/FclEx.Serilog/FclEx.Serilog.csproj" />
     <Project Path="src/FclEx.Slack/FclEx.Slack.csproj" />
@@ -73,6 +74,7 @@
     <Project Path="test/FclEx.Messaging.Tests/FclEx.Messaging.Tests.csproj" />
     <Project Path="test/FclEx.NewRelic.Tests/FclEx.NewRelic.Tests.csproj" />
     <Project Path="test/FclEx.NewtonsoftJson.Tests/FclEx.NewtonsoftJson.Tests.csproj" />
+    <Project Path="test/FclEx.RabbitMQ.Tests/FclEx.RabbitMQ.Tests.csproj" />
     <Project Path="test/FclEx.Serilog.Slack.Tests/FclEx.Serilog.Slack.Tests.csproj" />
     <Project Path="test/FclEx.Serilog.Tests/FclEx.Serilog.Tests.csproj" />
     <Project Path="test/FclEx.Slack.Tests/FclEx.Slack.Tests.csproj" />

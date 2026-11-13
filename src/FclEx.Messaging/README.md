@@ -16,6 +16,11 @@ Kafka and RabbitMQ helpers for FclEx.
 - Keep broker-specific configuration in the appropriate option objects.
 - Messaging tests may require local broker services.
 
+## New RabbitMQ Package
+
+The independent [FclEx.RabbitMQ package](../FclEx.RabbitMQ/README.md) provides the new publisher, consumer, router,
+automatic topology declaration, and native Quorum Queue delay/retry APIs. Existing RabbitMQ APIs in this package remain unchanged.
+
 ## Kafka Consumer
 
 Start the consumer from a `ConsumerConfig` and await the returned task for its entire lifetime:
