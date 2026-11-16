@@ -4,7 +4,7 @@
     <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="AngleSharp" Version="1.10.2" />
+    <PackageVersion Include="AngleSharp" Version="1.10.3" />
     <PackageVersion Include="AspectCore.Extensions.DependencyInjection" Version="3.0.0" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="Confluent.Kafka" Version="2.16.0" />
@@ -17,11 +17,11 @@
     <PackageVersion Include="FluentMigrator.Runner.SQLite" Version="8.0.1" />
     <PackageVersion Include="GraphQL.Client" Version="6.1.0" />
     <PackageVersion Include="GraphQL.Client.Serializer.SystemTextJson" Version="6.1.0" />
-    <PackageVersion Include="InterfaceBaseInvoke.Fody" Version="0.1.8" />
+    <PackageVersion Include="InterfaceBaseInvoke.Fody" Version="0.1.9" />
     <PackageVersion Include="Microsoft.Bcl.HashCode" Version="6.0.0" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.9.0" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
-    <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.1.1" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.12.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.12.0" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.1.2" />
     <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.23.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
     <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.5.3" />
@@ -32,10 +32,10 @@
     <PackageVersion Include="NewRelic.Agent.Api" Version="10.57.0" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="Oracle.ManagedDataAccess.Core" Version="23.26.400" />
-    <PackageVersion Include="PolySharp" Version="1.17.0" />
+    <PackageVersion Include="PolySharp" Version="1.17.1" />
     <PackageVersion Include="RabbitMQ.Client" Version="7.2.2" />
     <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
-    <PackageVersion Include="SSH.NET" Version="2026.0.0" />
+    <PackageVersion Include="SSH.NET" Version="2026.0.1" />
     <PackageVersion Include="Serilog.Extensions.Logging" Version="10.0.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageVersion Include="Serilog.Sinks.XUnit3" Version="2.1.2" />
@@ -75,6 +75,7 @@
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="[10.0.15, 11.0.0)" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Configuration" Version="[10.0.15, 11.0.0)" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="[10.0.15, 11.0.0)" />
+    <PackageVersion Include="System.Text.Json" Version="[10.0.15, 11.0.0)" />
   </ItemGroup>
   <ItemGroup Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), 11.0))">
     <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="11.0.0" />
@@ -87,11 +88,6 @@
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="11.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Configuration" Version="11.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="11.0.0" />
-  </ItemGroup>
-  <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 10.0))">
-    <PackageVersion Include="System.Text.Json" Version="[10.0.15, 11.0.0)" />
-  </ItemGroup>
-  <ItemGroup Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), 10.0))">
     <PackageVersion Include="System.Text.Json" Version="11.0.0" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
