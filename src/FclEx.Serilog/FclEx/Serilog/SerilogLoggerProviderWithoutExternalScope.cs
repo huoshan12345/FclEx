@@ -56,7 +56,18 @@ public class SerilogLoggerProviderWithoutExternalScope : ILoggerProvider, ILogEv
     public ValueTask DisposeAsync()
     {
         GC.SuppressFinalize(this);
-        return _innerProvider.DisposeAsync();
+
+        if (((object)_innerProvider) is IAsyncDisposable asyncDisposable)
+        {
+            return asyncDisposable.DisposeAsync();
+        }
+
+        if (_innerProvider is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
+
+        return ValueTask.CompletedTask;
     }
 #endif
 }

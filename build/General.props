@@ -14,7 +14,7 @@
     <SupportOracle>true</SupportOracle>
     <DefineConstants>$(DefineConstants);SUPPORT_ORACLE</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 11.0))">
+  <PropertyGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 12.0))">
     <SupportNpgsql>true</SupportNpgsql>
     <DefineConstants>$(DefineConstants);SUPPORT_NPGSQL</DefineConstants>
   </PropertyGroup>
